@@ -1,0 +1,51 @@
+# Publishes the WordPress plugin as a GitHub release whenever its version number changes.
+# Installed copies of the plugin read the latest release and update themselves from it.
+#
+# To ship an update: raise the version in wordpress/notation-bible.php (header and NB_VERSION)
+# and the Stable tag in wordpress/readme.txt, add a changelog entry, and push.
+name: Release WordPress plugin
+
+on:
+  push:
+    branches: [main, claude/initial-reader]
+    paths:
+      - 'wordpress/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-wp-plugin
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build plugin zip
+        run: bash scripts/build_wp.sh
+
+      - name: Lint PHP
+        run: for f in $(find build/notation-bible -name '*.php'); do php -l "$f"; done
+
+      - name: Publish release if this version is new
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ver=$(cat build/VERSION)
+          tag="v$ver"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag already exists; raise the plugin version to publish an update."
+            exit 0
+          fi
+          # Release notes: this version's section of the readme changelog.
+          awk -v v="= $ver =" '$0==v{f=1;next} /^= /{if(f)exit} f' wordpress/readme.txt > build/notes.md
+          [ -s build/notes.md ] || echo "Notation Bible $ver" > build/notes.md
+          gh release create "$tag" build/notation-bible.zip \
+            --target "$GITHUB_SHA" \
+            --title "Notation Bible $ver" \
+            --notes-file build/notes.md \
+            --latest

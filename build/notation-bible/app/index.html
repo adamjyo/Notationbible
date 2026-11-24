@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notation Bible</title>
+<meta name="color-scheme" content="dark light">
+<script>/* apply the saved appearance before first paint; dark by default */try{var t=((JSON.parse(localStorage.getItem('notationbible:v1'))||{}).set||{}).theme;document.documentElement.dataset.mode=t==='light'||t==='system'?t:'dark'}catch(e){document.documentElement.dataset.mode='dark'}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Inter:wght@400;500;600&family=Gentium+Book+Plus&family=Noto+Serif+Hebrew:wght@400;500&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="bar">
+  <a class="brand" href="#" id="home" aria-label="Notation Bible, go to last read">
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5 4.5h9.5a3 3 0 0 1 3 3V20H8a3 3 0 0 1-3-3z" fill="currentColor" stroke="none"/><path d="M14.5 4.5v8l-2-1.4-2 1.4v-8" fill="var(--accent)" stroke="none"/></svg>
+    <span>Notation Bible</span>
+  </a>
+  <nav class="refnav" aria-label="Chapter navigation">
+    <button class="ico" id="prev" aria-label="Previous chapter" title="Previous chapter (←)"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <button class="refbtn" id="refbtn" aria-haspopup="dialog"><span id="reflabel">John 1</span><svg viewBox="0 0 24 24" class="caret"><path d="M6 9l6 6 6-6"/></svg></button>
+    <button class="ico" id="next" aria-label="Next chapter" title="Next chapter (→)"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+  </nav>
+  <div class="tools">
+    <span class="tr" title="Berean Standard Bible">BSB</span>
+    <button class="ico" id="hsearch" aria-label="Search" title="Search (/)"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
+    <button class="menubtn" id="menubtn" aria-haspopup="menu" aria-expanded="false" aria-controls="menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span>Menu</span></button>
+  </div>
+</header>
+
+<div class="menu" id="menu" role="menu" aria-label="Features" hidden></div>
+
+<main id="page">
+  <article class="reader" id="reader"></article>
+  <nav class="pager" aria-label="Chapter pager"><a id="pprev" href="#"></a><a id="pnext" href="#"></a></nav>
+</main>
+
+<div class="dock" id="markbar" role="toolbar" aria-label="Mark up the selection" hidden>
+  <span class="alabel" id="marklabel"></span>
+  <div class="swatches">
+    <button data-k="hl" data-c="yellow" style="--s:var(--sw-yellow)" aria-label="Highlight yellow"></button>
+    <button data-k="hl" data-c="green" style="--s:var(--sw-green)" aria-label="Highlight green"></button>
+    <button data-k="hl" data-c="blue" style="--s:var(--sw-blue)" aria-label="Highlight blue"></button>
+    <button data-k="hl" data-c="pink" style="--s:var(--sw-pink)" aria-label="Highlight pink"></button>
+    <button data-k="hl" data-c="orange" style="--s:var(--sw-orange)" aria-label="Highlight orange"></button>
+    <button data-k="hl" data-c="purple" style="--s:var(--sw-purple)" aria-label="Highlight purple"></button>
+  </div>
+  <button class="abtn" data-k="pen">Pen</button>
+  <button class="abtn" data-k="note">Note</button>
+  <button class="abtn" data-k="erase">Erase</button>
+  <button class="abtn ntonly" data-k="tree">NoteTree</button>
+</div>
+
+<p class="toolhint" id="toolhint" role="status" hidden></p>
+<div class="palette" id="palette" role="group" aria-label="Colour for highlighter and pen" hidden>
+  <div class="prow"><span>Ink</span>
+    <button data-c="black" style="--s:var(--sw-black)" aria-label="Black"></button>
+    <button data-c="red" style="--s:var(--sw-red)" aria-label="Red"></button>
+    <button data-c="inkblue" style="--s:var(--sw-inkblue)" aria-label="Blue ink"></button>
+  </div>
+  <div class="prow"><span>Highlighter</span>
+    <button data-c="yellow" style="--s:var(--sw-yellow)" aria-label="Yellow"></button>
+    <button data-c="green" style="--s:var(--sw-green)" aria-label="Green"></button>
+    <button data-c="blue" style="--s:var(--sw-blue)" aria-label="Blue"></button>
+    <button data-c="pink" style="--s:var(--sw-pink)" aria-label="Pink"></button>
+    <button data-c="orange" style="--s:var(--sw-orange)" aria-label="Orange"></button>
+    <button data-c="purple" style="--s:var(--sw-purple)" aria-label="Purple"></button>
+  </div>
+</div>
+<nav class="toolbar" id="toolbar" aria-label="Markup tools">
+  <button class="tbfab" id="tbfab" aria-expanded="false" aria-label="Show markup tools"><svg viewBox="0 0 24 24"><path d="M6 3.5h9l3.5 3.5v13.5H6z"/><path d="M15 3.5V7h3.5"/><path d="M9 11h6M9 14.5h6M9 18h3.5"/></svg></button>
+  <button data-tool="hl" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M14.5 3.8l5.7 5.7-8.4 8.4H6.1v-5.7z"/><path class="tip" d="M6.1 12.2v5.7h5.7z"/><path d="M3.5 21h9"/></svg><span>Highlighter</span></button>
+  <button data-tool="pen" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M16 3.5l4.5 4.5L9 19.5l-5.5 1 1-5.5z"/><path d="M13.5 6l4.5 4.5"/><path class="tipline" d="M14 21c2-1.2 4-1.2 6.5 0"/></svg><span>Pen</span></button>
+  <button data-tool="eraser" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M8.5 20h11.5"/><path d="M4.6 14.4l8.6-8.6a2 2 0 0 1 2.8 0l3.2 3.2a2 2 0 0 1 0 2.8L11.5 19.5H9.7z"/><path d="M9.2 9.8l5 5"/></svg><span>Eraser</span></button>
+  <button id="colorbtn" aria-haspopup="true" aria-expanded="false" aria-controls="palette"><span class="cdot"></span><span>Color</span></button>
+  <button data-tool="sticky" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M4.5 4.5h15v9.8l-5.2 5.2H4.5z"/><path d="M14.3 19.5v-5.2h5.2"/><path d="M8 9h8M8 12.5h4"/></svg><span>Sticky note</span></button>
+</nav>
+
+<div class="dock audio" id="audiobar" role="toolbar" aria-label="Read aloud" hidden>
+  <button class="ico" id="aprev" aria-label="Previous verse"><svg viewBox="0 0 24 24"><path d="M7 5v14M18 5l-9 7 9 7z"/></svg></button>
+  <button class="ico big" id="apause" aria-label="Pause"><svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button>
+  <button class="ico" id="anext" aria-label="Next verse"><svg viewBox="0 0 24 24"><path d="M17 5v14M6 5l9 7-9 7z"/></svg></button>
+  <span class="alabel" id="aulabel"></span>
+  <select id="arate" aria-label="Reading speed"><option value=".8">0.8×</option><option value="1" selected>1×</option><option value="1.2">1.2×</option><option value="1.5">1.5×</option></select>
+  <button class="ico" id="astop" aria-label="Stop reading"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+</div>
+
+<section class="nt" id="nt" aria-label="NoteTree" hidden>
+  <header class="nthead">
+    <div class="ntt"><b>NoteTree</b><span id="ntref"></span></div>
+    <label class="ntrange">Verses <select id="ntfrom" aria-label="First verse"></select><span>to</span><select id="ntto" aria-label="Last verse"></select></label>
+    <div class="nttools" role="toolbar" aria-label="NoteTree tools">
+      <button data-nt="select" title="Select, move and highlight text (V)"><svg viewBox="0 0 24 24"><path d="M6 3.5l12 8-5.2 1.3 3.2 6.2-2.4 1.2-3.2-6.2L6 18z"/></svg><span>Select</span></button>
+      <button data-nt="pen" title="Pen (P)"><svg viewBox="0 0 24 24"><path d="M16 3.5l4.5 4.5L9 19.5l-5.5 1 1-5.5z"/></svg><span>Pen</span></button>
+      <button data-nt="hl" title="Highlighter (H)"><svg viewBox="0 0 24 24"><path d="M14.5 3.8l5.7 5.7-8.4 8.4H6.1v-5.7z"/><path d="M3.5 21h9"/></svg><span>Highlighter</span></button>
+      <button data-nt="text" title="Text box (T)"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M8 9.5h8M12 9.5v6"/></svg><span>Text box</span></button>
+      <button data-nt="eraser" title="Eraser (E)"><svg viewBox="0 0 24 24"><path d="M8.5 20h11.5"/><path d="M4.6 14.4l8.6-8.6a2 2 0 0 1 2.8 0l3.2 3.2a2 2 0 0 1 0 2.8L11.5 19.5H9.7z"/></svg><span>Eraser</span></button>
+      <button id="ntpencil" aria-pressed="false" title="Pencil only: Apple Pencil draws, fingers scroll and pinch to zoom" hidden><svg viewBox="0 0 24 24"><path d="M17 3.5l3.5 3.5L8 19.5 3.5 20.5l1-4.5z"/><path d="M14.5 6l3.5 3.5"/><path d="M4.5 16l3.5 3.5"/></svg><span>Pencil only</span></button>
+      <span class="ntsep"></span>
+      <div class="ntcolors" role="group" aria-label="Colour">
+        <button data-ntc="black" style="--s:var(--sw-black)" aria-label="Black"></button><button data-ntc="red" style="--s:var(--sw-red)" aria-label="Red"></button><button data-ntc="inkblue" style="--s:var(--sw-inkblue)" aria-label="Blue ink"></button>
+        <button data-ntc="yellow" style="--s:var(--sw-yellow)" aria-label="Yellow"></button><button data-ntc="green" style="--s:var(--sw-green)" aria-label="Green"></button><button data-ntc="blue" style="--s:var(--sw-blue)" aria-label="Blue"></button><button data-ntc="pink" style="--s:var(--sw-pink)" aria-label="Pink"></button><button data-ntc="orange" style="--s:var(--sw-orange)" aria-label="Orange"></button><button data-ntc="purple" style="--s:var(--sw-purple)" aria-label="Purple"></button>
+      </div>
+      <span class="ntsep"></span>
+      <button id="ntundo" title="Undo (Ctrl+Z)"><svg viewBox="0 0 24 24"><path d="M9 7L4.5 11.5 9 16"/><path d="M5 11.5h9.5a5 5 0 0 1 0 10H12"/></svg><span>Undo</span></button>
+      <button id="ntredo" title="Redo (Ctrl+Shift+Z)"><svg viewBox="0 0 24 24"><path d="M15 7l4.5 4.5L15 16"/><path d="M19 11.5H9.5a5 5 0 0 0 0 10H12"/></svg><span>Redo</span></button>
+      <button id="ntclear" title="Clear all markup"><svg viewBox="0 0 24 24"><path d="M5 7h14M10 7V4.5h4V7M7 7l1 13h8l1-13"/></svg><span>Clear</span></button>
+    </div>
+    <div class="ntview"><button id="ntzoomout" aria-label="Zoom out">−</button><span id="ntzoom">100%</span><button id="ntzoomin" aria-label="Zoom in">+</button><button id="ntfit">Fit</button><button id="ntclose" class="ntclose">Done</button></div>
+  </header>
+  <div class="ntscroll" id="ntscroll"><div class="ntsize" id="ntsize"><div class="ntcanvas" id="ntcanvas">
+    <div class="ntpage"><div class="nttext" id="nttext"></div></div>
+    <svg class="ntink" id="ntink" viewBox="0 0 1392 1056" aria-label="Drawing layer"></svg>
+    <div class="ntboxes" id="ntboxes"></div>
+    <div class="nthover" id="nthover" hidden></div>
+  </div></div></div>
+</section>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheettitle" hidden>
+  <div class="sheethead">
+    <button class="ico" id="sheetback" aria-label="Back" hidden><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <h2 id="sheettitle"></h2>
+    <button class="ico" id="sheetclose" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="sheetbody" id="sheetbody"></div>
+</aside>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script src="books.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

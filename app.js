@@ -39,7 +39,7 @@ const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch
 /* ---------- data ---------- */
 const cache = {};
 // window.__DATA is filled only in the single-file preview build (scripts/bundle.mjs)
-const getJSON = p => cache[p] ??= (window.__DATA && p in window.__DATA ? Promise.resolve(window.__DATA[p]) : fetch(p).then(r => r.ok ? r.json() : null).catch(() => null));
+const getJSON = p => cache[p] ??= (window.__DATA && p in window.__DATA ? Promise.resolve(window.__DATA[p]) : fetch((window.NB_BASE || '') + p).then(r => r.ok ? r.json() : null).catch(() => null));
 let M = { books: {}, layers: { footnotes: { books: [] }, xrefs: { books: [] }, commentary: [] } };
 // Full-Bible files (fmt 2) store each verse as its exact text with tagged phrases written ⟨english¦7225+430⟩;
 // they are turned into tokens here, once per book. Interlinear details live in data/il/ and load only when needed.
@@ -112,7 +112,10 @@ function rich(t) {
 const lord = s => esc(s).replace(/\bLORD\b/g, '<span class="sc">Lord</span>');
 
 /* ---------- state ---------- */
-let cur = parseHash(location.hash) || parseHash(S.last || '') || { b: 'john', c: 1, v: null };
+// A host page (the WordPress plugin) can pass a starting passage: ?ref=John 3:16 or window.NB_CONFIG.start.
+const startRef = (() => { try { const q = new URLSearchParams(location.search).get('ref'); return q && parseRef(q); } catch { return null; } })();
+const cfgRef = window.NB_CONFIG && window.NB_CONFIG.start ? parseRef(String(window.NB_CONFIG.start)) : null;
+let cur = parseHash(location.hash) || startRef || parseHash(S.last || '') || cfgRef || { b: 'john', c: 1, v: null };
 let chap = null; // data for the rendered chapter
 let studyIdx = [];
 const reader = $('#reader');
