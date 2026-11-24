@@ -51,8 +51,8 @@ a{color:var(--accent)}
 .ico svg{width:21px;height:21px}
 .ico.on{color:var(--accent)}
 .tools{display:flex;align-items:center;justify-self:end}
-.menubtn{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 14px 0 12px;border-radius:10px;border:1px solid var(--rule);font-weight:500;font-size:15px}
-.menubtn svg{width:20px;height:20px}
+.menubtn{display:flex;align-items:center;justify-content:center;min-height:44px;min-width:48px;padding:2px 6px;border-radius:10px;border:0;margin-left:4px}
+.menubtn svg{width:42px;height:35px}
 .menubtn:hover,.menubtn[aria-expanded=true]{background:var(--chip)}
 .menu{position:fixed;z-index:28;top:58px;right:max(2vw,10px);width:min(340px,calc(100vw - 20px));max-height:calc(100vh - 74px);overflow:auto;background:var(--bg);border:1px solid var(--rule);border-radius:14px;box-shadow:0 16px 40px rgb(0 0 0/.18);padding:6px}
 .menu h4{margin:10px 12px 4px;font-size:12px;font-weight:600;color:var(--soft)}
@@ -349,7 +349,7 @@ body.nt-open .dock{z-index:30}
 @media (max-width:640px){
   .bar{grid-template-columns:auto 1fr auto;gap:0;padding:2px 4px}
   .brand span,.tr{display:none}
-  .menubtn span{display:none}.menubtn{padding:0 11px}
+  .menubtn{padding:2px 4px}
   .menu{top:52px;right:8px}
   .refnav{justify-self:center}.refbtn{padding:0 6px}
   .tools .ico{width:40px}
@@ -374,3 +374,14 @@ body.nt-open .dock{z-index:30}
 .acct .who .meta{display:block;margin-top:2px}
 /* interlinear: a selection over English words doesn't paint the original-language rows */
 .selw .il [data-skip]::selection,.selw .il [data-skip] *::selection{background:transparent;color:inherit}
+/* logo on the account screens: icon over the stacked wordmark */
+.nblogo{display:flex;flex-direction:column;align-items:center;gap:6px;margin:4px 0 18px;font-family:'Source Serif 4',Georgia,serif;color:var(--ink)}
+.nblogo svg.nbicon{width:96px;height:80px;margin-bottom:6px}
+.nblogo .l1{font-size:34px;font-weight:600;letter-spacing:-.01em;line-height:1.1}
+.nblogo .br{color:#c9a227;font-weight:300}
+.nblogo .l2{font-size:23px;line-height:1.2}
+.nbhl{position:relative;display:inline-block;padding:0 .1em}
+.nbhl>svg{position:absolute;left:-.04em;top:.2em;width:calc(100% + .08em);height:.84em}
+.nbhl>b{position:relative;color:#fff;font-style:italic;font-weight:500}
+.nblogo .com{color:var(--soft)}
+.acct>.hint{margin-bottom:14px}

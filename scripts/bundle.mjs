@@ -51,6 +51,7 @@ const inline = s => s.replace(/<\/script/gi, '<\\/script'); // keep inlined code
 
 let html = await read('index.html');
 const swap = (from, to) => { if (!html.includes(from)) throw new Error('index.html changed: ' + from); html = html.replace(from, () => to); };
+swap('<link rel="icon" href="icon.svg" type="image/svg+xml">', `<link rel="icon" href="data:image/svg+xml,${encodeURIComponent(await read('icon.svg'))}" type="image/svg+xml">`);
 swap('<link rel="stylesheet" href="styles.css">', `<style>\n${css}\n</style>`);
 swap('<script src="books.js"></script>', `<script>\n${inline(books)}\n</script>\n<script>window.__DATA = ${inline(JSON.stringify(data))};</script>`);
 swap('<script src="app.js"></script>', `<script>\n${inline(app)}\n</script>`);

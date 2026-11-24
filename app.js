@@ -1360,6 +1360,8 @@ async function accountStart() {
 }
 
 /* account screens */
+const NB_ICON = '<svg class="nbicon" viewBox="0 0 120 100" aria-hidden="true"><path d="M24 12 H13 V88 H24 M96 12 H107 V88 H96" fill="none" stroke="#c9a227" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/> <path d="M59 29 C49 22 37 21 26 24 V76 C37 73 49 74 59 81 Z" fill="#c8323a"/> <path d="M61 29 C71 22 83 21 94 24 V76 C83 73 71 74 61 81 Z" fill="#e5484d"/> <path fill="#fff" d="M40.5 37.5 H53.5 L71.5 62 V41 Q71.5 39.6 69.6 39.4 L66.5 39 V37.5 H80 V39 L77.6 39.4 Q75.6 39.7 75.6 41.2 V72 H72.4 L48 39.6 V67.2 Q48 68.8 50 69 L53.5 69.5 V71 H40 V69.5 L42.6 69 Q44.4 68.7 44.4 67 V40.8 Q43.6 39.3 42 39.1 L40.5 38.9 Z"/></svg>';
+const NB_LOGO = `<div class="nblogo" role="img" aria-label="NotationBible.Com">${NB_ICON}<div class="l1"><span class="br">[</span>Notation<span class="br">]</span></div><div class="l2"><span class="nbhl"><svg viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true"><path d="M4 8 C22 4 58 6 96 3 C99 14 98 27 97 35 C70 38 33 35 5 38 C1 29 2 17 4 8 Z" fill="#7c4dcc" opacity=".92"/></svg><b>Bible</b></span><span class="com">.Com</span></div></div>`;
 const aerr = (m) => { const e = $('#aerr'); if (e) { e.textContent = m || ''; e.hidden = !m; } };
 const field = (name, type, label, ac, extra = '') => `<label class="afl">${label}<span class="field"><input name="${name}" type="${type}" autocomplete="${ac}" required ${extra}></span></label>`;
 function form(title, inner, submit, onSubmit, back) {
@@ -1397,7 +1399,7 @@ function openAccount() {
 }
 function openSignIn() {
   const site = window.NB_CONFIG && window.NB_CONFIG.site ? ` on ${esc(window.NB_CONFIG.site)}` : '';
-  form('Sign in', `<p class="hint">Sign in to your Notation Bible account${site} to keep your highlights, notes and NoteTrees on every device.</p>`
+  form('Sign in', `${NB_LOGO}<p class="hint">Sign in to your Notation Bible account${site} to keep your highlights, notes and NoteTrees on every device.</p>`
     + field('username', 'text', 'Username', 'username', 'autofocus autocapitalize="none" spellcheck="false"') + field('password', 'password', 'Password', 'current-password'), 'Sign in', async v => {
     const res = await api('login', 'POST', v); if (!res.ok) return aerr(res.data.message || 'Could not sign in. Check your connection.');
     await signedIn(res.data.reader);
@@ -1407,7 +1409,7 @@ function openSignIn() {
   if ($('#anew')) $('#anew').onclick = openRegister;
 }
 function openRegister() {
-  form('Create an account', `<p class="hint">Your account belongs to this Bible only; it isn't a login for the rest of the site.</p>`
+  form('Create an account', `${NB_LOGO}<p class="hint">Your account belongs to this Bible only; it isn't a login for the rest of the site.</p>`
     + field('username', 'text', 'Username (letters and numbers, no spaces)', 'username', 'autofocus autocapitalize="none" spellcheck="false" maxlength="40"') + field('password', 'password', 'Password (8 or more characters)', 'new-password', 'minlength="8"'), 'Create account', async v => {
     if (!/^[A-Za-z0-9._-]{3,40}$/.test(v.username.trim())) return aerr('Usernames are 3 to 40 letters or numbers (dots, dashes and underscores are fine too), with no spaces.');
     if (v.password.length < 8) return aerr('Use at least 8 characters for the password.');
@@ -1422,7 +1424,7 @@ async function openReset(token) {
   try { const u = new URL(location.href); u.searchParams.delete('nbreset'); history.replaceState(null, '', u); } catch {}
   const chk = await api('reset', 'GET', null, { token });
   if (!chk.ok) return openSheet('Link expired', `<div class="acct"><p class="hint">${esc(chk.data.message || 'This link has expired or was already used. Ask the site owner for a new one.')}</p></div>`);
-  form(chk.data.new ? 'Choose a password' : 'Choose a new password', `<p class="hint">For the account <strong>@${esc(chk.data.username)}</strong>. You'll sign in with this username and password.</p>` + field('password', 'password', 'New password (8 or more characters)', 'new-password', 'minlength="8" autofocus'), 'Save and sign in', async v => {
+  form(chk.data.new ? 'Choose a password' : 'Choose a new password', `${NB_LOGO}<p class="hint">For the account <strong>@${esc(chk.data.username)}</strong>. You'll sign in with this username and password.</p>` + field('password', 'password', 'New password (8 or more characters)', 'new-password', 'minlength="8" autofocus'), 'Save and sign in', async v => {
     if (v.password.length < 8) return aerr('Use at least 8 characters for the password.');
     const res = await api('reset', 'POST', { token, password: v.password }); if (!res.ok) return aerr(res.data.message || 'Could not save the password.');
     await signedIn(res.data.reader, 'Password saved. You\'re signed in.');

@@ -160,6 +160,7 @@ class NB_Reader {
 		);
 
 		$html = str_replace( 'href="styles.css"', 'href="' . esc_url( $base . 'styles.css?ver=' . $ver ) . '"', $html );
+		$html = str_replace( 'href="icon.svg"', 'href="' . esc_url( $base . 'icon.svg?ver=' . $ver ) . '"', $html );
 		$html = str_replace( 'src="app.js"', 'src="' . esc_url( $base . 'app.js?ver=' . $ver ) . '"', $html );
 		$boot = '<script>window.NB_BASE=' . wp_json_encode( $base ) . ';window.NB_CONFIG=' . wp_json_encode( $cfg ) . ';</script>' . "\n"
 			. '<script src="' . esc_url( $base . 'books.js?ver=' . $ver ) . '"></script>';

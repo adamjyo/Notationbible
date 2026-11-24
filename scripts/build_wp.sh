@@ -16,7 +16,7 @@ fi
 out=build/notation-bible
 rm -rf build && mkdir -p "$out/app"
 cp -r wordpress/notation-bible.php wordpress/includes wordpress/readme.txt wordpress/uninstall.php "$out/"
-cp index.html app.js books.js styles.css "$out/app/"
+cp index.html app.js books.js styles.css icon.svg "$out/app/"
 cp -r data "$out/app/data"
 find "$out/app/data" -type f ! -name '*.json' -delete
 cp LICENSE "$out/" 2>/dev/null || true
