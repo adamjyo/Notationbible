@@ -13,7 +13,7 @@ untagged: 4115
 missed: 72
 tag coverage: 0.9998
 unknown book names: {}
-sizes (MB): bsb=8.8, il=16.0, footnotes=0.4, lexicon=4.4, xrefs=4.1
+sizes (MB): bsb=8.8, il=16.4, footnotes=0.4, lexicon=4.4, xrefs=4.1
 first misses:
   genesis 37:35 'No, ” he said'
   leviticus 1:17 'dividing [ the bird ] completely'
@@ -58,48 +58,4 @@ first misses:
 sample John 1:1: ⟨In¦1722⟩ ⟨the beginning¦746⟩ ⟨was¦1510⟩ ⟨the¦3588⟩ ⟨Word¦3056⟩, ⟨and¦2532⟩ ⟨the¦3588⟩ ⟨Word¦3056⟩ ⟨was¦1510⟩ ⟨with¦4314⟩ ⟨God¦2316⟩, ⟨and¦2532⟩ ⟨the¦3588⟩ ⟨Word¦3056⟩ ⟨was¦1510⟩ ⟨God¦2316⟩.
 sample IL John 1:1: Ἐν¦En¦Prep~ἀρχῇ¦archē¦N-DFS~ἦν¦ēn¦V-IIA-3S~ὁ¦ho¦Art-NMS~Λόγος¦Logos¦N-NMS~καὶ¦kai¦Conj~ὁ¦ho¦Art-NMS~Λόγος¦Logos¦N-NMS~ἦν¦ēn¦V-IIA-3S~πρὸς¦pros¦Prep~Θεόν¦Theon¦N-AMS~καὶ¦kai¦Conj~ὁ¦ho¦Art-NMS~Λόγος¦Logos¦N-NMS~ἦν¦ēn¦V-IIA-3S~Θεὸς¦Theos¦N-NMS
 sample Gen 1:1 heading: ['The Creation', '(John 1:1–5; Hebrews 11:1–3)']
-John 1:1-2 rows in English order:
-  john 1:1 sort=615114 en='In' num='1722' orig='Ἐν'
-  john 1:1 sort=615115 en='[the] beginning' num='746' orig='ἀρχῇ'
-  john 1:1 sort=615116 en='was' num='1510' orig='ἦν'
-  john 1:1 sort=615117 en='the' num='3588' orig='ὁ'
-  john 1:1 sort=615118 en='Word' num='3056' orig='Λόγος'
-  john 1:1 sort=615119 en='and' num='2532' orig='καὶ'
-  john 1:1 sort=615120 en='the' num='3588' orig='ὁ'
-  john 1:1 sort=615121 en='Word' num='3056' orig='Λόγος'
-  john 1:1 sort=615122 en='was' num='1510' orig='ἦν'
-  john 1:1 sort=615123 en='with' num='4314' orig='πρὸς'
-  john 1:1 sort=615124 en='-' num='3588' orig='τὸν'
-  john 1:1 sort=615125 en='God' num='2316' orig='Θεόν'
-  john 1:1 sort=615126 en='and' num='2532' orig='καὶ'
-  john 1:1 sort=615127 en='the' num='3588' orig='ὁ'
-  john 1:1 sort=615128 en='Word' num='3056' orig='Λόγος'
-  john 1:1 sort=615129 en='was' num='1510' orig='ἦν'
-  john 1:1 sort=615130 en='God' num='2316' orig='Θεὸς'
-  john 1:1 sort=615131 en='' num='' orig=''
-  john 1:1 sort=615132 en='' num='' orig=''
-  john 1:1 sort=615133 en='' num='' orig=''
-  john 1:1 sort=615134 en='' num='' orig=''
-  john 1:1 sort=615135 en='' num='' orig=''
-  john 1:1 sort=615136 en='' num='' orig=''
-  john 1:1 sort=615137 en='' num='' orig=''
-  john 1:1 sort=615138 en='' num='' orig=''
-  john 1:1 sort=615139 en='' num='' orig=''
-  john 1:1 sort=615140 en='' num='' orig=''
-  john 1:2 sort=615141 en='He' num='3778' orig='Οὗτος'
-  john 1:2 sort=615142 en='was' num='1510' orig='ἦν'
-  john 1:2 sort=615143 en='with' num='4314' orig='πρὸς'
-  john 1:2 sort=615144 en='-' num='3588' orig='τὸν'
-  john 1:2 sort=615145 en='God' num='2316' orig='Θεόν'
-  john 1:2 sort=615146 en='in' num='1722' orig='ἐν'
-  john 1:2 sort=615147 en='[the] beginning' num='746' orig='ἀρχῇ'
-  john 1:2 sort=615148 en='' num='' orig=''
-  john 1:2 sort=615149 en='' num='' orig=''
-  john 1:2 sort=615150 en='' num='' orig=''
-  john 1:2 sort=615151 en='' num='' orig=''
-  john 1:2 sort=615152 en='' num='' orig=''
-  john 1:2 sort=615153 en='' num='' orig=''
-  john 1:2 sort=615154 en='' num='' orig=''
-  john 1:2 sort=615155 en='' num='' orig=''
-  john 1:2 sort=615156 en='' num='' orig=''
-  john 1:2 sort=615157 en='' num='' orig=''
+sample IL Romans 8:28: δὲ¦de¦Conj~Οἴδαμεν¦Oidamen¦V-RIA-1P~ὅτι¦hoti¦Conj~θεὸς¦theos¦N-NMS~συνεργεῖ πάντα¦synergei panta¦V-PIA-3S Adj-ANP~εἰς¦eis¦Prep~ἀγαθόν¦agathon¦Adj-ANS~τοῖς¦tois¦Art-DMP~ἀγαπῶσιν¦agapōsin¦V-PPA-DMP~Θεὸν¦Theon¦N-AMS~τοῖς¦tois¦Art-DMP~οὖσιν¦ousin¦V-PPA-DMP~κλητοῖς¦klētois¦Adj-DMP~κατὰ¦kata¦Prep~πρόθεσιν¦prothesin¦N-AFS
