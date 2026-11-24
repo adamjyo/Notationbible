@@ -1,0 +1,72 @@
+# Stage 1 of the full-Bible import: download the public-domain sources on GitHub's servers
+# and commit a report describing them (file list, headers, sample rows), so the converter
+# can be written against the real formats. Raw downloads stay out of git.
+name: Fetch Bible sources (report)
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/initial-reader]
+    paths: ['.github/workflows/fetch-sources.yml']
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: claude/initial-reader }
+      - name: Download sources
+        run: |
+          set -x
+          mkdir -p raw && cd raw
+          UA='Mozilla/5.0 (compatible; NotationBibleImporter/1.0)'
+          # Berean download pages: collect every link that looks like the BSB, its tables, or a concordance
+          for page in https://berean.bible/downloads.htm https://bereanbible.com/ https://biblehub.com/downloads.htm https://openbible.com/download.htm; do
+            curl -sSL -A "$UA" "$page" -o "page_$(echo $page | md5sum | cut -c1-6).html" || true
+          done
+          grep -hoiE 'href="[^"]+\.(tsv|txt|xlsx|zip|csv)"' page_*.html | sed -E 's/href="//I; s/"$//' | sort -u > links.txt || true
+          cat links.txt
+          # absolute-ise and download the likely BSB / tables files
+          while read -r l; do
+            case "$l" in http*) u="$l";; //*) u="https:$l";; /*) u="https://bereanbible.com$l";; *) u="https://bereanbible.com/$l";; esac
+            if echo "$u" | grep -qiE 'bsb|berean|table|strong'; then curl -sSL -A "$UA" -o "dl_$(basename "$u")" "$u" || true; fi
+          done < links.txt
+          # eBible USFM of the BSB (text, headings, footnotes)
+          curl -sSL -A "$UA" -o engbsb_usfm.zip https://ebible.org/Scriptures/engbsb_usfm.zip || true
+          # OpenBible cross references
+          curl -sSL -A "$UA" -o cross-references.zip https://a.openbible.info/data/cross-references.zip || true
+          # STEPBible lexicons
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/STEPBible/STEPBible-Data.git step || true
+          (cd step && git sparse-checkout set --no-cone '/Lexicons/*' && ls -la Lexicons) || true
+          ls -la
+      - name: Write report
+        run: |
+          cd raw
+          {
+            echo "# Source report"; date -u
+            echo; echo "## Files"; ls -la; echo; ls -la step/Lexicons 2>/dev/null || true
+            echo; echo "## Links found"; cat links.txt 2>/dev/null
+            for f in dl_*; do
+              [ -f "$f" ] || continue
+              echo; echo "## $f"; file "$f"
+              case "$f" in
+                *.zip) unzip -l "$f" | head -40;;
+                *.xlsx) python3 - "$f" <<'PY'
+          import sys, zipfile, re
+          z = zipfile.ZipFile(sys.argv[1]); print([n for n in z.namelist()][:20])
+          PY
+                ;;
+                *) head -c 3000 "$f" | head -25;;
+              esac
+            done
+            for z in engbsb_usfm.zip cross-references.zip; do echo; echo "## $z"; unzip -l "$z" 2>/dev/null | head -20; done
+            mkdir -p u && unzip -oq engbsb_usfm.zip -d u 2>/dev/null; f=$(ls u/*JHN* u/*John* 2>/dev/null | head -1); echo; echo "## USFM sample $f"; head -60 "$f" 2>/dev/null
+            mkdir -p x && unzip -oq cross-references.zip -d x 2>/dev/null; echo; echo "## xrefs sample"; head -5 x/* 2>/dev/null
+            for g in step/Lexicons/TBESG* step/Lexicons/TBESH*; do [ -f "$g" ] || continue; echo; echo "## $g"; grep -m3 -n $'^G0\|^H0' "$g" | cut -c1-400; done
+          } > ../data/SOURCE_REPORT.md 2>&1
+          cat ../data/SOURCE_REPORT.md | head -200
+      - name: Commit report
+        run: |
+          git config user.name "notationbible-bot"; git config user.email "actions@users.noreply.github.com"
+          git add data/SOURCE_REPORT.md && git commit -m "Source report from fetch-sources workflow" && git push || echo "nothing to commit"
