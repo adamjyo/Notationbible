@@ -274,7 +274,7 @@ const ICON = {
 async function render() {
   const { b, c } = cur, book = BY[b];
   $('#reflabel').textContent = label(b, c);
-  document.title = `${label(b, c)} · Notation Bible`;
+  document.title = (window.NB_CONFIG && window.NB_CONFIG.title) || 'NotationBible.Com';
   chap = await loadChapter(b, c);
   const L = S.set.layers;
   const pr = prevOf(b, c), nx = nextOf(b, c);

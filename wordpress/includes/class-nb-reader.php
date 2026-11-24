@@ -33,12 +33,19 @@ class NB_Reader {
 				'slug'        => 'bible',
 				'start'       => 'John 1',
 				'home'        => 0,
+				'title'       => 'NotationBible.Com',
 				'token'       => '',
 				'accounts'    => 1,
 				'signups'     => 1,
 				'delete_data' => 0,
 			)
 		);
+	}
+
+	/** What the browser tab shows. */
+	public static function tab_title() {
+		$t = trim( (string) self::settings()['title'] );
+		return '' === $t ? 'NotationBible.Com' : $t;
 	}
 
 	/** True when the Bible is the site's home page. */
@@ -147,6 +154,7 @@ class NB_Reader {
 		$cfg  = array(
 			'start'    => self::settings()['start'],
 			'site'     => get_bloginfo( 'name' ),
+			'title'    => self::tab_title(),
 			'api'      => NB_Accounts::enabled() ? esc_url_raw( rest_url( NB_Accounts::NS . '/' ) ) : '',
 			'signups'  => NB_Accounts::signups_open(),
 		);
@@ -157,10 +165,7 @@ class NB_Reader {
 			. '<script src="' . esc_url( $base . 'books.js?ver=' . $ver ) . '"></script>';
 		$html = str_replace( '<script src="books.js"></script>', $boot, $html );
 
-		$title = get_bloginfo( 'name' );
-		if ( $title ) {
-			$html = preg_replace( '#<title>(.*?)</title>#', '<title>$1 · ' . esc_html( $title ) . '</title>', $html, 1 );
-		}
+		$html = preg_replace( '#<title>(.*?)</title>#', '<title>' . esc_html( self::tab_title() ) . '</title>', $html, 1 );
 		return $html;
 	}
 

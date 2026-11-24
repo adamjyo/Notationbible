@@ -50,6 +50,7 @@ class NB_Admin {
 			'signups'     => $form ? (int) ! empty( $in['signups'] ) : (int) ( $in['signups'] ?? $old['signups'] ),
 			'delete_data' => $form ? (int) ! empty( $in['delete_data'] ) : (int) ( $in['delete_data'] ?? $old['delete_data'] ),
 			'home'        => $form ? (int) ! empty( $in['home'] ) : (int) ( $in['home'] ?? $old['home'] ),
+			'title'       => sanitize_text_field( $in['title'] ?? $old['title'] ),
 			'slug'        => sanitize_title( $in['slug'] ?? $old['slug'] ),
 			'start' => sanitize_text_field( $in['start'] ?? $old['start'] ),
 			// Leaving the token box empty keeps the saved token; tick "remove" to clear it.
@@ -138,6 +139,10 @@ class NB_Admin {
 						<th scope="row">Home page</th>
 						<td><label><input name="nb_settings[home]" type="checkbox" value="1" <?php checked( NB_Reader::is_home_page() ); ?>> Show the Bible as this site's home page (<code><?php echo esc_html( home_url( '/' ) ); ?></code>)</label>
 						<p class="description">When on, the address below sends visitors to the home page. When off, the Bible is only at the address below.</p></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="nb-title">Browser tab title</label></th>
+						<td><input id="nb-title" name="nb_settings[title]" type="text" class="regular-text" value="<?php echo esc_attr( NB_Reader::tab_title() ); ?>"></td>
 					</tr>
 					<tr>
 						<th scope="row"><label for="nb-slug">Reader address</label></th>
