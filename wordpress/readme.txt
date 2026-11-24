@@ -4,7 +4,7 @@ Tags: bible, scripture, strongs, interlinear, commentary
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.2.1
+Stable tag: 1.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -22,7 +22,7 @@ Notation Bible adds a full Bible reader to your site at /bible/ (you can change 
 * Highlighters, pens, sticky notes and NoteTrees (with Apple Pencil support)
 * Read aloud and dictation
 
-Readers can sign in to a Notation Bible account (separate from WordPress users) so their highlights, notes, NoteTrees and settings follow them to every device. Without an account, notes are saved in the reader's own browser. Manage reader accounts under Notation Bible → Readers.
+Readers can sign in with a username and password to a Notation Bible account (separate from WordPress users; no email is used) so their highlights, notes, NoteTrees and settings follow them to every device. Without an account, notes are saved in the reader's own browser. Manage reader accounts under Notation Bible → Readers.
 
 Put the reader in any page or post with the shortcode:
 
@@ -33,6 +33,9 @@ Put the reader in any page or post with the shortcode:
 The plugin updates itself from its GitHub releases (https://github.com/adamjyo/notationbible/releases). WordPress shows new versions on the Plugins and Updates screens like any other plugin, and automatic updates are switched on when the plugin is first activated. Notation Bible → Settings shows the installed and latest versions and has a "Check for updates now" button.
 
 == Changelog ==
+
+= 1.3.0 =
+* Reader accounts use a username instead of an email address, and nothing is emailed. To set up an account or reset a password, make a password link on the Readers page and send it to the reader yourself. Existing readers get a username made from their email name.
 
 = 1.2.1 =
 * Interlinear: highlights and selections cover only the English words, not the Greek and Hebrew rows beneath them, and no slivers of colour appear between word blocks.

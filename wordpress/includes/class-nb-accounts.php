@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class NB_Accounts {
 
-	const DB_VERSION   = '1';
+	const DB_VERSION   = '2';
 	const NS           = 'notationbible/v1';
 	const COOKIE       = 'nb_reader';
 	const SESSION_DAYS = 60;
@@ -54,7 +54,8 @@ class NB_Accounts {
 		dbDelta(
 			'CREATE TABLE ' . self::table( 'readers' ) . " (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-			email varchar(190) NOT NULL,
+			username varchar(60) NOT NULL DEFAULT '',
+			email varchar(190) NULL DEFAULT NULL,
 			name varchar(100) NOT NULL DEFAULT '',
 			pass varchar(255) NOT NULL DEFAULT '',
 			status varchar(20) NOT NULL DEFAULT 'active',
@@ -63,7 +64,7 @@ class NB_Accounts {
 			reset_hash varchar(64) NOT NULL DEFAULT '',
 			reset_exp bigint(20) NOT NULL DEFAULT 0,
 			PRIMARY KEY  (id),
-			UNIQUE KEY email (email)
+			KEY username (username)
 			) $c;"
 		);
 		dbDelta(
@@ -86,6 +87,16 @@ class NB_Accounts {
 			PRIMARY KEY  (reader_id)
 			) $c;"
 		);
+		// Version 1 signed readers in by email; give them usernames. dbDelta neither drops
+		// the old unique email index nor relaxes NOT NULL, so do both here.
+		$t = self::table( 'readers' );
+		if ( $wpdb->get_var( "SHOW INDEX FROM $t WHERE Key_name = 'email'" ) ) { // phpcs:ignore WordPress.DB.PreparedSQL
+			$wpdb->query( "ALTER TABLE $t DROP INDEX email" ); // phpcs:ignore WordPress.DB
+		}
+		$wpdb->query( "ALTER TABLE $t MODIFY email varchar(190) NULL DEFAULT NULL" ); // phpcs:ignore WordPress.DB
+		foreach ( (array) $wpdb->get_results( "SELECT id, email FROM $t WHERE username = ''", ARRAY_A ) as $row ) { // phpcs:ignore WordPress.DB.PreparedSQL
+			$wpdb->update( $t, array( 'username' => self::free_username( strstr( (string) $row['email'], '@', true ) ) ), array( 'id' => (int) $row['id'] ) );
+		}
 		update_option( 'nb_db_version', self::DB_VERSION );
 		if ( ! wp_next_scheduled( 'nb_cleanup_sessions' ) ) {
 			wp_schedule_event( time() + HOUR_IN_SECONDS, 'daily', 'nb_cleanup_sessions' );
@@ -114,33 +125,53 @@ class NB_Accounts {
 		return $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . self::table( 'readers' ) . ' WHERE id = %d', $id ), ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL
 	}
 
-	public static function get_by_email( $email ) {
+	public static function get_by_username( $username ) {
 		global $wpdb;
-		return $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . self::table( 'readers' ) . ' WHERE email = %s', strtolower( trim( $email ) ) ), ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL
+		return $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . self::table( 'readers' ) . ' WHERE username = %s', self::clean_username( $username ) ), ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL
+	}
+
+	/** Usernames: 3–40 letters, numbers, dots, dashes or underscores; not case-sensitive. */
+	public static function clean_username( $u ) {
+		return strtolower( trim( (string) $u ) );
+	}
+
+	public static function valid_username( $u ) {
+		return (bool) preg_match( '/^[a-z0-9._-]{3,40}$/', $u );
+	}
+
+	/** A username based on $base that nobody has yet. */
+	private static function free_username( $base ) {
+		$base = substr( preg_replace( '/[^a-z0-9._-]/', '', self::clean_username( $base ) ), 0, 34 );
+		$base = strlen( $base ) < 3 ? 'reader' : $base;
+		$name = $base;
+		for ( $i = 2; self::get_by_username( $name ); $i++ ) {
+			$name = $base . $i;
+		}
+		return $name;
 	}
 
 	/** @return int|WP_Error */
-	public static function create( $name, $email, $password = '' ) {
+	public static function create( $name, $username, $password = '' ) {
 		global $wpdb;
-		$email = strtolower( trim( (string) $email ) );
-		$name  = trim( sanitize_text_field( (string) $name ) );
-		if ( ! is_email( $email ) ) {
-			return new WP_Error( 'nb_email', 'Enter a valid email address.', array( 'status' => 400 ) );
+		$username = self::clean_username( $username );
+		$name     = trim( sanitize_text_field( (string) $name ) );
+		if ( ! self::valid_username( $username ) ) {
+			return new WP_Error( 'nb_user', 'Usernames are 3 to 40 letters or numbers (dots, dashes and underscores are fine too), with no spaces.', array( 'status' => 400 ) );
 		}
 		if ( '' === $name ) {
-			$name = strstr( $email, '@', true );
+			$name = $username;
 		}
 		if ( '' !== $password && strlen( $password ) < self::MIN_PASS ) {
 			return new WP_Error( 'nb_pass', sprintf( 'Use at least %d characters for the password.', self::MIN_PASS ), array( 'status' => 400 ) );
 		}
-		if ( self::get_by_email( $email ) ) {
-			return new WP_Error( 'nb_exists', 'There is already an account with that email. Sign in instead, or reset the password.', array( 'status' => 409 ) );
+		if ( self::get_by_username( $username ) ) {
+			return new WP_Error( 'nb_exists', 'That username is taken. Try another one.', array( 'status' => 409 ) );
 		}
 		$ok = $wpdb->insert(
 			self::table( 'readers' ),
 			array(
-				'email'   => $email,
-				'name'    => mb_substr( $name, 0, 100 ),
+				'username' => $username,
+				'name'     => mb_substr( $name, 0, 100 ),
 				'pass'    => '' === $password ? '' : wp_hash_password( $password ),
 				'status'  => 'active',
 				'created' => current_time( 'mysql', true ),
@@ -175,9 +206,9 @@ class NB_Accounts {
 
 	public static function public_reader( $r ) {
 		return $r ? array(
-			'id'    => (int) $r['id'],
-			'name'  => $r['name'],
-			'email' => $r['email'],
+			'id'       => (int) $r['id'],
+			'name'     => $r['name'],
+			'username' => $r['username'],
 		) : null;
 	}
 
@@ -260,32 +291,29 @@ class NB_Accounts {
 
 	/* ---------- password reset ---------- */
 
-	/** Emails a link to set a new password. $welcome is for accounts an admin adds. */
-	public static function send_reset( $id, $welcome = false ) {
+	/** How long a password link works. */
+	const LINK_DAYS = 7;
+
+	/**
+	 * Makes a one-time link that lets the reader choose a password (for a new account)
+	 * or a new password (to reset it). Nothing is emailed: the site owner copies the link
+	 * and sends it however they like. Making a new link cancels the previous one.
+	 */
+	public static function make_link( $id ) {
 		global $wpdb;
-		$r = self::get( $id );
-		if ( ! $r ) {
-			return false;
+		if ( ! self::get( $id ) ) {
+			return '';
 		}
 		$token = bin2hex( random_bytes( 24 ) );
 		$wpdb->update(
 			self::table( 'readers' ),
 			array(
 				'reset_hash' => hash( 'sha256', $token ),
-				'reset_exp'  => time() + ( $welcome ? 7 * DAY_IN_SECONDS : 2 * HOUR_IN_SECONDS ),
+				'reset_exp'  => time() + self::LINK_DAYS * DAY_IN_SECONDS,
 			),
 			array( 'id' => (int) $id )
 		);
-		$link = add_query_arg( 'nbreset', $token, NB_Reader::page_url() );
-		$site = wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES );
-		if ( $welcome ) {
-			$subject = sprintf( '[%s] Your Notation Bible account', $site );
-			$body    = sprintf( "Hi %s,\n\nAn account was made for you on %s's Notation Bible. Choose a password here (the link works for 7 days):\n\n%s\n\nYour highlights, notes and NoteTrees will be saved to this account on every device you sign in on.", $r['name'], $site, $link );
-		} else {
-			$subject = sprintf( '[%s] Reset your Notation Bible password', $site );
-			$body    = sprintf( "Hi %s,\n\nSomeone asked to reset the password for your Notation Bible account (%s). Choose a new password here (the link works for 2 hours):\n\n%s\n\nIf you didn't ask for this, ignore this email; your password stays the same.", $r['name'], $r['email'], $link );
-		}
-		return wp_mail( $r['email'], $subject, $body );
+		return add_query_arg( 'nbreset', $token, NB_Reader::page_url() );
 	}
 
 	public static function reader_for_reset( $token ) {
@@ -330,7 +358,6 @@ class NB_Accounts {
 		$r( '/data', 'PUT', 'api_put_data' );
 		$r( '/account', 'POST', 'api_account' );
 		$r( '/password', 'POST', 'api_password' );
-		$r( '/forgot', 'POST', 'api_forgot' );
 		$r( '/reset', 'GET', 'api_reset_check' );
 		$r( '/reset', 'POST', 'api_reset' );
 		$r( '/delete', 'POST', 'api_delete' );
@@ -352,17 +379,17 @@ class NB_Accounts {
 		return $r ? $r : new WP_Error( 'nb_signed_out', 'Please sign in again.', array( 'status' => 401 ) );
 	}
 
-	private static function throttle_key( $email ) {
+	private static function throttle_key( $username ) {
 		$ip = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ?? '' ) );
-		return 'nb_fail_' . md5( strtolower( trim( (string) $email ) ) . '|' . $ip );
+		return 'nb_fail_' . md5( self::clean_username( $username ) . '|' . $ip );
 	}
 
-	private static function throttled( $email ) {
-		return (int) get_transient( self::throttle_key( $email ) ) >= 8;
+	private static function throttled( $username ) {
+		return (int) get_transient( self::throttle_key( $username ) ) >= 8;
 	}
 
-	private static function fail( $email ) {
-		$k = self::throttle_key( $email );
+	private static function fail( $username ) {
+		$k = self::throttle_key( $username );
 		set_transient( $k, (int) get_transient( $k ) + 1, 15 * MINUTE_IN_SECONDS );
 	}
 
@@ -382,7 +409,7 @@ class NB_Accounts {
 		if ( strlen( $pass ) < self::MIN_PASS ) {
 			return new WP_Error( 'nb_pass', sprintf( 'Use at least %d characters for the password.', self::MIN_PASS ), array( 'status' => 400 ) );
 		}
-		$id = self::create( $req->get_param( 'name' ), $req->get_param( 'email' ), $pass );
+		$id = self::create( $req->get_param( 'name' ), $req->get_param( 'username' ), $pass );
 		if ( is_wp_error( $id ) ) {
 			return $id;
 		}
@@ -391,19 +418,19 @@ class NB_Accounts {
 	}
 
 	public static function api_login( WP_REST_Request $req ) {
-		$email = (string) $req->get_param( 'email' );
-		if ( self::throttled( $email ) ) {
-			return new WP_Error( 'nb_slow', 'Too many tries. Wait 15 minutes, or reset your password.', array( 'status' => 429 ) );
+		$username = (string) $req->get_param( 'username' );
+		if ( self::throttled( $username ) ) {
+			return new WP_Error( 'nb_slow', 'Too many tries. Wait 15 minutes, or ask the site owner for a password link.', array( 'status' => 429 ) );
 		}
-		$r = self::get_by_email( $email );
+		$r = self::get_by_username( $username );
 		if ( ! $r || '' === $r['pass'] || ! wp_check_password( (string) $req->get_param( 'password' ), $r['pass'] ) ) {
-			self::fail( $email );
-			return new WP_Error( 'nb_login', 'That email and password don\'t match.', array( 'status' => 401 ) );
+			self::fail( $username );
+			return new WP_Error( 'nb_login', 'That username and password don\'t match.', array( 'status' => 401 ) );
 		}
 		if ( 'active' !== $r['status'] ) {
 			return new WP_Error( 'nb_disabled', 'This account has been switched off by the site owner.', array( 'status' => 403 ) );
 		}
-		delete_transient( self::throttle_key( $email ) );
+		delete_transient( self::throttle_key( $username ) );
 		self::start_session( $r['id'] );
 		return array( 'reader' => self::public_reader( $r ) );
 	}
@@ -484,27 +511,15 @@ class NB_Accounts {
 		return array( 'ok' => true );
 	}
 
-	public static function api_forgot( WP_REST_Request $req ) {
-		$email = (string) $req->get_param( 'email' );
-		$key   = 'nb_forgot_' . md5( strtolower( trim( $email ) ) );
-		$r     = self::get_by_email( $email );
-		if ( $r && 'active' === $r['status'] && ! get_transient( $key ) ) {
-			set_transient( $key, 1, 2 * MINUTE_IN_SECONDS );
-			self::send_reset( $r['id'] );
-		}
-		// Same answer either way, so the form can't be used to find out who has an account.
-		return array( 'ok' => true );
-	}
-
 	public static function api_reset_check( WP_REST_Request $req ) {
 		$r = self::reader_for_reset( $req->get_param( 'token' ) );
-		return $r ? array( 'ok' => true, 'email' => $r['email'], 'name' => $r['name'] ) : new WP_Error( 'nb_reset', 'This link has expired or was already used. Ask for a new one.', array( 'status' => 400 ) );
+		return $r ? array( 'ok' => true, 'username' => $r['username'], 'name' => $r['name'], 'new' => '' === $r['pass'] ) : new WP_Error( 'nb_reset', 'This link has expired or was already used. Ask the site owner for a new one.', array( 'status' => 400 ) );
 	}
 
 	public static function api_reset( WP_REST_Request $req ) {
 		$r = self::reader_for_reset( $req->get_param( 'token' ) );
 		if ( ! $r ) {
-			return new WP_Error( 'nb_reset', 'This link has expired or was already used. Ask for a new one.', array( 'status' => 400 ) );
+			return new WP_Error( 'nb_reset', 'This link has expired or was already used. Ask the site owner for a new one.', array( 'status' => 400 ) );
 		}
 		$new = (string) $req->get_param( 'password' );
 		if ( strlen( $new ) < self::MIN_PASS ) {

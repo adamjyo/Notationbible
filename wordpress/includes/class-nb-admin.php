@@ -150,7 +150,7 @@ class NB_Admin {
 					<tr>
 						<th scope="row">Reader accounts</th>
 						<td>
-							<label><input name="nb_settings[accounts]" type="checkbox" value="1" <?php checked( ! empty( $s['accounts'] ) ); ?>> Readers can sign in to save their highlights, notes and NoteTrees across devices</label><br>
+							<label><input name="nb_settings[accounts]" type="checkbox" value="1" <?php checked( ! empty( $s['accounts'] ) ); ?>> Readers can sign in with a username and password to save their highlights, notes and NoteTrees across devices</label><br>
 							<label><input name="nb_settings[signups]" type="checkbox" value="1" <?php checked( ! empty( $s['signups'] ) ); ?>> Anyone can create an account (when off, only readers you add on the <a href="<?php echo esc_url( admin_url( 'admin.php?page=notation-bible-readers' ) ); ?>">Readers</a> page can sign in)</label>
 							<p class="description">Reader accounts are separate from WordPress users: readers never get a WordPress login. Without an account, notes stay in the reader's own browser.</p>
 						</td>

@@ -1378,7 +1378,7 @@ function openAccount() {
   const r = ACCT.reader, when = ACCT.synced ? new Date(ACCT.synced).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
   const status = ACCT.status === 'offline' ? 'Offline. Your changes are kept here and will sync when you\'re back online.' : ACCT.status === 'toobig' ? 'Your notes are too large to save to your account.' : when ? `Your highlights, notes, NoteTrees and settings are saved to your account. Last synced at ${when}.` : 'Syncing…';
   openSheet('Account', `<div class="acct">
-    <p class="who"><strong>${esc(r.name)}</strong><span class="meta">${esc(r.email)}</span></p>
+    <p class="who"><strong>${esc(r.name)}</strong><span class="meta">@${esc(r.username)}</span></p>
     <p class="hint">${status}</p>
     <div class="row"><button class="btn" id="async">Sync now</button><button class="btn" id="aname">Change name</button><button class="btn" id="apass">Change password</button></div>
     <div class="row"><button class="btn primary" id="aout">Sign out</button><button class="btn" id="adel">Delete account</button></div>
@@ -1398,7 +1398,7 @@ function openAccount() {
 function openSignIn() {
   const site = window.NB_CONFIG && window.NB_CONFIG.site ? ` on ${esc(window.NB_CONFIG.site)}` : '';
   form('Sign in', `<p class="hint">Sign in to your Notation Bible account${site} to keep your highlights, notes and NoteTrees on every device.</p>`
-    + field('email', 'email', 'Email', 'email', 'autofocus') + field('password', 'password', 'Password', 'current-password'), 'Sign in', async v => {
+    + field('username', 'text', 'Username', 'username', 'autofocus autocapitalize="none" spellcheck="false"') + field('password', 'password', 'Password', 'current-password'), 'Sign in', async v => {
     const res = await api('login', 'POST', v); if (!res.ok) return aerr(res.data.message || 'Could not sign in. Check your connection.');
     await signedIn(res.data.reader);
   });
@@ -1408,23 +1408,21 @@ function openSignIn() {
 }
 function openRegister() {
   form('Create an account', `<p class="hint">Your account belongs to this Bible only; it isn't a login for the rest of the site.</p>`
-    + field('name', 'text', 'Name', 'name', 'autofocus maxlength="100"') + field('email', 'email', 'Email', 'email') + field('password', 'password', 'Password (8 or more characters)', 'new-password', 'minlength="8"'), 'Create account', async v => {
+    + field('username', 'text', 'Username (letters and numbers, no spaces)', 'username', 'autofocus autocapitalize="none" spellcheck="false" maxlength="40"') + field('password', 'password', 'Password (8 or more characters)', 'new-password', 'minlength="8"'), 'Create account', async v => {
+    if (!/^[A-Za-z0-9._-]{3,40}$/.test(v.username.trim())) return aerr('Usernames are 3 to 40 letters or numbers (dots, dashes and underscores are fine too), with no spaces.');
     if (v.password.length < 8) return aerr('Use at least 8 characters for the password.');
     const res = await api('register', 'POST', v); if (!res.ok) return aerr(res.data.message || 'Could not create the account. Check your connection.');
     await signedIn(res.data.reader, S.ann.length ? 'Account created. Your notes from this device are saved to it.' : 'Account created. Your notes will now save to it.');
   }, openSignIn);
 }
 function openForgot() {
-  form('Reset password', `<p class="hint">Enter your account's email and we'll send a link to choose a new password.</p>` + field('email', 'email', 'Email', 'email', 'autofocus'), 'Send link', async v => {
-    const res = await api('forgot', 'POST', v); if (!res.ok) return aerr(res.data.message || 'Could not send. Check your connection.');
-    openSheet('Check your email', `<p class="hint">If there's an account for ${esc(v.email)}, a link to choose a new password is on its way. It works for 2 hours.</p>`, openSignIn);
-  }, openSignIn);
+  openSheet('Forgot password', `<div class="acct"><p class="hint">Ask the site owner for a password link. Opening it lets you choose a new password, and your highlights and notes stay in your account.</p></div>`, openSignIn);
 }
 async function openReset(token) {
   try { const u = new URL(location.href); u.searchParams.delete('nbreset'); history.replaceState(null, '', u); } catch {}
   const chk = await api('reset', 'GET', null, { token });
-  if (!chk.ok) return openSheet('Link expired', `<p class="hint">${esc(chk.data.message || 'This link has expired or was already used.')}</p><button class="btn primary" id="aagain">Send a new link</button>`), ($('#aagain').onclick = openForgot);
-  form('Choose a password', `<p class="hint">For ${esc(chk.data.email)}</p>` + field('password', 'password', 'New password (8 or more characters)', 'new-password', 'minlength="8" autofocus'), 'Save and sign in', async v => {
+  if (!chk.ok) return openSheet('Link expired', `<div class="acct"><p class="hint">${esc(chk.data.message || 'This link has expired or was already used. Ask the site owner for a new one.')}</p></div>`);
+  form(chk.data.new ? 'Choose a password' : 'Choose a new password', `<p class="hint">For the account <strong>@${esc(chk.data.username)}</strong>. You'll sign in with this username and password.</p>` + field('password', 'password', 'New password (8 or more characters)', 'new-password', 'minlength="8" autofocus'), 'Save and sign in', async v => {
     if (v.password.length < 8) return aerr('Use at least 8 characters for the password.');
     const res = await api('reset', 'POST', { token, password: v.password }); if (!res.ok) return aerr(res.data.message || 'Could not save the password.');
     await signedIn(res.data.reader, 'Password saved. You\'re signed in.');
