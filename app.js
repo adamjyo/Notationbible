@@ -757,6 +757,7 @@ function openNoteTree(from, to) {
   $('#ntfrom').innerHTML = opts; $('#ntto').innerHTML = opts; $('#ntfrom').value = from; $('#ntto').value = to;
   $('#ntfrom').disabled = $('#ntto').disabled = !edit;
   $$('[data-ntc]', ntEl).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.ntc === S.set.color)));
+  $('#ntpencil').hidden = !(navigator.maxTouchPoints > 0 || ntPencil); setPencilOnly(ntPencil, true);
   ntSetTool(edit ? ntTool : 'view'); ntRenderText(); ntRender(); ntFit();
 }
 function closeNoteTree() { ntFlush(); ntEl.hidden = true; document.body.classList.remove('nt-open'); nt = null; render(); }
@@ -777,9 +778,28 @@ const ntPath = p => { // smooth a point list into a quadratic curve
   for (let i = 1; i < p.length - 1; i++) d += `Q${p[i][0]} ${p[i][1]} ${(p[i][0] + p[i + 1][0]) / 2} ${(p[i][1] + p[i + 1][1]) / 2}`;
   return d + `L${p[p.length - 1][0]} ${p[p.length - 1][1]}`;
 };
+// Pen strokes are drawn as filled outlines so their width follows Apple Pencil pressure
+// (points are [x, y, pressure]; mouse and finger strokes have no pressure and draw at an even width).
+const PEN_W = 3.2;
+function inkOutline(pts) {
+  const n = pts.length, pr = i => { // pressure, smoothed over neighbours so the edge doesn't wobble
+    let t = 0, c = 0; for (let k = Math.max(0, i - 2); k <= Math.min(n - 1, i + 2); k++) { t += pts[k][2] ?? .5; c++; } return t / c;
+  };
+  const half = i => PEN_W * (.3 + 1.4 * pr(i)) / 2;
+  if (n < 2) { const [x, y] = pts[0], r = half(0); return `M${x - r} ${y}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0Z`; }
+  const L = [], R = [];
+  for (let i = 0; i < n; i++) {
+    const a = pts[Math.max(0, i - 1)], b = pts[Math.min(n - 1, i + 1)];
+    let dx = b[0] - a[0], dy = b[1] - a[1]; const len = Math.hypot(dx, dy) || 1; dx /= len; dy /= len;
+    const w = half(i); L.push([pts[i][0] - dy * w, pts[i][1] + dx * w]); R.push([pts[i][0] + dy * w, pts[i][1] - dx * w]);
+  }
+  const f = v => Math.round(v * 10) / 10, side = q => q.slice(1, -1).map((p, i) => `Q${f(p[0])} ${f(p[1])} ${f((p[0] + q[i + 2][0]) / 2)} ${f((p[1] + q[i + 2][1]) / 2)}`).join('') + `L${f(q[q.length - 1][0])} ${f(q[q.length - 1][1])}`;
+  const Rr = R.slice().reverse(), re = half(n - 1), rs = half(0);
+  return `M${f(L[0][0])} ${f(L[0][1])}${side(L)}A${f(re)} ${f(re)} 0 0 1 ${f(Rr[0][0])} ${f(Rr[0][1])}${side(Rr)}A${f(rs)} ${f(rs)} 0 0 1 ${f(L[0][0])} ${f(L[0][1])}Z`;
+}
 const strokeSVG = s => s.tool === 'hl'
   ? `<path data-id="${s.id}" class="nths ${s.c === 'black' ? 'tc-black' : ''}" d="${ntPath(s.p)}" style="stroke:${s.c === 'black' ? 'currentColor' : `var(--sw-${s.c})`}"/>`
-  : `<path data-id="${s.id}" class="ntps tc-${s.c}" d="${ntPath(s.p)}"/>`;
+  : `<path data-id="${s.id}" class="ntpf tc-${s.c}" d="${inkOutline(s.p)}"/>`;
 function ntRender() {
   ntInk.innerHTML = nt.strokes.map(strokeSVG).join('');
   ntBoxes.innerHTML = nt.boxes.map(x => `<div class="ntbox" data-id="${x.id}" style="left:${x.x}px;top:${x.y}px;width:${x.w}px">
@@ -822,32 +842,75 @@ function ntEraseAt(e) {
   nt.strokes = nt.strokes.filter(s => !hits.includes(s)); ntRender(); ntSave();
 }
 let ntDraw = null;
+// Apple Pencil: once a pen is seen, only the pen draws. Fingers scroll (one) and pinch-zoom (two), and a
+// resting palm is ignored while the pen is down.
+let ntPencil = !!S.set.pencilOnly, penDown = false;
+const fingers = new Map();
+const capture = e => { try { ntInk.setPointerCapture(e.pointerId); } catch {} };
+function setPencilOnly(on, quiet) {
+  ntPencil = on; S.set.pencilOnly = on; save();
+  $('#ntpencil').setAttribute('aria-pressed', String(on));
+  if (!quiet) toast(on ? 'Pencil only: Apple Pencil draws, fingers scroll and zoom' : 'Fingers draw too');
+}
+const pressureOf = e => e.pointerType === 'pen' && e.pressure > 0 ? Math.round(e.pressure * 100) / 100 : undefined;
+const ntPointP = e => { const p = ntPoint(e), pr = pressureOf(e); if (pr !== undefined) p.push(pr); return p; };
+function fingerGesture(e, phase) {
+  if (phase === 'down') { fingers.set(e.pointerId, [e.clientX, e.clientY]); capture(e); return; }
+  if (phase === 'up') { fingers.delete(e.pointerId); return; }
+  const prev = fingers.get(e.pointerId); if (!prev) return;
+  const sc = $('#ntscroll');
+  if (fingers.size === 1) { sc.scrollLeft -= e.clientX - prev[0]; sc.scrollTop -= e.clientY - prev[1]; }
+  else if (fingers.size === 2) { // pinch: zoom by the change in distance between the two fingers
+    const [o] = [...fingers].filter(([id]) => id !== e.pointerId).map(([, v]) => v);
+    const d0 = Math.hypot(prev[0] - o[0], prev[1] - o[1]), d1 = Math.hypot(e.clientX - o[0], e.clientY - o[1]);
+    if (d0 > 10) ntSetScale(ntScale * d1 / d0);
+  }
+  fingers.set(e.pointerId, [e.clientX, e.clientY]);
+}
 ntInk.addEventListener('pointerdown', e => {
   if (!nt || ntEl.classList.contains('readonly')) return;
-  if (ntTool === 'text') {
+  if (e.pointerType === 'pen' && !ntPencil) setPencilOnly(true);
+  if (e.pointerType === 'touch' && ntPencil) { e.preventDefault(); if (!penDown) fingerGesture(e, 'down'); return; } // palm or finger
+  $('#nthover').hidden = true;
+  const tool = e.buttons & 32 ? 'eraser' : ntTool; // a stylus's eraser end erases
+  if (tool === 'text') {
     e.preventDefault();
-    if (document.activeElement?.matches('.ntbody')) { document.activeElement.blur(); return; } // first click just finishes the box being typed in
+    if (document.activeElement?.matches('.ntbody')) { document.activeElement.blur(); return; } // first tap just finishes the box being typed in
     ntPush();
     const [x, y] = ntPoint(e), id = uid();
     nt.boxes.push({ id, x: Math.min(x, NTW - 240), y: Math.min(y - 14, NTH - 60), w: 240, text: '', c: S.set.color });
-    ntRender(); ntBoxes.querySelector(`[data-id="${id}"] .ntbody`).focus(); return;
+    ntRender(); ntBoxes.querySelector(`[data-id="${id}"] .ntbody`).focus(); return; // iPadOS Scribble can handwrite straight into it
   }
-  if (ntTool === 'eraser') { ntInk.setPointerCapture(e.pointerId); ntDraw = { erase: true }; ntEraseAt(e); return; } // one undo step per eraser drag
-  if (ntTool !== 'pen' && ntTool !== 'hl') return;
-  e.preventDefault(); ntInk.setPointerCapture(e.pointerId); ntPush();
-  const s = { id: uid(), tool: ntTool, c: S.set.color, p: [ntPoint(e)] };
+  if (tool === 'eraser') { e.preventDefault(); capture(e); ntDraw = { erase: true, id: e.pointerId }; penDown = e.pointerType === 'pen'; ntEraseAt(e); return; }
+  if (tool !== 'pen' && tool !== 'hl') return;
+  e.preventDefault(); capture(e); ntPush(); penDown = e.pointerType === 'pen';
+  const s = { id: uid(), tool, c: S.set.color, p: [ntPointP(e)] };
   nt.strokes.push(s); ntInk.insertAdjacentHTML('beforeend', strokeSVG(s));
-  ntDraw = { s, el: ntInk.lastElementChild };
+  ntDraw = { s, el: ntInk.lastElementChild, id: e.pointerId };
 });
 ntInk.addEventListener('pointermove', e => {
-  if (!ntDraw) return;
+  if (e.pointerType === 'touch' && ntPencil) { if (!penDown) fingerGesture(e, 'move'); return; }
+  if (e.pointerType === 'pen' && !e.buttons && !ntDraw) return ntHover(e); // Pencil hovering above the screen
+  if (!ntDraw || e.pointerId !== ntDraw.id) return;
   if (ntDraw.erase) return ntEraseAt(e);
-  const p = ntPoint(e), last = ntDraw.s.p[ntDraw.s.p.length - 1];
-  if (Math.hypot(p[0] - last[0], p[1] - last[1]) < 1.5) return;
-  ntDraw.s.p.push(p); ntDraw.el.setAttribute('d', ntPath(ntDraw.s.p));
+  const co = e.getCoalescedEvents?.();
+  for (const ev of co && co.length ? co : [e]) { // the Pencil reports up to 240 points a second
+    const p = ntPointP(ev), last = ntDraw.s.p[ntDraw.s.p.length - 1];
+    if (Math.hypot(p[0] - last[0], p[1] - last[1]) >= 1.2) ntDraw.s.p.push(p);
+  }
+  ntDraw.el.setAttribute('d', ntDraw.s.tool === 'hl' ? ntPath(ntDraw.s.p) : inkOutline(ntDraw.s.p));
 });
-const ntEnd = () => { if (ntDraw) { ntDraw = null; ntSave(); } };
+const ntEnd = e => {
+  if (e.pointerType === 'touch' && ntPencil) { fingerGesture(e, 'up'); return; }
+  if (ntDraw && e.pointerId === ntDraw.id) { ntDraw = null; penDown = false; ntSave(); }
+};
 ntInk.addEventListener('pointerup', ntEnd); ntInk.addEventListener('pointercancel', ntEnd);
+ntInk.addEventListener('pointerleave', () => { $('#nthover').hidden = true; });
+function ntHover(e) { // a ring the size and colour of the nib, under a hovering Pencil
+  const h = $('#nthover'), [x, y] = ntPoint(e), d = ntTool === 'hl' ? 22 : ntTool === 'eraser' ? 16 : PEN_W * 2.2;
+  if (!['pen', 'hl', 'eraser'].includes(ntTool)) { h.hidden = true; return; }
+  h.hidden = false; h.style.cssText = `left:${x - d / 2}px;top:${y - d / 2}px;width:${d}px;height:${d}px;--hc:${ntTool === 'eraser' ? 'var(--soft)' : `var(--sw-${S.set.color})`}`;
+}
 // text boxes: type, drag by the grip, resize from the corner, delete
 ntBoxes.addEventListener('focusin', e => { if (e.target.matches('.ntbody')) { ntPush(); e.target.closest('.ntbox').classList.add('editing'); } });
 ntBoxes.addEventListener('focusout', e => {
@@ -874,6 +937,7 @@ new MutationObserver(() => ntBoxes.querySelectorAll('.ntbox').forEach(b => boxRO
 ntEl.addEventListener('click', e => {
   const t = e.target, q = s => t.closest(s);
   if (q('#ntclose')) return closeNoteTree();
+  if (q('#ntpencil')) return setPencilOnly(!ntPencil);
   if (q('[data-nt]')) return ntSetTool(q('[data-nt]').dataset.nt);
   if (q('[data-ntc]')) { S.set.color = q('[data-ntc]').dataset.ntc; save(); renderToolbar(); $$('[data-ntc]', ntEl).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.ntc === S.set.color))); if (ntTool === 'select' || ntTool === 'eraser') ntSetTool('pen'); return; }
   if (q('#ntundo')) { if (ntHist.length) { ntFut.push(ntSnap()); ntRestore(ntHist.pop()); } return; }
