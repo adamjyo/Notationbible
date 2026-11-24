@@ -17,6 +17,7 @@ jobs:
         with: { ref: claude/initial-reader }
       - name: Clone and report
         run: |
+          set +e
           mkdir -p res && cd res
           R="SOTW-Historical-Commentaries/historical-commentary-resources Jackboby/MHCC-JSON thefrenchpressed/pillar-commentary-data garydavenport73/eastons-bible-dictionary-json neuu-org/bible-dictionary-dataset j86schroeder/topical-bible-search openbibleinfo/Bible-Geocoding-Data scrollmapper/bible_databases"
           {
