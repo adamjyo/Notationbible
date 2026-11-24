@@ -101,3 +101,18 @@ docs/ARCHITECTURE.md                           data model, layers and the markup
 The Holy Bible, Berean Standard Bible, BSB, is produced in cooperation with Bible Hub, Discovery Bible, OpenBible.com, and the Berean Bible Translation Committee. It has been dedicated to the public domain.
 Lexicon data, once imported: STEPBible.org, based on work at Tyndale House Cambridge, CC BY 4.0.
 Cross-references, once imported: OpenBible.info, CC BY.
+
+## WordPress plugin
+
+`wordpress/` is the plugin source. `scripts/build_wp.sh` packs it with the app and the whole Bible into `build/notation-bible.zip` (about 18 MB). Download the latest zip from [Releases](https://github.com/adamjyo/Notationbible/releases/latest) and install it with Plugins → Add New → Upload.
+
+- The reader is at `/bible/` (changeable in Settings → Notation Bible); `[notation_bible ref="John 3:16" height="80vh"]` embeds it in a page.
+- **Updates:** the plugin updates itself from this repository's GitHub releases. WordPress shows new versions like any other plugin update, and automatic updates are switched on at first activation.
+
+### Shipping an update
+
+1. Raise the version in `wordpress/notation-bible.php` (the `Version:` header and `NB_VERSION`) and `Stable tag:` in `wordpress/readme.txt`, and add a changelog entry there.
+2. Push. The **Release WordPress plugin** workflow builds the zip and publishes release `v<version>` with it; its notes come from the changelog entry.
+3. Sites pick it up within about 12 hours (WordPress checks twice a day), or straight away with **Check for updates now** in Settings → Notation Bible.
+
+Changes to the app or Bible data reach WordPress sites only when the plugin version is raised.
