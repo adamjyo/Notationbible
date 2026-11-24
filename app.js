@@ -189,22 +189,30 @@ function annCls(a) {
   // translucent fills: overlapping colours blend like real highlighter ink
   const HL = { black: ['20,20,20', .16, .0], red: ['230,30,45', .26, .34], inkblue: ['35,70,210', .22, .38], yellow: ['255,214,0', .45, .30], green: ['64,200,90', .34, .28], blue: ['60,150,245', .30, .32], pink: ['245,90,150', .30, .32], orange: ['255,150,40', .40, .32], purple: ['150,110,250', .30, .34] };
   const PEN = { black: ['#1a1a1a', '#f1efea'], red: ['#d6202f', '#ff6b6b'], inkblue: ['#1f3fbf', '#91a7ff'], yellow: ['#b08800', '#ffd43b'], green: ['#2b8a3e', '#69db7c'], blue: ['#1971c2', '#74c0fc'], pink: ['#d6336c', '#f783ac'], orange: ['#e8590c', '#ffa94d'], purple: ['#6741d9', '#b197fc'] };
-  // a marker stroke: wobbly top and bottom edges, rough start (hs) and end (he) caps
+  // A chisel-tip marker stroke, drawn by hand: it climbs slightly, its edges wander, the start is cut
+  // at an angle (hs) and the end blots where the pen lifts (he). The shape is stretched to the mark;
+  // a second, darker pass and faint streaks repeat at a fixed size so long marks look hand-made too.
+  const TOP = 'C10 3.2 21 4.4 33 3.3S55 2.2 67 2.9S88 1.6 100 1.9';
+  const BOT = 'C88 17.2 77 18.3 64 17.5S41 18.9 29 18.1S10 18.8 0 18.3';
   const SHAPE = {
-    '': 'M0 2.4C14 1.2 30 3.4 47 2.2S82 1.2 100 2.6L100 17.8C84 18.9 66 16.9 50 18S16 18.6 0 17.4Z',
-    '.hs': 'M3.2 3.1C14 1.2 30 3.4 47 2.2S82 1.2 100 2.6L100 17.8C84 18.9 66 16.9 50 18S16 18.6 1.6 17.6C.4 13.5 1.8 7.5 3.2 3.1Z',
-    '.he': 'M0 2.4C14 1.2 30 3.4 47 2.2S82 1.2 97.4 3.2C99.6 7.4 98.6 12.8 99.4 17.6C84 18.9 66 16.9 50 18S16 18.6 0 17.4Z',
-    '.hs.he': 'M3.2 3.1C14 1.2 30 3.4 47 2.2S82 1.2 97.4 3.2C99.6 7.4 98.6 12.8 99.4 17.6C84 18.9 66 16.9 50 18S16 18.6 1.6 17.6C.4 13.5 1.8 7.5 3.2 3.1Z',
+    '': `M0 3.9${TOP}L100 17.1${BOT}Z`,
+    '.hs': `M2.6 3.8${TOP}L100 17.1${BOT}C-.3 17.6.4 12.2 1.2 8.6S2.2 4.8 2.6 3.8Z`,
+    '.he': `M0 3.9${TOP}C100.9 2.6 99.6 6.4 100.4 9.7S98.4 15.6 98.9 17.3${BOT}Z`,
+    '.hs.he': `M2.6 3.8${TOP}C100.9 2.6 99.6 6.4 100.4 9.7S98.4 15.6 98.9 17.3${BOT}C-.3 17.6.4 12.2 1.2 8.6S2.2 4.8 2.6 3.8Z`,
   };
+  const PASS = 'M6 11.2C22 10.4 39 11.8 55 10.9S82 10.2 95 10.8L95.6 15.4C80 16.3 63 15.1 47 16S20 16.4 5.4 15.7Z'; // a second, darker sweep
   const svg = x => `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 20' preserveAspectRatio='none'>${x}</svg>`)}")`;
+  const tile = x => `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 20' preserveAspectRatio='none'>${x}</svg>`)}")`;
+  const streaks = (rgb, op) => tile(`<g fill='none' stroke='rgb(${rgb})' stroke-opacity='${op}' stroke-linecap='round'><path d='M0 6.2C9 5.6 17 6.8 27 6.1S46 5.4 60 6' stroke-width='.9'/><path d='M4 14.6C15 15.2 26 14.1 38 14.8S52 15.3 58 14.7' stroke-width='1.1'/><path d='M31 9.6C37 9.3 42 9.9 47 9.5' stroke-width='.6'/></g>`);
+  const hlLayers = (d, rgb, op) => `background-image:${streaks(rgb, (op * .55).toFixed(3))},${svg(`<path d='${PASS}' fill='rgb(${rgb})' fill-opacity='${(op * .32).toFixed(3)}'/>`)},${svg(`<path d='${d}' fill='rgb(${rgb})' fill-opacity='${op}'/>`)}`;
   const pen = col => svg(`<path d='M0 15.3C22 14.7 38 15.9 56 15.1S86 14.9 100 15.5' fill='none' stroke='${col}' stroke-width='2.2' stroke-linecap='round' vector-effect='non-scaling-stroke'/>`);
   let light = '', dark = '';
   for (const c of COLORS) {
     const [rgb, lo, dk] = HL[c];
     for (const [sel, d] of Object.entries(SHAPE)) {
-      light += `.hl.c-${c}${sel}{background-image:${svg(`<path d='${d}' fill='rgb(${rgb})' fill-opacity='${lo}'/>`)}}`;
+      light += `.hl.c-${c}${sel}{${hlLayers(d, rgb, lo)}}`;
       const night = c === 'black' ? ['255,255,255', .18] : [rgb, dk]; // black highlighter reads as a grey wash at night
-      dark += `.hl.c-${c}${sel}{background-image:${svg(`<path d='${d}' fill='rgb(${night[0]})' fill-opacity='${night[1]}'/>`)}}`;
+      dark += `.hl.c-${c}${sel}{${hlLayers(d, night[0], night[1])}}`;
     }
     light += `.pen.p-${c}{background-image:${pen(PEN[c][0])}}.tc-${c}{color:${PEN[c][0]}}`; dark += `.pen.p-${c}{background-image:${pen(PEN[c][1])}}.tc-${c}{color:${PEN[c][1]}}`;
   }
@@ -222,15 +230,12 @@ function applyMarks() {
     (byA[a.a] ||= []).push(a); lastOfGroup[a.g] = a.id; firstOfGroup[a.g] ??= a.id;
     const sp = span[a.g] ||= { len: 0, n: 0 }; sp.len += Math.max(0, a.e - a.s); sp.n++;
   }
-  // a note on a long passage (several verses, or more than a few words) gets big gold [ ] around it
-  const isLong = a => kindOf(a) === 'note' && (span[a.g].n > 1 || span[a.g].len >= 30);
-  const bracket = (ch, a) => { const x = document.createElement('span'); x.className = 'nbr'; x.textContent = ch; x.dataset.skip = ''; x.dataset.note = a.g; x.setAttribute('aria-hidden', 'true'); return x; };
   const order = a => kindOf(a) === 'hl' ? 0 : kindOf(a) === 'note' ? 2 : 1; // highlighter under pen under notes
   const showNotes = S.set.layers.notes !== 'off';
   for (const el of $$('[data-anchor]')) {
     const list = (byA[el.dataset.anchor] || []).slice().sort((x, y) => order(x) - order(y));
     for (const a of list) {
-      if (a.e > a.s && !(isLong(a) && showNotes)) {
+      if (a.e > a.s) {
         const ms = wrap(el, a.s, a.e, annCls(a), a.id);
         if (ms.length && kindOf(a) === 'hl') { ms[0].classList.add('hs'); ms[ms.length - 1].classList.add('he'); }
       }
@@ -239,11 +244,6 @@ function applyMarks() {
         st.className = 'sticky'; st.dataset.skip = ''; st.dataset.note = a.g; if (HILITES.includes(a.c)) st.style.setProperty('--nc', `var(--sw-${a.c})`); st.setAttribute('role', 'button'); st.tabIndex = 0;
         st.title = 'Note: ' + (a.n || '').slice(0, 80); st.setAttribute('aria-label', st.title);
         insertAt(el, a.e, st);
-      }
-      // inserted after the sticky so ] lands before it
-      if (isLong(a) && showNotes) {
-        if (lastOfGroup[a.g] === a.id) insertAt(el, a.e, bracket(']', a));
-        if (firstOfGroup[a.g] === a.id) insertAt(el, a.s, bracket('[', a));
       }
     }
   }

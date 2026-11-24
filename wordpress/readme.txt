@@ -4,7 +4,7 @@ Tags: bible, scripture, strongs, interlinear, commentary
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.8.1
+Stable tag: 1.8.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -33,6 +33,10 @@ Put the reader in any page or post with the shortcode:
 The plugin updates itself from its GitHub releases (https://github.com/adamjyo/notationbible/releases). WordPress shows new versions on the Plugins and Updates screens like any other plugin, and automatic updates are switched on when the plugin is first activated. Notation Bible → Settings shows the installed and latest versions and has a "Check for updates now" button.
 
 == Changelog ==
+
+= 1.8.2 =
+* Highlights look hand-drawn: a chisel-tip marker stroke with an angled start, a blotted end, uneven edges, a second darker pass and faint streaks.
+* Notes on long passages no longer get gold [ ] brackets; their words are highlighted like any other.
 
 = 1.8.1 =
 * Menus, buttons and the toolbar use IBM Plex Sans.
