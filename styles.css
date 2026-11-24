@@ -379,9 +379,9 @@ body.nt-open .dock{z-index:30}
 .nblogo svg.nbicon{width:96px;height:80px;margin-bottom:6px}
 .nblogo .l1{font-size:34px;font-weight:600;letter-spacing:-.01em;line-height:1.1}
 .nblogo .br{color:#c9a227;font-weight:300}
-.nblogo .l2{font-size:23px;line-height:1.2}
-.nbhl{position:relative;display:inline-block;padding:0 .1em}
-.nbhl>svg{position:absolute;left:-.04em;top:.2em;width:calc(100% + .08em);height:.84em}
+.nblogo .l2{font-size:24px;font-weight:600;line-height:1.2}
+.nbhl{position:relative;display:inline-block}
+.nbhl>svg{position:absolute;left:-.07em;top:.2em;width:calc(100% + .1em);height:.84em}
 .nbhl>b{position:relative;color:#fff;font-style:italic;font-weight:500}
-.nblogo .com{color:var(--soft)}
+.nblogo .com{color:var(--soft);font-weight:400}
 .acct>.hint{margin-bottom:14px}
