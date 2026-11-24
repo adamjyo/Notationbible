@@ -4,7 +4,7 @@ Tags: bible, scripture, strongs, interlinear, commentary
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.6.1
+Stable tag: 1.7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -33,6 +33,11 @@ Put the reader in any page or post with the shortcode:
 The plugin updates itself from its GitHub releases (https://github.com/adamjyo/notationbible/releases). WordPress shows new versions on the Plugins and Updates screens like any other plugin, and automatic updates are switched on when the plugin is first activated. Notation Bible → Settings shows the installed and latest versions and has a "Check for updates now" button.
 
 == Changelog ==
+
+= 1.7.0 =
+* Highlighting pops up a note card under the highlight (close it with the X to keep just the highlight). A note takes its highlight's colour, and erasing that colour removes the note too.
+* The toolbar's third button makes a NoteTree from the selected verses (or tap a verse).
+* New Select tool, for selecting text to copy without marking it.
 
 = 1.6.1 =
 * Notes have their own colour (the highlighter colours), separate from the pen: with Note in hand, the Colour button sets the note's colour. The note's box and sticky marker are tinted with it.

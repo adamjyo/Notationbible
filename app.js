@@ -279,6 +279,7 @@ function groups() {
   return [...m.values()];
 }
 const ICON = {
+  x: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>',
   note: '<svg viewBox="0 0 24 24"><path d="M5 19l1-4L16 5l3 3L9 18z"/></svg>',
   mic: '<svg viewBox="0 0 24 24"><rect x="9" y="3.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5v3"/></svg>',
   play: '<svg viewBox="0 0 24 24"><path d="M7 5l12 7-12 7z"/></svg>',
@@ -588,7 +589,7 @@ S.set.color = COLORS.includes(S.set.color) ? S.set.color : 'yellow';
 // each tool keeps its own colour; S.set.color follows the tool last picked (the NoteTree uses it too)
 S.set.toolColor = Object.assign({ hl: HILITES.includes(S.set.color) ? S.set.color : 'yellow', pen: 'black', note: 'yellow' }, S.set.toolColor || {});
 if (!HILITES.includes(S.set.toolColor.note)) S.set.toolColor.note = 'yellow';
-S.set.lastTool = ['hl', 'pen', 'eraser'].includes(S.set.lastTool) ? S.set.lastTool : 'hl';
+S.set.lastTool = ['select', 'hl', 'pen', 'eraser'].includes(S.set.lastTool) ? S.set.lastTool : 'hl';
 const markbar = $('#markbar'), toolbar = $('#toolbar'), tbpane = $('#tbpane');
 const INK = ['hl', 'pen', 'eraser'];
 function selTargets() {
@@ -604,7 +605,8 @@ function selTargets() {
   out.q = sel.toString().replace(/\s+/g, ' ').trim().slice(0, 280);
   return out;
 }
-function addInk(kind, tg, color) { const g = uid(); for (const t of tg) S.ann.push({ id: uid(), g, a: t.a, s: t.s, e: t.e, k: kind, c: color, q: tg.q, t: Date.now() }); }
+function addInk(kind, tg, color) { const g = uid(); for (const t of tg) S.ann.push({ id: uid(), g, a: t.a, s: t.s, e: t.e, k: kind, c: color, q: tg.q, t: Date.now() }); if (kind === 'hl') lastHl = g; return g; }
+let lastHl = null;
 // Erases only the rubbed-over part. With an eraser colour set, only marks of that colour go.
 // With no colour set (all colours), rubbing over a note's words or its sticky deletes the note, with Undo.
 function eraseRange(tg, only = '') {
@@ -613,7 +615,7 @@ function eraseRange(tg, only = '') {
   for (const a of S.ann) {
     const t = tg.find(t => hits(a, t));
     if (!t) { out.push(a); continue; }
-    if (kindOf(a) === 'note') { if (!only) gone.add(a.g); out.push(a); continue; }
+    if (kindOf(a) === 'note') { if (!only || a.c === only) gone.add(a.g); out.push(a); continue; }
     if (!isInk(a) || (only && a.c !== only)) { out.push(a); continue; }
     if (a.s < t.s) out.push({ ...a, id: uid(), e: t.s });
     if (a.e > t.e) out.push({ ...a, id: uid(), s: t.e });
@@ -624,7 +626,7 @@ function eraseRange(tg, only = '') {
     toast(gone.size > 1 ? `${gone.size} notes deleted` : 'Note deleted', 'Undo', () => { S.ann = before; save(); render(); toast('Note restored'); });
   }
 }
-const commit = () => { save(); getSelection().removeAllRanges(); markbar.hidden = true; targets = []; applyMarks(); bumpIdle(); nudgeSignIn(); };
+const commit = () => { save(); getSelection().removeAllRanges(); markbar.hidden = true; targets = []; applyMarks(); bumpIdle(); nudgeSignIn(); if (lastHl) { const g = lastHl; lastHl = null; offerNote(g); } };
 // On a site with reader accounts, the first mark made while signed out gets a one-time reminder:
 // without an account, notes live only in this browser.
 function nudgeSignIn() {
@@ -636,12 +638,15 @@ document.addEventListener('selectionchange', () => { clearTimeout(selT); selT = 
 function readSelection() {
   targets = selTargets();
   if (!targets.length) { if (!markbar.contains(document.activeElement)) markbar.hidden = true; return; }
+  if (tool === 'select') { markbar.hidden = true; return; } // plain selection, for copying
+  if (tool === 'tree') { markbar.hidden = true; if (!ptrDown) { clearTimeout(toolT); toolT = setTimeout(() => { const tg = selTargets(); if (tg.length) { getSelection().removeAllRanges(); treeFrom(tg); } }, 500); } return; }
   if (INK.includes(tool)) { markbar.hidden = true; if (!ptrDown) { clearTimeout(toolT); toolT = setTimeout(toolOnSelection, 700); } return; } // touch handles: apply once they settle
   $('#marklabel').textContent = targets.length > 1 ? `${where(targets[0].a)} +${targets.length - 1}` : where(targets[0].a);
   markbar.hidden = false; $('#audiobar').hidden = true;
 }
 function toolOnSelection() {
   clearTimeout(toolT);
+  if (tool === 'tree') { const tg = selTargets(); if (tg.length) { getSelection().removeAllRanges(); treeFrom(tg); } return; }
   if (!INK.includes(tool)) return;
   const tg = selTargets(); if (!tg.length) return;
   if (tool === 'eraser') eraseRange(tg, S.set.eraseColor || ''); else addInk(tool, tg, S.set.toolColor[tool]);
@@ -668,32 +673,50 @@ markbar.addEventListener('click', e => {
    [current tool] [current colour] [note]. Tool swaps the bar for pen / highlighter / eraser,
    Colour swaps it for that tool's colours; picking one brings the three buttons back.
    After a few idle seconds it tucks into a round button: the current tool over a line of its colour. */
-const HINTS = { hl: 'Select words, or tap a word, to highlight', pen: 'Select words, or tap a word, to underline', eraser: 'Rub over marks, or tap a word, to erase', sticky: 'Tap the word where the note goes' };
+const HINTS = { hl: 'Select words, or tap a word, to highlight', pen: 'Select words, or tap a word, to underline', eraser: 'Rub over marks, or tap a word, to erase', sticky: 'Tap the word where the note goes', select: 'Select text to copy it', tree: 'Select the verses for your NoteTree, or tap a verse' };
 const TOOL_ICON = {
   hl: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 3.8l5.7 5.7-8.4 8.4H6.1v-5.7z"/><path class="tip" d="M6.1 12.2v5.7h5.7z"/></svg>',
   pen: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 3.5l4.5 4.5L9 19.5l-5.5 1 1-5.5z"/><path d="M13.5 6l4.5 4.5"/></svg>',
   eraser: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 20h11.5"/><path d="M4.6 14.4l8.6-8.6a2 2 0 0 1 2.8 0l3.2 3.2a2 2 0 0 1 0 2.8L11.5 19.5H9.7z"/><path d="M9.2 9.8l5 5"/></svg>',
   sticky: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 4.5h15v9.8l-5.2 5.2H4.5z"/><path d="M14.3 19.5v-5.2h5.2"/><path d="M8 9h8M8 12.5h4"/></svg>',
+  select: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3.5h2.2a.8.8 0 0 1 .8.8v15.4a.8.8 0 0 1-.8.8H9M15 3.5h-2.2a.8.8 0 0 0-.8.8v15.4a.8.8 0 0 0 .8.8H15"/><path d="M12 12h0"/></svg>',
+  // a tree with sticky notes on its branches
+  tree: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5v-9M12 14.5l-4.6-3.4M12 13l4.6-3.6M12 12.5V7.5M8.5 21.5h7"/><rect class="stk s1" x="2.6" y="7.3" width="5.4" height="5.2" rx=".7" transform="rotate(-8 5.3 9.9)"/><rect class="stk s2" x="15.8" y="5.4" width="5.4" height="5.2" rx=".7" transform="rotate(7 18.5 8)"/><rect class="stk s3" x="9.3" y="2" width="5.4" height="5" rx=".7" transform="rotate(-3 12 4.5)"/></svg>',
 };
 let pane = 'main';
 const toolColorOf = t => t === 'eraser' ? (S.set.eraseColor || '') : S.set.toolColor[t === 'pen' || t === 'note' ? t : 'hl'];
-function syncColor() { if (S.set.lastTool !== 'eraser') S.set.color = S.set.toolColor[S.set.lastTool]; }
+function syncColor() { if (S.set.lastTool === 'hl' || S.set.lastTool === 'pen') S.set.color = S.set.toolColor[S.set.lastTool]; }
+// NoteTree button: with verses selected, make the NoteTree now; otherwise wait for a selection or a tapped verse
+function treeButton() {
+  if (!canEditTrees()) { toast('NoteTrees are made on a tablet or computer. On a phone you can open the ones you have made.'); return; }
+  const tg = selTargets(); getSelection().removeAllRanges();
+  if (tg.length && treeFrom(tg)) return;
+  setTool('tree');
+}
+function treeFrom(tg) {
+  const vs = tg.map(t => t.a.split('.')).filter(p => p.length === 3 && p[0] === chap?.b && +p[1] === chap?.c).map(p => +p[2]);
+  if (!vs.length) return false;
+  if (tool === 'tree') tool = null;
+  openNoteTree(Math.min(...vs), Math.max(...vs)); renderToolbar(); return true;
+}
 function renderToolbar() {
   // the Colour button belongs to whatever is in hand: the Note has its own colour, apart from the pen and highlighter
-  const t = S.set.lastTool, ct = tool === 'sticky' ? 'note' : t, c = toolColorOf(ct), cname = c ? CNAME[c] : 'All colours';
+  const t = S.set.lastTool, ct = t, c = t === 'select' ? 'black' : toolColorOf(ct), cname = c ? CNAME[c] : 'All colours';
   document.documentElement.style.setProperty('--tc', c ? `var(--sw-${c})` : 'var(--soft)');
   toolbar.classList.toggle('allc', !c);
   let h;
-  if (pane === 'tools') h = ['pen', 'hl', 'eraser'].map(k => `<button data-pick="${k}" aria-pressed="${tool === k}">${TOOL_ICON[k]}<span>${TOOLNAME[k]}</span></button>`).join('');
+  if (pane === 'tools') h = ['select', 'pen', 'hl', 'eraser'].map(k => `<button data-pick="${k}" aria-pressed="${tool === k}">${TOOL_ICON[k]}<span>${TOOLNAME[k]}</span></button>`).join('');
   else if (pane === 'colors') {
     const list = ct === 'note' ? HILITES : (t === 'eraser' ? [''] : []).concat(INKS, HILITES);
     h = `<div class="swrow" role="group" aria-label="${ct === 'note' ? 'Colour for notes' : t === 'eraser' ? 'Colour the eraser removes' : 'Colour for the ' + TOOLNAME[t].toLowerCase()}">` +
       list.map(k => `<button class="swc${k ? '' : ' all'}" data-c="${k}" style="--s:var(--sw-${k || 'yellow'})" aria-pressed="${k === c}" aria-label="${k ? CNAME[k] : 'All colours, and notes'}" title="${k ? CNAME[k] : 'All colours, and notes'}"></button>`).join('') + '</div>';
   } else h = `<button id="tbtool" aria-pressed="${tool === t}" aria-label="Tool: ${TOOLNAME[t]}${tool === t ? ', in hand' : ''}. Choose a tool">${TOOL_ICON[t]}<span>${TOOLNAME[t]}</span></button>`
-    + `<button id="tbcolor" aria-label="Colour: ${cname}. Choose a colour"><span class="cdot${c ? '' : ' all'}"></span><span>${t === 'eraser' && !c ? 'All' : cname}</span></button>`
-    + `<button id="tbnote" aria-pressed="${tool === 'sticky'}">${TOOL_ICON.sticky}<span>Note</span></button>`;
+    + (t === 'select' ? `<button id="tbcolor" disabled aria-label="No colour for the select tool"><span class="cdot none"></span><span>No colour</span></button>`
+      : `<button id="tbcolor" aria-label="Colour: ${cname}. Choose a colour"><span class="cdot${c ? '' : ' all'}"></span><span>${t === 'eraser' && !c ? 'All' : cname}</span></button>`)
+    + `<button id="tbtree" aria-pressed="${tool === 'tree'}" aria-label="NoteTree: make one from the selected verses">${TOOL_ICON.tree}<span>NoteTree</span></button>`;
   tbpane.innerHTML = h; tbpane.dataset.pane = pane;
-  $('#tbfab').innerHTML = `${TOOL_ICON[tool === 'sticky' ? 'sticky' : t]}<span class="fabline"></span>`;
+  $('#tbfab').innerHTML = `${TOOL_ICON[tool === 'tree' ? 'tree' : t]}<span class="fabline"></span>`;
+  toolbar.classList.toggle('nocolor', t === 'select' || tool === 'tree');
   const erasing = tool === 'eraser';
   $('#toolhint').textContent = erasing ? (c ? `Rub over marks, or tap a word, to erase ${CNAME[c].toLowerCase()} only` : HINTS.eraser + ' (all colours, and notes)') : HINTS[tool] || '';
   $('#toolhint').hidden = !tool || pane !== 'main' || toolbar.classList.contains('collapsed');
@@ -701,10 +724,10 @@ function renderToolbar() {
 }
 function setTool(t) {
   tool = tool === t ? null : t;
-  if (t && t !== 'sticky') { S.set.lastTool = t; syncColor(); save(); }
+  if (t && t !== 'sticky' && t !== 'tree') { S.set.lastTool = t; syncColor(); save(); }
   pane = 'main'; renderToolbar();
 }
-const IDLE_MS = 4000, TOOLNAME = { hl: 'Highlighter', pen: 'Pen', eraser: 'Eraser', sticky: 'Note' };
+const IDLE_MS = 4000, TOOLNAME = { hl: 'Highlighter', pen: 'Pen', eraser: 'Eraser', sticky: 'Note', select: 'Select', tree: 'NoteTree' };
 let idleT;
 function bumpIdle() { clearTimeout(idleT); idleT = setTimeout(collapseToolbar, IDLE_MS); }
 function collapseToolbar() {
@@ -717,7 +740,7 @@ function expandToolbar(focus) {
   toolbar.classList.remove('collapsed', 'holding'); pane = 'main'; renderToolbar(); bumpIdle();
   if (focus) $('#tbtool').focus({ preventScroll: true });
 }
-toolbar.addEventListener('pointerdown', bumpIdle);
+toolbar.addEventListener('pointerdown', e => { bumpIdle(); if (e.target.closest('#tbpane')) e.preventDefault(); });
 toolbar.addEventListener('focusin', () => { if (!toolbar.classList.contains('collapsed')) bumpIdle(); });
 toolbar.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
@@ -726,9 +749,8 @@ toolbar.addEventListener('click', e => {
   const t = S.set.lastTool;
   if (b.id === 'tbtool') pane = 'tools';
   else if (b.id === 'tbcolor') pane = 'colors';
-  else if (b.id === 'tbnote') return setTool('sticky');
+  else if (b.id === 'tbtree') return treeButton();
   else if (b.dataset.pick) { const k = b.dataset.pick; tool = tool === k ? null : k; S.set.lastTool = k; syncColor(); save(); pane = 'main'; } // picking the tool in hand puts it down
-  else if ('c' in b.dataset && tool === 'sticky') { S.set.toolColor.note = b.dataset.c; save(); pane = 'main'; } // the note's own colour; the note stays in hand
   else if ('c' in b.dataset) { if (t === 'eraser') S.set.eraseColor = b.dataset.c; else S.set.toolColor[t] = b.dataset.c; syncColor(); tool = t; save(); pane = 'main'; } // a colour picks the tool up
   renderToolbar();
   if (e.detail === 0) tbpane.querySelector('[aria-pressed=true], button')?.focus({ preventScroll: true });
@@ -752,7 +774,9 @@ function wordAt(e, t) { // the word (or tagged phrase) under a tap, as an anchor
   return { a: anchor.dataset.anchor, s: offsetIn(anchor, c.node, i), e: offsetIn(anchor, c.node, j), el: anchor };
 }
 function toolTap(e, t) {
+  if (tool === 'select') return; // selecting text: taps do nothing
   const w = wordAt(e, t); if (!w) return;
+  if (tool === 'tree') return treeFrom([{ a: w.a }]);
   const text = anchorText(w.el);
   if (tool === 'sticky') {
     const q = (w.e > 60 ? '…' : '') + text.slice(Math.max(0, w.e - 60), w.e).trim() + ' ✎';
@@ -765,24 +789,53 @@ function toolTap(e, t) {
 }
 
 /* ---------- notes (with dictation) ---------- */
+// After something is highlighted, a small note card pops up under it. Writing in it adds a note
+// in the highlight's colour, tied to the same words; the X closes it and keeps just the highlight.
+let notePop = null;
+function closeNotePop() { if (notePop) { stopDictation(); notePop.remove(); notePop = null; } }
+function offerNote(g) {
+  closeNotePop();
+  const items = S.ann.filter(a => a.g === g); if (!items.length) return;
+  const marks = items.map(a => document.querySelector(`mark[data-aid="${a.id}"]`)).filter(Boolean); if (!marks.length) return;
+  const c = items[0].c, r = marks[marks.length - 1].getBoundingClientRect();
+  const el = document.createElement('div');
+  el.className = 'notepop'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Add a note to this highlight');
+  el.style.setProperty('--nc', `var(--sw-${c})`);
+  el.innerHTML = `<button class="npx" aria-label="Close, keep just the highlight" title="Close">${ICON.x}</button>
+    <textarea rows="2" placeholder="Add a note…" aria-label="Note"></textarea>
+    <div class="row"><button class="btn rec" data-mic>${ICON.mic}<span>Dictate</span></button><span class="hint" data-state style="margin:0"></span><button class="btn primary" data-save>Save note</button></div>`;
+  document.body.appendChild(el); notePop = el;
+  const w = el.offsetWidth, h = el.offsetHeight, below = r.bottom + 10 + h < innerHeight - 90;
+  el.style.left = Math.round(Math.max(8, Math.min(r.left, innerWidth - w - 8)) + scrollX) + 'px';
+  el.style.top = Math.round((below ? r.bottom + 10 : r.top - h - 10) + scrollY) + 'px';
+  const ta = el.querySelector('textarea');
+  el.querySelector('.npx').onclick = closeNotePop;
+  el.querySelector('[data-mic]').onclick = e => dictate(txt => { ta.value = (ta.value ? ta.value.replace(/\s*$/, ' ') : '') + txt; }, e.currentTarget, el.querySelector('[data-state]'));
+  el.querySelector('[data-save]').onclick = () => {
+    const n = ta.value.trim(); if (!n) return ta.focus();
+    const ng = uid();
+    for (const a of items) S.ann.push({ id: uid(), g: ng, a: a.a, s: a.s, e: a.e, k: 'note', n, c, q: a.q, hg: g, t: Date.now() });
+    closeNotePop(); save(); render(); toast('Note saved');
+  };
+  ta.addEventListener('keydown', e => { if (e.key === 'Escape') closeNotePop(); if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) el.querySelector('[data-save]').click(); });
+}
+
 function noteEditor({ targets: t, g, verse, listen }) {
   const existing = g ? groups().find(x => x.g === g) : null;
   if (verse && chap?.verses) { const id = `${chap.b}.${chap.c}.${verse}`; t = [{ a: id, s: 0, e: plain(chap.verses[verse - 1]).length }]; t.q = plain(chap.verses[verse - 1]); }
   const quote = existing ? existing.q : t?.q;
   openSheet(existing ? 'Edit note' : 'New note', `<p class="quote">${esc(quote || '')}</p>
     <textarea id="ntext" autofocus placeholder="Write a note. **bold**, *italic*, ==highlight==, and references like John 3:16 or G3056 become links.">${esc(existing?.n || '')}</textarea>
-    <div class="ncolors" role="group" aria-label="Note colour">${HILITES.map(c => `<button data-nc="${c}" style="--s:var(--sw-${c})" aria-label="${CNAME[c]} note" title="${CNAME[c]}"></button>`).join('')}</div>
     <div class="row" style="margin-top:10px"><button class="btn rec" id="nmic">${ICON.mic}<span>Dictate</span></button><span class="hint" id="nmicstate" style="margin:0"></span></div>
     <div class="preview prose" id="nprev"></div>
     <div class="row end">${existing ? '<button class="btn" id="ndel">Delete</button>' : ''}<button class="btn primary" id="nsave">Save note</button></div>`);
   const ta = $('#ntext'), pv = $('#nprev');
-  let nc = existing?.c || S.set.toolColor.note;
+  let nc = existing?.c || S.set.toolColor.hl;
   const upd = () => {
     pv.className = 'preview prose notebg'; pv.style.setProperty('--nc', `var(--sw-${nc})`);
     pv.innerHTML = ta.value.trim() ? rich(ta.value) : '<span class="hint">Preview</span>';
     $$('[data-nc]', sheet).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.nc === nc)));
   };
-  $$('[data-nc]', sheet).forEach(b => b.onclick = () => { nc = b.dataset.nc; S.set.toolColor.note = nc; save(); upd(); renderToolbar(); });
   ta.addEventListener('input', upd); upd();
   $('#nmic').onclick = () => dictate(txt => { ta.value = (ta.value ? ta.value.replace(/\s*$/, ' ') : '') + txt; upd(); }, $('#nmic'), $('#nmicstate'));
   $('#nsave').onclick = () => {
@@ -1288,13 +1341,14 @@ document.addEventListener('click', async e => {
 document.addEventListener('keydown', e => {
   if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('span[role=button]')) { e.preventDefault(); e.target.click(); return; }
   if (e.target.matches('input, textarea, select')) { if (e.key === 'Escape') closeSheet(); return; }
-  if (e.key === 'Escape') { if (!menu.hidden) closeMenu(true); else if (!sheet.hidden) closeSheet(); else if (pane !== 'main') { pane = 'main'; renderToolbar(); } else if (tool) setTool(tool); else { markbar.hidden = true; getSelection().removeAllRanges(); } }
+  if (e.key === 'Escape') { if (notePop) closeNotePop(); else if (!menu.hidden) closeMenu(true); else if (!sheet.hidden) closeSheet(); else if (pane !== 'main') { pane = 'main'; renderToolbar(); } else if (tool) setTool(tool); else { markbar.hidden = true; getSelection().removeAllRanges(); } }
   else if (!sheet.hidden) return;
   else if (e.key === 'ArrowLeft') $('#prev').click();
   else if (e.key === 'ArrowRight') $('#next').click();
   else if (e.key === '/') { e.preventDefault(); openSearch(); }
 });
 window.addEventListener('hashchange', () => {
+  closeNotePop();
   const h = parseHash(location.hash); if (!h) return;
   const changed = h.b !== cur.b || h.c !== cur.c;
   cur = h; S.last = location.hash; save();
