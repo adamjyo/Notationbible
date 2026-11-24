@@ -153,6 +153,15 @@ body[data-active-tool]:not([data-active-tool=""]) .tag:hover{color:inherit}
 .toolbar .tipline{stroke:var(--tc);stroke-width:2.4}
 .toolbar button[aria-pressed=true]{background:color-mix(in srgb,var(--tc) 22%,var(--bg));color:var(--ink);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--tc) 70%,var(--ink))}
 .toolbar button[aria-expanded=true]{background:var(--chip);color:var(--ink)}
+/* after a few idle seconds the toolbar tucks into a round notes button, bottom right */
+.toolbar{transition:left .28s ease,transform .28s ease,border-radius .28s ease,padding .2s ease}
+.toolbar .tbfab{display:none}
+.toolbar.collapsed{left:calc(100% - max(16px,env(safe-area-inset-right)));transform:translateX(-100%);padding:0;border-radius:50%}
+.toolbar.collapsed>button:not(.tbfab){display:none}
+.toolbar.collapsed .tbfab{display:grid;place-items:center;width:58px;height:58px;min-height:0;border-radius:50%;animation:tbpop .24s ease-out}
+.toolbar.collapsed .tbfab svg{width:26px;height:26px}
+.toolbar.collapsed.holding .tbfab{box-shadow:inset 0 0 0 3px var(--tc)}
+@keyframes tbpop{from{transform:scale(.55);opacity:0}to{transform:none;opacity:1}}
 .cdot{width:23px;height:23px;border-radius:50%;background:var(--tc);box-shadow:inset 0 0 0 2px var(--bg),0 0 0 1px var(--rule)}
 .palette{position:fixed;z-index:26;width:max-content;max-width:calc(100vw - 16px);left:50%;bottom:calc(max(10px,env(safe-area-inset-bottom)) + 74px);transform:translateX(-50%);display:grid;gap:10px;padding:12px 14px;background:var(--bg);border:1px solid var(--rule);border-radius:16px;box-shadow:0 10px 30px rgb(0 0 0/.16)}
 .prow{display:flex;align-items:center;gap:10px}

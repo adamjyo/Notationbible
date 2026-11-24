@@ -511,7 +511,7 @@ function eraseRange(tg) { // erases only the rubbed-over part; notes are left al
   }
   S.ann = out;
 }
-const commit = () => { save(); getSelection().removeAllRanges(); markbar.hidden = true; targets = []; applyMarks(); };
+const commit = () => { save(); getSelection().removeAllRanges(); markbar.hidden = true; targets = []; applyMarks(); bumpIdle(); };
 document.addEventListener('selectionchange', () => { clearTimeout(selT); selT = setTimeout(readSelection, 140); });
 function readSelection() {
   targets = selTargets();
@@ -545,17 +545,36 @@ function renderToolbar() {
   $$('[data-tool]', toolbar).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tool === tool)));
   document.documentElement.style.setProperty('--tc', `var(--sw-${S.set.color})`);
   $$('[data-c]', palette).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.c === S.set.color)));
-  $('#toolhint').textContent = HINTS[tool] || ''; $('#toolhint').hidden = !tool || !palette.hidden;
+  $('#toolhint').textContent = HINTS[tool] || ''; $('#toolhint').hidden = !tool || !palette.hidden || toolbar.classList.contains('collapsed');
   document.body.dataset.activeTool = tool || '';
 }
 function setTool(t) { tool = tool === t ? null : t; palette.hidden = true; $('#colorbtn').setAttribute('aria-expanded', 'false'); renderToolbar(); }
+/* the toolbar tucks itself into a round notes button after a few unused seconds */
+const IDLE_MS = 4000, TOOLNAME = { hl: 'Highlighter', pen: 'Pen', eraser: 'Eraser', sticky: 'Sticky note' };
+let idleT;
+function bumpIdle() { clearTimeout(idleT); idleT = setTimeout(collapseToolbar, IDLE_MS); }
+function collapseToolbar() {
+  if (!palette.hidden || toolbar.querySelector(':focus-visible:not(.tbfab)')) return bumpIdle(); // not while choosing a colour or tabbing through it
+  toolbar.classList.add('collapsed'); toolbar.classList.toggle('holding', !!tool);
+  $('#tbfab').setAttribute('aria-label', tool ? `Show markup tools (${TOOLNAME[tool]} in hand)` : 'Show markup tools');
+  renderToolbar();
+}
+function expandToolbar(focus) {
+  toolbar.classList.remove('collapsed', 'holding'); renderToolbar(); bumpIdle();
+  if (focus) (toolbar.querySelector('[aria-pressed=true]') || toolbar.querySelector('[data-tool]')).focus({ preventScroll: true });
+}
+toolbar.addEventListener('pointerdown', bumpIdle);
+toolbar.addEventListener('focusin', () => { if (!toolbar.classList.contains('collapsed')) bumpIdle(); });
 toolbar.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
+  if (b.id === 'tbfab') return expandToolbar(e.detail === 0); // keyboard activation moves focus into the toolbar
+  bumpIdle();
   if (b.id === 'colorbtn') { palette.hidden = !palette.hidden; b.setAttribute('aria-expanded', String(!palette.hidden)); renderToolbar(); if (!palette.hidden) palette.querySelector('[aria-pressed=true]')?.focus(); return; }
   setTool(b.dataset.tool);
 });
 palette.addEventListener('click', e => {
   const b = e.target.closest('[data-c]'); if (!b) return;
+  bumpIdle();
   S.set.color = b.dataset.c; save();
   if (tool !== 'pen') tool = 'hl'; // picking a colour picks up the highlighter unless the pen is in hand
   palette.hidden = true; $('#colorbtn').setAttribute('aria-expanded', 'false'); renderToolbar();
@@ -773,6 +792,6 @@ window.addEventListener('hashchange', () => {
   studyIdx = (await getJSON('data/studies/index.json')) || [];
   await loadLex();
   if (synth) synth.onvoiceschanged = () => {};
-  renderToolbar(); await render();
+  renderToolbar(); bumpIdle(); await render();
 })();
 }
