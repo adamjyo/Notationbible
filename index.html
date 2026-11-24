@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notation Bible</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Inter:wght@400;500;600&family=Gentium+Book+Plus&family=Noto+Serif+Hebrew:wght@400;500&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="bar">
+  <a class="brand" href="#" id="home" aria-label="Notation Bible, go to last read">
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5 4.5h9.5a3 3 0 0 1 3 3V20H8a3 3 0 0 1-3-3z" fill="currentColor" stroke="none"/><path d="M14.5 4.5v8l-2-1.4-2 1.4v-8" fill="var(--accent)" stroke="none"/></svg>
+    <span>Notation Bible</span>
+  </a>
+  <nav class="refnav" aria-label="Chapter navigation">
+    <button class="ico" id="prev" aria-label="Previous chapter" title="Previous chapter (←)"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <button class="refbtn" id="refbtn" aria-haspopup="dialog"><span id="reflabel">John 1</span><svg viewBox="0 0 24 24" class="caret"><path d="M6 9l6 6 6-6"/></svg></button>
+    <button class="ico" id="next" aria-label="Next chapter" title="Next chapter (→)"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+  </nav>
+  <div class="tools">
+    <span class="tr" title="Berean Standard Bible">BSB</span>
+    <button class="ico" id="playbtn" aria-label="Read aloud" title="Read aloud"><svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg></button>
+    <button class="ico" id="searchbtn" aria-label="Search" title="Search (/)"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
+    <button class="ico" id="studybtn" aria-label="Bible studies" title="Bible studies"><svg viewBox="0 0 24 24"><path d="M3.5 5.5c3-1 6-1 8.5 1v13c-2.5-2-5.5-2-8.5-1zM20.5 5.5c-3-1-6-1-8.5 1v13c2.5-2 5.5-2 8.5-1z"/></svg></button>
+    <button class="ico" id="savedbtn" aria-label="Highlights and notes" title="Highlights and notes"><svg viewBox="0 0 24 24"><path d="M7 3.5h10v17l-5-3.6-5 3.6z"/></svg></button>
+    <button class="ico" id="setbtn" aria-label="Layers and settings" title="Layers and settings"><svg viewBox="0 0 24 24"><path d="M12 3.5l8.5 4.5-8.5 4.5L3.5 8z"/><path d="M3.5 12l8.5 4.5 8.5-4.5M3.5 16l8.5 4.5 8.5-4.5"/></svg></button>
+  </div>
+</header>
+
+<div class="layerbar" id="layerbar" role="group" aria-label="Quick layer toggles"></div>
+
+<main id="page">
+  <article class="reader" id="reader"></article>
+  <nav class="pager" aria-label="Chapter pager"><a id="pprev" href="#"></a><a id="pnext" href="#"></a></nav>
+</main>
+
+<div class="dock" id="markbar" role="toolbar" aria-label="Markup" hidden>
+  <span class="alabel" id="marklabel"></span>
+  <div class="swatches">
+    <button data-k="gold" aria-label="Highlight gold"></button>
+    <button data-k="sage" aria-label="Highlight green"></button>
+    <button data-k="sky" aria-label="Highlight blue"></button>
+    <button data-k="rose" aria-label="Highlight rose"></button>
+  </div>
+  <button class="abtn" data-k="u" aria-label="Underline"><u>U</u></button>
+  <button class="abtn" data-k="b" aria-label="Bold"><b>B</b></button>
+  <button class="abtn" data-k="note">Note</button>
+  <button class="abtn" data-k="clear">Clear</button>
+</div>
+
+<div class="dock audio" id="audiobar" role="toolbar" aria-label="Read aloud" hidden>
+  <button class="ico" id="aprev" aria-label="Previous verse"><svg viewBox="0 0 24 24"><path d="M7 5v14M18 5l-9 7 9 7z"/></svg></button>
+  <button class="ico big" id="apause" aria-label="Pause"><svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button>
+  <button class="ico" id="anext" aria-label="Next verse"><svg viewBox="0 0 24 24"><path d="M17 5v14M6 5l9 7-9 7z"/></svg></button>
+  <span class="alabel" id="aulabel"></span>
+  <select id="arate" aria-label="Reading speed"><option value=".8">0.8×</option><option value="1" selected>1×</option><option value="1.2">1.2×</option><option value="1.5">1.5×</option></select>
+  <button class="ico" id="astop" aria-label="Stop reading"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheettitle" hidden>
+  <div class="sheethead">
+    <button class="ico" id="sheetback" aria-label="Back" hidden><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <h2 id="sheettitle"></h2>
+    <button class="ico" id="sheetclose" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="sheetbody" id="sheetbody"></div>
+</aside>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script src="books.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
