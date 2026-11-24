@@ -8,10 +8,11 @@ on:
     paths: ['.github/workflows/inspect-resources.yml']
 permissions:
   contents: write
+concurrency: { group: inspect, cancel-in-progress: true }
 jobs:
   inspect:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with: { ref: claude/initial-reader }
@@ -25,16 +26,16 @@ jobs:
           for r in $R; do
             d=$(echo $r | tr / _)
             echo; echo "## $r"
-            git clone -q --depth 1 --filter=blob:limit=200m https://github.com/$r.git $d 2>&1 | tail -2 || { echo "clone failed"; continue; }
-            (cd $d && du -sh . && echo '```' && git ls-files | head -70 && echo "... $(git ls-files | wc -l) files" && echo '```')
-            for L in $d/LICENSE* $d/COPYING* $d/license*; do [ -f "$L" ] && { echo "### $(basename $L)"; head -8 "$L"; }; done
-            echo "### README (head)"; head -c 1800 $d/README* 2>/dev/null; echo
-            # small samples of the main data files
-            for f in $(cd $d && git ls-files | grep -iE '\.(json|jsonl|csv|tsv|txt|md)$' | grep -viE 'readme|license|package|\.github' | head -6); do
-              echo "### sample $f ($(stat -c%s $d/$f) bytes)"; echo '```'; head -c 700 "$d/$f"; echo; echo '```'
+            # tree only: no file contents are downloaded until a sample is read
+            timeout 120 git clone -q --depth 1 --filter=blob:none --no-checkout https://github.com/$r.git $d || { echo "clone failed"; continue; }
+            cd $d
+            echo '```'; git ls-tree -r -l HEAD | awk '{print $4, $5}' | head -80; echo "... $(git ls-tree -r --name-only HEAD | wc -l) files"; echo '```'
+            for L in $(git ls-tree -r --name-only HEAD | grep -iE '^(license|copying|readme)' | head -3); do echo "### $L"; timeout 60 git show HEAD:"$L" | head -c 1500; echo; done
+            for f in $(git ls-tree -r --name-only HEAD | grep -iE '\.(json|jsonl|csv|tsv|txt)$' | grep -viE 'readme|license|package|\.github' | grep -iE "${PICK:-.}" | head -5); do
+              echo "### sample $f"; echo '```'; timeout 60 git show HEAD:"$f" | head -c 700; echo; echo '```'
             done
+            cd ..
           done
-          echo; echo "## scrollmapper formats"; ls scrollmapper_bible_databases 2>/dev/null; ls scrollmapper_bible_databases/formats 2>/dev/null | head; ls scrollmapper_bible_databases/formats/json 2>/dev/null | head -80
           } > ../data/RESOURCES_REPORT.md 2>&1
           wc -c ../data/RESOURCES_REPORT.md
       - name: Commit report
