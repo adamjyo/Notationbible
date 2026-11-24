@@ -70,7 +70,7 @@ function parseHash(h) {
 function rich(t) {
   return esc(t).split(/\n{2,}/).map(p => '<p>' + p
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/==(.+?)==/g, '<mark class="hl-gold">$1</mark>')
+    .replace(/==(.+?)==/g, '<mark class="hl c-yellow hs he">$1</mark>')
     .replace(REF_RE, (m, bk, c, v) => { const b = bookByName(bk); return b ? `<a class="ref" href="${hashOf(b.id, c, v)}">${m}</a>` : m; })
     .replace(/\b([GH]\d{1,4})\b/g, '<button class="sref" data-s="$1">$1</button>')
     .replace(/\n/g, '<br>') + '</p>').join('');
@@ -99,7 +99,7 @@ function offsetIn(el, node, off) {
   return f.textContent.length;
 }
 function wrap(el, s, e, cls, aid) {
-  let pos = 0;
+  let pos = 0; const made = [];
   for (const n of textNodes(el)) {
     const L = n.length, a = Math.max(s, pos), z = Math.min(e, pos + L);
     if (a < z) {
@@ -107,10 +107,11 @@ function wrap(el, s, e, cls, aid) {
       if (z < pos + L) t.splitText(z - pos);
       if (a > pos) t = t.splitText(a - pos);
       const m = document.createElement('mark'); m.className = cls; m.dataset.aid = aid;
-      t.parentNode.insertBefore(m, t); m.appendChild(t);
+      t.parentNode.insertBefore(m, t); m.appendChild(t); made.push(m);
     }
     pos += L;
   }
+  return made;
 }
 function insertAt(el, off, node) {
   let pos = 0;
@@ -120,12 +121,66 @@ function insertAt(el, off, node) {
   }
   el.appendChild(node);
 }
-const KCLS = { gold: 'hl-gold', sage: 'hl-sage', sky: 'hl-sky', rose: 'hl-rose', u: 'mk-u', b: 'mk-b', note: 'mk-note' };
+/* ---------- ink: six hand-drawn highlighter and pen colours ---------- */
+const COLORS = ['yellow', 'green', 'blue', 'pink', 'orange', 'purple'];
+const LEGACY = { gold: 'yellow', sage: 'green', sky: 'blue', rose: 'pink' }; // colours saved by earlier versions
+const kindOf = a => LEGACY[a.k] ? 'hl' : a.k;
+const colorOf = a => a.c || LEGACY[a.k] || 'yellow';
+const isInk = a => ['hl', 'pen', 'u', 'b'].includes(kindOf(a));
+function annCls(a) {
+  const k = kindOf(a), c = colorOf(a);
+  return k === 'hl' ? `hl c-${c}` : k === 'pen' ? `pen p-${c}` : k === 'u' ? 'mk-u' : k === 'b' ? 'mk-b' : 'mk-note';
+}
+(function inkCSS() {
+  // translucent fills: overlapping colours blend like real highlighter ink
+  const HL = { yellow: ['255,214,0', .45, .30], green: ['64,200,90', .34, .28], blue: ['60,150,245', .30, .32], pink: ['245,90,150', .30, .32], orange: ['255,150,40', .40, .32], purple: ['150,110,250', .30, .34] };
+  const PEN = { yellow: ['#c99700', '#ffd43b'], green: ['#2b8a3e', '#69db7c'], blue: ['#1971c2', '#74c0fc'], pink: ['#d6336c', '#f783ac'], orange: ['#e8590c', '#ffa94d'], purple: ['#6741d9', '#b197fc'] };
+  // a marker stroke: wobbly top and bottom edges, rough start (hs) and end (he) caps
+  const SHAPE = {
+    '': 'M0 2.4C14 1.2 30 3.4 47 2.2S82 1.2 100 2.6L100 17.8C84 18.9 66 16.9 50 18S16 18.6 0 17.4Z',
+    '.hs': 'M3.2 3.1C14 1.2 30 3.4 47 2.2S82 1.2 100 2.6L100 17.8C84 18.9 66 16.9 50 18S16 18.6 1.6 17.6C.4 13.5 1.8 7.5 3.2 3.1Z',
+    '.he': 'M0 2.4C14 1.2 30 3.4 47 2.2S82 1.2 97.4 3.2C99.6 7.4 98.6 12.8 99.4 17.6C84 18.9 66 16.9 50 18S16 18.6 0 17.4Z',
+    '.hs.he': 'M3.2 3.1C14 1.2 30 3.4 47 2.2S82 1.2 97.4 3.2C99.6 7.4 98.6 12.8 99.4 17.6C84 18.9 66 16.9 50 18S16 18.6 1.6 17.6C.4 13.5 1.8 7.5 3.2 3.1Z',
+  };
+  const svg = x => `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 20' preserveAspectRatio='none'>${x}</svg>`)}")`;
+  const pen = col => svg(`<path d='M0 15.3C22 14.7 38 15.9 56 15.1S86 14.9 100 15.5' fill='none' stroke='${col}' stroke-width='2.2' stroke-linecap='round' vector-effect='non-scaling-stroke'/>`);
+  let light = '', dark = '';
+  for (const c of COLORS) {
+    const [rgb, lo, dk] = HL[c];
+    for (const [sel, d] of Object.entries(SHAPE)) {
+      light += `.hl.c-${c}${sel}{background-image:${svg(`<path d='${d}' fill='rgb(${rgb})' fill-opacity='${lo}'/>`)}}`;
+      dark += `.hl.c-${c}${sel}{background-image:${svg(`<path d='${d}' fill='rgb(${rgb})' fill-opacity='${dk}'/>`)}}`;
+    }
+    light += `.pen.p-${c}{background-image:${pen(PEN[c][0])}}`; dark += `.pen.p-${c}{background-image:${pen(PEN[c][1])}}`;
+  }
+  const scope = (css, pre) => css.replace(/(^|})\./g, `$1${pre} .`);
+  const st = document.createElement('style');
+  st.textContent = light + scope(dark, ':root[data-theme=dark]') + `@media (prefers-color-scheme:dark){${scope(dark, ':root:not([data-theme=light])')}}`;
+  document.head.appendChild(st);
+})();
+function anchorText(el) { return textNodes(el).map(n => n.data).join(''); }
 function applyMarks() {
+  $$('.sticky').forEach(x => { const p = x.parentNode; x.remove(); p?.normalize(); });
   $$('mark[data-aid]').forEach(m => { const p = m.parentNode; m.replaceWith(...m.childNodes); p.normalize(); });
-  const byA = {};
-  for (const a of S.ann) (byA[a.a] ||= []).push(a);
-  for (const el of $$('[data-anchor]')) for (const a of byA[el.dataset.anchor] || []) wrap(el, a.s, a.e, KCLS[a.k], a.id);
+  const byA = {}, lastOfGroup = {};
+  for (const a of S.ann) { (byA[a.a] ||= []).push(a); lastOfGroup[a.g] = a.id; }
+  const order = a => kindOf(a) === 'hl' ? 0 : kindOf(a) === 'note' ? 2 : 1; // highlighter under pen under notes
+  const showNotes = S.set.layers.notes !== 'off';
+  for (const el of $$('[data-anchor]')) {
+    const list = (byA[el.dataset.anchor] || []).slice().sort((x, y) => order(x) - order(y));
+    for (const a of list) {
+      if (a.e > a.s) {
+        const ms = wrap(el, a.s, a.e, annCls(a), a.id);
+        if (ms.length && kindOf(a) === 'hl') { ms[0].classList.add('hs'); ms[ms.length - 1].classList.add('he'); }
+      }
+      if (kindOf(a) === 'note' && showNotes && lastOfGroup[a.g] === a.id) {
+        const st = document.createElement('span');
+        st.className = 'sticky'; st.dataset.skip = ''; st.dataset.note = a.g; st.setAttribute('role', 'button'); st.tabIndex = 0;
+        st.title = 'Note: ' + (a.n || '').slice(0, 80); st.setAttribute('aria-label', st.title);
+        insertAt(el, a.e, st);
+      }
+    }
+  }
   document.body.classList.toggle('nomarkup', !S.set.markup);
 }
 
@@ -203,7 +258,6 @@ async function render() {
     if (L.xrefs === 'markers' && xrs.length) mk += `<span class="mk" role="button" tabindex="0" data-skip data-panel="${n}" title="Cross references">↗</span>`;
     if (L.commentary === 'markers' && cmStart.length) mk += `<span class="mk" role="button" tabindex="0" data-skip data-panel="${n}" title="Commentary">C</span>`;
     if (L.studies === 'markers' && sts.length) mk += `<span class="mk" role="button" tabindex="0" data-skip data-panel="${n}" title="Study">S</span>`;
-    if (L.notes === 'markers' && nts.length) mk += `<span class="mk" role="button" tabindex="0" data-skip data-note="${nts[0].g}" title="My note">✎</span>`;
     let ib = '';
     if (L.footnotes === 'inline' && fns.length) ib += fns.map((f, j) => `<div class="ib fn"><h4>Footnote ${String.fromCharCode(97 + fnLetter + j)} · ${esc(label(b, c, n))}</h4><span data-anchor="fn:${id}:${j}">${rich(f[1])}</span></div>`).join('');
     if (L.footnotes !== 'off') fnLetter += fns.length;
@@ -383,9 +437,9 @@ async function openStudy(id) {
 /* ---------- saved ---------- */
 function openSaved(filter = 'all') {
   const gs = groups().filter(g => filter === 'all' || (filter === 'notes' ? g.k === 'note' : g.k !== 'note')).sort((a, b) => b.t - a.t);
-  const sw = k => k === 'note' ? 'Note' : k === 'u' ? 'Underline' : k === 'b' ? 'Bold' : 'Highlight';
+  const sw = g => { const k = kindOf(g.items[0]); return k === 'note' ? 'Note' : k === 'pen' ? 'Pen' : k === 'u' ? 'Underline' : k === 'b' ? 'Bold' : 'Highlight'; };
   openSheet('Highlights & notes', `<div class="seg" role="group">${['all', 'highlights', 'notes'].map(f => `<button data-saved="${f}" aria-pressed="${f === filter}">${f[0].toUpperCase() + f.slice(1)}</button>`).join('')}</div>
-  ${gs.length ? `<ul class="list" style="margin-top:12px">${gs.map(g => { const a = g.items[0].a; return `<li><button data-open="${esc(a)}" data-g="${g.g}"><b>${esc(where(a))} · ${sw(g.k)}</b><span><mark class="${KCLS[g.k]}">${esc(g.q || '')}</mark></span>${g.n ? `<span class="meta">${esc(g.n)}</span>` : ''}</button></li>`; }).join('')}</ul>` : '<p class="empty"><b>Nothing saved yet</b>Select words in a verse, note, commentary or study to mark them up.</p>'}`);
+  ${gs.length ? `<ul class="list" style="margin-top:12px">${gs.map(g => { const a = g.items[0].a; return `<li><button data-open="${esc(a)}" data-g="${g.g}"><b>${esc(where(a))} · ${sw(g)}</b><span><mark class="${annCls(g.items[0])} hs he">${esc(g.q || '')}</mark></span>${g.n ? `<span class="meta">${esc(g.n)}</span>` : ''}</button></li>`; }).join('')}</ul>` : '<p class="empty"><b>Nothing saved yet</b>Select words in a verse, note, commentary or study to mark them up.</p>'}`);
 }
 function where(a) {
   if (/^[\w-]+\.\d+\.\d+$/.test(a)) return anchorLabel(a);
@@ -407,33 +461,112 @@ function openAnchor(a) {
   if (p[0] === 'nt') return noteEditor({ g: p[1] });
 }
 
-/* ---------- markup bar ---------- */
-let targets = [], selT;
-const markbar = $('#markbar');
-document.addEventListener('selectionchange', () => { clearTimeout(selT); selT = setTimeout(readSelection, 140); });
-function readSelection() {
-  const sel = getSelection();
-  if (!sel.rangeCount || sel.isCollapsed) { if (!markbar.contains(document.activeElement)) markbar.hidden = true; return; }
-  const r = sel.getRangeAt(0); targets = [];
+/* ---------- marking up: shared by the selection bar and the bottom toolbar ---------- */
+let targets = [], selT, toolT, tool = null, ptrDown = false;
+S.set.color = COLORS.includes(S.set.color) ? S.set.color : 'yellow';
+const markbar = $('#markbar'), toolbar = $('#toolbar'), palette = $('#palette');
+const INK = ['hl', 'pen', 'eraser'];
+function selTargets() {
+  const sel = getSelection(), out = [];
+  if (!sel.rangeCount || sel.isCollapsed) return out;
+  const r = sel.getRangeAt(0);
   for (const el of $$('[data-anchor]')) {
     if (!r.intersectsNode(el)) continue;
     const s = el.contains(r.startContainer) ? offsetIn(el, r.startContainer, r.startOffset) : 0;
     const e = el.contains(r.endContainer) ? offsetIn(el, r.endContainer, r.endOffset) : plainLen(el);
-    if (e > s) targets.push({ a: el.dataset.anchor, s, e });
+    if (e > s) out.push({ a: el.dataset.anchor, s, e });
   }
-  if (!targets.length) { markbar.hidden = true; return; }
-  targets.q = sel.toString().replace(/\s+/g, ' ').trim().slice(0, 280);
+  out.q = sel.toString().replace(/\s+/g, ' ').trim().slice(0, 280);
+  return out;
+}
+function addInk(kind, tg, color) { const g = uid(); for (const t of tg) S.ann.push({ id: uid(), g, a: t.a, s: t.s, e: t.e, k: kind, c: color, q: tg.q, t: Date.now() }); }
+function eraseRange(tg) { // erases only the rubbed-over part; notes are left alone
+  const out = [];
+  for (const a of S.ann) {
+    const t = isInk(a) && tg.find(t => t.a === a.a && a.s < t.e && a.e > t.s);
+    if (!t) { out.push(a); continue; }
+    if (a.s < t.s) out.push({ ...a, id: uid(), e: t.s });
+    if (a.e > t.e) out.push({ ...a, id: uid(), s: t.e });
+  }
+  S.ann = out;
+}
+const commit = () => { save(); getSelection().removeAllRanges(); markbar.hidden = true; targets = []; applyMarks(); };
+document.addEventListener('selectionchange', () => { clearTimeout(selT); selT = setTimeout(readSelection, 140); });
+function readSelection() {
+  targets = selTargets();
+  if (!targets.length) { if (!markbar.contains(document.activeElement)) markbar.hidden = true; return; }
+  if (INK.includes(tool)) { markbar.hidden = true; if (!ptrDown) { clearTimeout(toolT); toolT = setTimeout(toolOnSelection, 700); } return; } // touch handles: apply once they settle
   $('#marklabel').textContent = targets.length > 1 ? `${where(targets[0].a)} +${targets.length - 1}` : where(targets[0].a);
   markbar.hidden = false; $('#audiobar').hidden = true;
 }
+function toolOnSelection() {
+  clearTimeout(toolT);
+  if (!INK.includes(tool)) return;
+  const tg = selTargets(); if (!tg.length) return;
+  if (tool === 'eraser') eraseRange(tg); else addInk(tool, tg, S.set.color);
+  commit();
+}
+document.addEventListener('pointerdown', e => { if (e.target.closest('[data-anchor]')) ptrDown = true; });
+document.addEventListener('pointerup', () => { if (ptrDown) { ptrDown = false; setTimeout(toolOnSelection, 0); } });
 markbar.addEventListener('pointerdown', e => e.preventDefault()); // keep the text selection alive
 markbar.addEventListener('click', e => {
-  const k = e.target.closest('[data-k]')?.dataset.k; if (!k || !targets.length) return;
-  if (k === 'clear') S.ann = S.ann.filter(a => !targets.some(t => t.a === a.a && a.s < t.e && a.e > t.s));
-  else if (k === 'note') { const t = targets; getSelection().removeAllRanges(); markbar.hidden = true; return noteEditor({ targets: t }); }
-  else { const g = uid(); for (const t of targets) S.ann.push({ id: uid(), g, a: t.a, s: t.s, e: t.e, k, q: targets.q, t: Date.now() }); }
-  save(); getSelection().removeAllRanges(); markbar.hidden = true; targets = []; applyMarks(); if (k === 'clear') render();
+  const b = e.target.closest('[data-k]'); if (!b || !targets.length) return;
+  const k = b.dataset.k;
+  if (k === 'note') { const t = targets; getSelection().removeAllRanges(); markbar.hidden = true; return noteEditor({ targets: t }); }
+  if (k === 'erase') eraseRange(targets);
+  else { if (b.dataset.c) { S.set.color = b.dataset.c; renderToolbar(); } addInk(k, targets, S.set.color); }
+  commit();
 });
+
+/* bottom toolbar: highlighter, pen, eraser, colour, sticky note */
+const HINTS = { hl: 'Select words, or tap a word, to highlight', pen: 'Select words, or tap a word, to underline', eraser: 'Rub over marks, or tap a word, to erase', sticky: 'Tap the spot where the note goes' };
+function renderToolbar() {
+  $$('[data-tool]', toolbar).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tool === tool)));
+  document.documentElement.style.setProperty('--tc', `var(--sw-${S.set.color})`);
+  $$('[data-c]', palette).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.c === S.set.color)));
+  $('#toolhint').textContent = HINTS[tool] || ''; $('#toolhint').hidden = !tool || !palette.hidden;
+  document.body.dataset.activeTool = tool || '';
+}
+function setTool(t) { tool = tool === t ? null : t; palette.hidden = true; $('#colorbtn').setAttribute('aria-expanded', 'false'); renderToolbar(); }
+toolbar.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.id === 'colorbtn') { palette.hidden = !palette.hidden; b.setAttribute('aria-expanded', String(!palette.hidden)); renderToolbar(); if (!palette.hidden) palette.querySelector('[aria-pressed=true]')?.focus(); return; }
+  setTool(b.dataset.tool);
+});
+palette.addEventListener('click', e => {
+  const b = e.target.closest('[data-c]'); if (!b) return;
+  S.set.color = b.dataset.c; save();
+  if (tool !== 'pen') tool = 'hl'; // picking a colour picks up the highlighter unless the pen is in hand
+  palette.hidden = true; $('#colorbtn').setAttribute('aria-expanded', 'false'); renderToolbar();
+});
+function caretAt(x, y) {
+  if (document.caretPositionFromPoint) { const p = document.caretPositionFromPoint(x, y); return p && { node: p.offsetNode, off: p.offset }; }
+  const r = document.caretRangeFromPoint?.(x, y); return r && { node: r.startContainer, off: r.startOffset };
+}
+function wordAt(e, t) { // the word (or tagged phrase) under a tap, as an anchor range
+  const anchor = t.closest('[data-anchor]'); if (!anchor) return null;
+  const w = t.closest('.il')?.querySelector('.w') || t.closest('.w');
+  if (w && anchor.contains(w)) { const s = offsetIn(anchor, w, 0); return { a: anchor.dataset.anchor, s, e: s + plainLen(w), el: anchor }; }
+  const c = caretAt(e.clientX, e.clientY);
+  if (!c || c.node.nodeType !== 3 || !anchor.contains(c.node) || c.node.parentElement.closest('[data-skip]')) return null;
+  const tx = c.node.data, W = /[\p{L}\p{N}’'-]/u; let i = c.off, j = c.off;
+  while (i > 0 && W.test(tx[i - 1])) i--;
+  while (j < tx.length && W.test(tx[j])) j++;
+  if (i === j && tool !== 'sticky') return null;
+  return { a: anchor.dataset.anchor, s: offsetIn(anchor, c.node, i), e: offsetIn(anchor, c.node, j), el: anchor };
+}
+function toolTap(e, t) {
+  const w = wordAt(e, t); if (!w) return;
+  const text = anchorText(w.el);
+  if (tool === 'sticky') {
+    const q = (w.e > 60 ? '…' : '') + text.slice(Math.max(0, w.e - 60), w.e).trim() + ' ✎';
+    const tg = Object.assign([{ a: w.a, s: w.e, e: w.e }], { q });
+    setTool(null); return noteEditor({ targets: tg });
+  }
+  const tg = Object.assign([{ a: w.a, s: w.s, e: w.e }], { q: text.slice(w.s, w.e) });
+  if (tool === 'eraser') eraseRange(tg); else addInk(tool, tg, S.set.color);
+  commit();
+}
 
 /* ---------- notes (with dictation) ---------- */
 function noteEditor({ targets: t, g, verse, listen }) {
@@ -571,6 +704,7 @@ document.addEventListener('click', async e => {
   if (q('[data-open]')) return openAnchor(q('[data-open]').dataset.open);
   if (q('[data-study]')) return openStudy(q('[data-study]').dataset.study);
   if (q('[data-note]')) { e.preventDefault(); return noteEditor({ g: q('[data-note]').dataset.note }); }
+  if (tool && q('[data-anchor]') && getSelection().isCollapsed && !q('a, button, [role=button], .vn')) return toolTap(e, t);
   if (q('mark.mk-note')) { const a = S.ann.find(x => x.id === q('mark.mk-note').dataset.aid); if (a && getSelection().isCollapsed) return noteEditor({ g: a.g }); }
   if (q('[data-read]')) { const v = +q('[data-read]').dataset.read; closeSheet(); return startReading(v); }
   if (q('[data-newnote]')) return noteEditor({ verse: +q('[data-newnote]').dataset.newnote });
@@ -589,7 +723,7 @@ document.addEventListener('click', async e => {
 document.addEventListener('keydown', e => {
   if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('span[role=button]')) { e.preventDefault(); e.target.click(); return; }
   if (e.target.matches('input, textarea, select')) { if (e.key === 'Escape') closeSheet(); return; }
-  if (e.key === 'Escape') { if (!menu.hidden) closeMenu(true); else if (!sheet.hidden) closeSheet(); else { markbar.hidden = true; getSelection().removeAllRanges(); } }
+  if (e.key === 'Escape') { if (!menu.hidden) closeMenu(true); else if (!sheet.hidden) closeSheet(); else if (!palette.hidden) { palette.hidden = true; renderToolbar(); } else if (tool) setTool(tool); else { markbar.hidden = true; getSelection().removeAllRanges(); } }
   else if (!sheet.hidden) return;
   else if (e.key === 'ArrowLeft') $('#prev').click();
   else if (e.key === 'ArrowRight') $('#next').click();
@@ -609,6 +743,6 @@ window.addEventListener('hashchange', () => {
   studyIdx = (await getJSON('data/studies/index.json')) || [];
   await loadLex();
   if (synth) synth.onvoiceschanged = () => {};
-  await render();
+  renderToolbar(); await render();
 })();
 }

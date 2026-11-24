@@ -25,7 +25,8 @@ Opening `index.html` directly from disk won't work, because browsers block `fetc
 | Interlinear | English order (reverse interlinear) with the Greek or Hebrew word, transliteration and Strong's number under each English word. |
 | Verse panel | Tap a verse for all its layers at once: word list, footnotes, cross-references with previews, commentary, studies, notes. |
 | Concordance | Every verse using a Strong's number, plus how the BSB translates it. Search `G3056` or `H430` to jump there. |
-| Markup | Select any words in a verse, footnote, commentary, study, lexicon entry or note, then highlight (4 colours), underline, bold, attach a note, or clear. Selections can span several verses. |
+| Toolbar | Along the bottom: **Highlighter** (hand-drawn marker strokes), **Pen** (hand-drawn underline), **Eraser** (removes only what you rub over), **Color** (six inks: yellow, green, blue, pink, orange, purple) and **Sticky note** (tap anywhere in the text to pin a note there). With a tool picked up, drag across words or tap a single word; tap the tool again or press Escape to put it down. |
+| Markup | With no tool picked up, selecting text shows a bar with the six colours, Pen, Note and Erase. Works in verses, footnotes, commentary, studies, lexicon entries and notes, and across several verses. Overlapping colours blend like real highlighter ink. |
 | Notes | Light formatting: `**bold**`, `*italic*`, `==highlight==`. References like `John 3:16` and numbers like `G3056` become links. |
 | Read aloud | **Read aloud** in the menu reads from the current or tapped verse, highlights each verse, follows along and continues into the next chapter. Speed and voice are in settings. |
 | Voice to text | **Dictate** in the note editor, **Dictate note** in the verse panel, and the mic in search. |

@@ -33,19 +33,37 @@
   <nav class="pager" aria-label="Chapter pager"><a id="pprev" href="#"></a><a id="pnext" href="#"></a></nav>
 </main>
 
-<div class="dock" id="markbar" role="toolbar" aria-label="Markup" hidden>
+<div class="dock" id="markbar" role="toolbar" aria-label="Mark up the selection" hidden>
   <span class="alabel" id="marklabel"></span>
   <div class="swatches">
-    <button data-k="gold" aria-label="Highlight gold"></button>
-    <button data-k="sage" aria-label="Highlight green"></button>
-    <button data-k="sky" aria-label="Highlight blue"></button>
-    <button data-k="rose" aria-label="Highlight rose"></button>
+    <button data-k="hl" data-c="yellow" style="--s:var(--sw-yellow)" aria-label="Highlight yellow"></button>
+    <button data-k="hl" data-c="green" style="--s:var(--sw-green)" aria-label="Highlight green"></button>
+    <button data-k="hl" data-c="blue" style="--s:var(--sw-blue)" aria-label="Highlight blue"></button>
+    <button data-k="hl" data-c="pink" style="--s:var(--sw-pink)" aria-label="Highlight pink"></button>
+    <button data-k="hl" data-c="orange" style="--s:var(--sw-orange)" aria-label="Highlight orange"></button>
+    <button data-k="hl" data-c="purple" style="--s:var(--sw-purple)" aria-label="Highlight purple"></button>
   </div>
-  <button class="abtn" data-k="u" aria-label="Underline"><u>U</u></button>
-  <button class="abtn" data-k="b" aria-label="Bold"><b>B</b></button>
+  <button class="abtn" data-k="pen">Pen</button>
   <button class="abtn" data-k="note">Note</button>
-  <button class="abtn" data-k="clear">Clear</button>
+  <button class="abtn" data-k="erase">Erase</button>
 </div>
+
+<p class="toolhint" id="toolhint" role="status" hidden></p>
+<div class="palette" id="palette" role="group" aria-label="Ink colour" hidden>
+  <button data-c="yellow" style="--s:var(--sw-yellow)" aria-label="Yellow"></button>
+  <button data-c="green" style="--s:var(--sw-green)" aria-label="Green"></button>
+  <button data-c="blue" style="--s:var(--sw-blue)" aria-label="Blue"></button>
+  <button data-c="pink" style="--s:var(--sw-pink)" aria-label="Pink"></button>
+  <button data-c="orange" style="--s:var(--sw-orange)" aria-label="Orange"></button>
+  <button data-c="purple" style="--s:var(--sw-purple)" aria-label="Purple"></button>
+</div>
+<nav class="toolbar" id="toolbar" aria-label="Markup tools">
+  <button data-tool="hl" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M14.5 3.8l5.7 5.7-8.4 8.4H6.1v-5.7z"/><path class="tip" d="M6.1 12.2v5.7h5.7z"/><path d="M3.5 21h9"/></svg><span>Highlighter</span></button>
+  <button data-tool="pen" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M16 3.5l4.5 4.5L9 19.5l-5.5 1 1-5.5z"/><path d="M13.5 6l4.5 4.5"/><path class="tipline" d="M14 21c2-1.2 4-1.2 6.5 0"/></svg><span>Pen</span></button>
+  <button data-tool="eraser" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M8.5 20h11.5"/><path d="M4.6 14.4l8.6-8.6a2 2 0 0 1 2.8 0l3.2 3.2a2 2 0 0 1 0 2.8L11.5 19.5H9.7z"/><path d="M9.2 9.8l5 5"/></svg><span>Eraser</span></button>
+  <button id="colorbtn" aria-haspopup="true" aria-expanded="false" aria-controls="palette"><span class="cdot"></span><span>Color</span></button>
+  <button data-tool="sticky" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M4.5 4.5h15v9.8l-5.2 5.2H4.5z"/><path d="M14.3 19.5v-5.2h5.2"/><path d="M8 9h8M8 12.5h4"/></svg><span>Sticky note</span></button>
+</nav>
 
 <div class="dock audio" id="audiobar" role="toolbar" aria-label="Read aloud" hidden>
   <button class="ico" id="aprev" aria-label="Previous verse"><svg viewBox="0 0 24 24"><path d="M7 5v14M18 5l-9 7 9 7z"/></svg></button>
