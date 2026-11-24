@@ -639,13 +639,17 @@ document.addEventListener('selectionchange', () => { clearTimeout(selT); selT = 
 function readSelection() {
   targets = selTargets();
   if (tool !== 'select' || !targets.length) hideCopy();
-  if (!targets.length) { if (!markbar.contains(document.activeElement)) markbar.hidden = true; return; }
+  markbar.hidden = true; // the toolbar does the selection bar's jobs now
+  if (!targets.length) { if (selLabel) { selLabel = ''; renderToolbar(); } return; }
   if (tool === 'select') { markbar.hidden = true; return showCopy(); } // plain selection, with a Copy button
   if (tool === 'tree') { markbar.hidden = true; if (!ptrDown) { clearTimeout(toolT); toolT = setTimeout(() => { const tg = selTargets(); if (tg.length) { getSelection().removeAllRanges(); treeFrom(tg); } }, 500); } return; }
   if (INK.includes(tool)) { markbar.hidden = true; if (!ptrDown) { clearTimeout(toolT); toolT = setTimeout(toolOnSelection, 700); } return; } // touch handles: apply once they settle
-  $('#marklabel').textContent = targets.length > 1 ? `${where(targets[0].a)} +${targets.length - 1}` : where(targets[0].a);
-  markbar.hidden = false; $('#audiobar').hidden = true;
+  // No tool in hand: the toolbar acts on the selection. Bring it out and say what's selected.
+  selLabel = targets.length > 1 ? `${where(targets[0].a)} +${targets.length - 1}` : where(targets[0].a);
+  if (toolbar.classList.contains('collapsed')) expandToolbar(); else { pane = pane === 'tools' || pane === 'colors' ? pane : 'main'; renderToolbar(); }
+  $('#audiobar').hidden = true;
 }
+let selLabel = '';
 function toolOnSelection() {
   clearTimeout(toolT);
   if (tool === 'tree') { const tg = selTargets(); if (tg.length) { getSelection().removeAllRanges(); treeFrom(tg); } return; }
@@ -745,18 +749,19 @@ function treeFrom(tg) {
 }
 function renderToolbar() {
   // the Colour button belongs to whatever is in hand: the Note has its own colour, apart from the pen and highlighter
-  const t = S.set.lastTool, ct = t, c = t === 'select' ? 'black' : toolColorOf(ct), cname = c ? CNAME[c] : 'All colours';
+  const t = S.set.lastTool, ct = t === 'select' && !tool && selLabel ? 'hl' : t; // with text selected, Colour highlights even when Select was the last tool
+  const c = ct === 'select' ? 'black' : toolColorOf(ct), cname = c ? CNAME[c] : 'All colours';
   document.documentElement.style.setProperty('--tc', c ? `var(--sw-${c})` : 'var(--soft)');
   toolbar.classList.toggle('allc', !c);
   let h;
   if (pane === 'tools') h = ['select', 'pen', 'hl', 'eraser'].map(k => `<button data-pick="${k}" aria-pressed="${tool === k}">${TOOL_ICON[k]}<span>${TOOLNAME[k]}</span></button>`).join('');
   else if (pane === 'colors') {
-    const list = ct === 'note' ? HILITES : (t === 'eraser' ? [''] : []).concat(INKS, HILITES);
+    const list = ct === 'note' ? HILITES : (ct === 'eraser' ? [''] : []).concat(INKS, HILITES);
     h = `<div class="swrow" role="group" aria-label="${ct === 'note' ? 'Colour for notes' : t === 'eraser' ? 'Colour the eraser removes' : 'Colour for the ' + TOOLNAME[t].toLowerCase()}">` +
       list.map(k => `<button class="swc${k ? '' : ' all'}" data-c="${k}" style="--s:var(--sw-${k || 'yellow'})" aria-pressed="${k === c}" aria-label="${k ? CNAME[k] : 'All colours, and notes'}" title="${k ? CNAME[k] : 'All colours, and notes'}"></button>`).join('') + '</div>';
   } else h = `<button id="tbtool" aria-pressed="${tool === t}" aria-label="Tool: ${TOOLNAME[t]}${tool === t ? ', in hand' : ''}. Choose a tool">${TOOL_ICON[t]}<span>${TOOLNAME[t]}</span></button>`
-    + (t === 'select' ? `<button id="tbcolor" disabled aria-label="No colour for the select tool"><span class="cdot none"></span><span>No colour</span></button>`
-      : `<button id="tbcolor" aria-label="Colour: ${cname}. Choose a colour"><span class="cdot${c ? '' : ' all'}"></span><span>${t === 'eraser' && !c ? 'All' : cname}</span></button>`)
+    + (ct === 'select' ? `<button id="tbcolor" disabled aria-label="No colour for the select tool"><span class="cdot none"></span><span>No colour</span></button>`
+      : `<button id="tbcolor" aria-label="Colour: ${cname}. Choose a colour"><span class="cdot${c ? '' : ' all'}"></span><span>${ct === 'eraser' && !c ? 'All' : cname}</span></button>`)
     + `<button id="tbtree" aria-pressed="${tool === 'tree'}" aria-label="NoteTree: make one from the selected verses">${TOOL_ICON.tree}<span>NoteTree</span></button>`;
   tbpane.innerHTML = h; tbpane.dataset.pane = pane;
   $('#tbfab').innerHTML = `${TOOL_ICON[tool === 'tree' ? 'tree' : t]}<span class="fabline"></span>`;
@@ -764,6 +769,10 @@ function renderToolbar() {
   const erasing = tool === 'eraser';
   $('#toolhint').textContent = erasing ? (c ? `Rub over marks, or tap a word, to erase ${CNAME[c].toLowerCase()} only` : HINTS.eraser + ' (all colours, and notes)') : HINTS[tool] || '';
   $('#toolhint').hidden = !tool || pane !== 'main' || toolbar.classList.contains('collapsed');
+  if (!tool && selLabel && !toolbar.classList.contains('collapsed')) {
+    $('#toolhint').textContent = pane === 'tools' ? `${selLabel} selected: pick what to do with it` : pane === 'colors' ? `${selLabel} selected: pick a colour` : `${selLabel} selected: pick a colour to highlight, or a tool`;
+    $('#toolhint').hidden = false;
+  }
   document.body.dataset.activeTool = tool || '';
 }
 function setTool(t) {
@@ -775,7 +784,7 @@ const IDLE_MS = 4000, TOOLNAME = { hl: 'Highlighter', pen: 'Pen', eraser: 'Erase
 let idleT;
 function bumpIdle() { clearTimeout(idleT); idleT = setTimeout(collapseToolbar, IDLE_MS); }
 function collapseToolbar() {
-  if (pane !== 'main' || toolbar.querySelector(':focus-visible:not(.tbfab)')) return bumpIdle(); // not while choosing, or tabbing through it
+  if (pane !== 'main' || selLabel || toolbar.querySelector(':focus-visible:not(.tbfab)')) return bumpIdle(); // not while choosing, with text selected, or tabbing through it
   toolbar.classList.add('collapsed'); toolbar.classList.toggle('holding', !!tool);
   $('#tbfab').setAttribute('aria-label', tool ? `Show markup tools (${TOOLNAME[tool]} in hand)` : 'Show markup tools');
   renderToolbar();
@@ -794,11 +803,23 @@ toolbar.addEventListener('click', e => {
   if (b.id === 'tbtool') pane = 'tools';
   else if (b.id === 'tbcolor') pane = 'colors';
   else if (b.id === 'tbtree') return treeButton();
+  else if (b.dataset.pick && !tool && selLabel) return actOnSelection(b.dataset.pick, null);
+  else if ('c' in b.dataset && !tool && selLabel) return actOnSelection(t === 'select' ? 'hl' : t, b.dataset.c);
   else if (b.dataset.pick) { const k = b.dataset.pick; tool = tool === k ? null : k; hideCopy(); S.set.lastTool = k; syncColor(); save(); pane = 'main'; } // picking the tool in hand puts it down
   else if ('c' in b.dataset) { if (t === 'eraser') S.set.eraseColor = b.dataset.c; else S.set.toolColor[t] = b.dataset.c; syncColor(); tool = t; save(); pane = 'main'; } // a colour picks the tool up
   renderToolbar();
   if (e.detail === 0) tbpane.querySelector('[aria-pressed=true], button')?.focus({ preventScroll: true });
 });
+// With text selected and no tool in hand, a tool or colour acts on the selection once (it isn't picked up).
+async function actOnSelection(k, color) {
+  const tg = selTargets(); pane = 'main';
+  if (!tg.length) { selLabel = ''; return renderToolbar(); }
+  if (color !== null) { if (k === 'eraser') S.set.eraseColor = color; else S.set.toolColor[k === 'pen' ? 'pen' : 'hl'] = color; }
+  if (k === 'select') { const txt = copyText(tg); if (txt && await doCopy(txt)) toast('Copied'); getSelection().removeAllRanges(); selLabel = ''; return renderToolbar(); }
+  S.set.lastTool = k; syncColor();
+  if (k === 'eraser') eraseRange(tg, S.set.eraseColor || ''); else addInk(k, tg, S.set.toolColor[k]);
+  selLabel = ''; commit(); renderToolbar();
+}
 // tapping anywhere else, or Escape, brings the three buttons back
 document.addEventListener('pointerdown', e => { if (pane !== 'main' && !toolbar.contains(e.target)) { pane = 'main'; renderToolbar(); } }, true);
 function caretAt(x, y) {
