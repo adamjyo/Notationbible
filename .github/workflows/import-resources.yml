@@ -1,11 +1,9 @@
 # Builds the extra study resources (parallel translations, commentaries, Easton's dictionary,
 # Nave's/Torrey's topics, Bible places) on GitHub's servers and commits them to data/.
 name: Import study resources
+# PAUSED: runs only by hand (Actions > Import study resources > Run workflow). See docs/RESOURCES_STATUS.md.
 on:
   workflow_dispatch:
-  push:
-    branches: [claude/initial-reader]
-    paths: ['scripts/build_resources.py', '.github/workflows/import-resources.yml']
 permissions:
   contents: write
 concurrency: { group: import-resources, cancel-in-progress: true }

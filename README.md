@@ -35,6 +35,10 @@ The app opens in **dark mode** by default. Switch with **Dark mode** in the menu
 | Read aloud | **Read aloud** in the menu reads from the current or tapped verse, highlights each verse, follows along and continues into the next chapter. Speed and voice are in settings. |
 | Voice to text | **Dictate** in the note editor, **Dictate note** in the verse panel, and the mic in search. |
 | NoteTree | On a computer or tablet: select verses (or tap a verse) and choose **NoteTree**. The passage is centred on an 8½ × 11 in page with 3 in of free canvas on each side. Draw anywhere with a pen or highlighter, drop text boxes and drag them by their top grip, erase, undo/redo (Ctrl+Z / Ctrl+Shift+Z), zoom and fit. Shortcuts: V select, P pen, H highlighter, T text, E eraser. Each passage keeps its own NoteTree; an **NT** mark appears on its first verse. Phones open NoteTrees to view only. **Apple Pencil:** pen lines follow pressure; the first Pencil stroke turns on **Pencil only**, so the Pencil draws while one finger scrolls, two fingers pinch to zoom, and a resting palm is ignored (toggle it in the NoteTree toolbar). Pencil hover (on iPads that support it) previews the nib, and iPadOS Scribble handwriting works in text boxes. |
+| Compare | A layer that shows the KJV, ASV or YLT under each BSB verse (choose in settings). The verse panel always shows every translation. |
+| Commentaries | Jamieson-Fausset-Brown (verse by verse, whole Bible) and Scofield Reference Notes. Pick which ones under settings → Commentaries. |
+| Topics, places, dictionary | The verse panel lists Nave's and Torrey's topics for the verse, Bible places with coordinates and map links, and Easton's Bible Dictionary entries for names and key words. Search also finds topics and dictionary entries. |
+| Reading plans | Menu → Reading plans: whole Bible in a year, OT and NT together, New Testament in 90 days, Gospels in 30 days, Psalms and Proverbs in a month. Days are balanced by verse count, with today's reading, catch-up and progress. |
 | Search | Words (all must match), `"exact phrase"`, references (`jn 1:14`, `ps 23`) and Strong's numbers. |
 
 Highlights, notes and settings are stored in the browser (`localStorage`). See *Roadmap* for sync.
@@ -62,7 +66,7 @@ The repo ships the **complete Berean Standard Bible**: all 66 books and 31,102 v
 
 **Rebuilding:** the data is built on GitHub's servers by `.github/workflows/import-bible.yml`, which downloads the sources, runs `scripts/build_bsb.py` and `scripts/import.mjs xrefs`, and commits `data/`. It runs whenever the converter changes, or by hand from **Actions → Import full Bible → Run workflow**. `data/IMPORT_REPORT.md` records the counts and any phrases that couldn't be aligned.
 
-**Commentary:** the only commentary is still the short *preview commentary* on Genesis 1, Psalm 23 and John 1. Add a public-domain commentary as a `ref,text` CSV with `node scripts/import.mjs commentary <id> "<Name>" file.csv`.
+**Study resources:** see `docs/RESOURCES_STATUS.md` for what is imported (KJV, ASV, YLT, JFB, Scofield, Easton's, Nave's, Torrey's, places), the sources and licences, and what's next. Resource importing is paused. **Preview commentary:** the original short sample on Genesis 1, Psalm 23 and John 1. Add a public-domain commentary as a `ref,text` CSV with `node scripts/import.mjs commentary <id> "<Name>" file.csv`.
 
 **Studies:** hand-authored JSON in `data/studies/`.
 

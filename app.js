@@ -13,19 +13,20 @@ const LAYERS = [
   { k: 'interlinear', name: 'Interlinear', modes: ['off', 'inline'], labels: { off: 'Off', inline: 'On' }, help: 'Greek or Hebrew, transliteration and number under each English word.' },
   { k: 'footnotes', name: 'Footnotes', modes: ['off', 'markers', 'inline'], labels: { off: 'Off', markers: 'Markers', inline: 'Inline' }, help: 'Translator notes and manuscript readings.' },
   { k: 'xrefs', name: 'Cross refs', modes: ['off', 'markers', 'inline'], labels: { off: 'Off', markers: 'Markers', inline: 'Inline' }, help: 'Related passages.' },
-  { k: 'commentary', name: 'Commentary', modes: ['off', 'markers', 'inline'], labels: { off: 'Off', markers: 'Markers', inline: 'Inline' }, help: 'Notes on each section of the chapter.' },
+  { k: 'commentary', name: 'Commentary', modes: ['off', 'markers', 'inline'], labels: { off: 'Off', markers: 'Markers', inline: 'Inline' }, help: 'Classic commentaries, verse by verse. Choose which ones under Commentaries below.' },
+  { k: 'compare', name: 'Compare', modes: ['off', 'inline'], labels: { off: 'Off', inline: 'On' }, help: 'Another translation under each verse (KJV, ASV, WEB or YLT; choose below).' },
   { k: 'studies', name: 'Studies', modes: ['off', 'markers', 'inline'], labels: { off: 'Off', markers: 'Markers', inline: 'Inline' }, help: 'Bible-study sections anchored to verses.' },
   { k: 'notes', name: 'My notes', modes: ['off', 'markers', 'inline'], labels: { off: 'Off', markers: 'Markers', inline: 'Inline' }, help: 'Your own notes, shown where you wrote them.' },
 ];
 const PRESETS = {
-  reading: { strongs: 'off', interlinear: 'off', footnotes: 'off', xrefs: 'off', commentary: 'off', studies: 'off', notes: 'markers' },
-  study: { strongs: 'tap', interlinear: 'off', footnotes: 'markers', xrefs: 'markers', commentary: 'inline', studies: 'inline', notes: 'inline' },
-  original: { strongs: 'inline', interlinear: 'inline', footnotes: 'markers', xrefs: 'off', commentary: 'off', studies: 'off', notes: 'markers' },
+  reading: { strongs: 'off', interlinear: 'off', footnotes: 'off', xrefs: 'off', commentary: 'off', compare: 'off', studies: 'off', notes: 'markers' },
+  study: { strongs: 'tap', interlinear: 'off', footnotes: 'markers', xrefs: 'markers', commentary: 'markers', compare: 'off', studies: 'inline', notes: 'inline' },
+  original: { strongs: 'inline', interlinear: 'inline', footnotes: 'markers', xrefs: 'off', commentary: 'off', compare: 'off', studies: 'off', notes: 'markers' },
 };
 const KEY = 'notationbible:v1';
 let S = {};
 try { S = JSON.parse(localStorage.getItem(KEY)) || {}; } catch { S = {}; }
-S.set = Object.assign({ theme: 'dark', size: 19, font: 'serif', layout: 'para', nums: true, markup: true, rate: 1, voice: '', cont: true }, S.set || {});
+S.set = Object.assign({ compareTr: 'kjv', commentaries: ['jfb', 'scofield'], theme: 'dark', size: 19, font: 'serif', layout: 'para', nums: true, markup: true, rate: 1, voice: '', cont: true }, S.set || {});
 // appearance: dark by default; 'system' follows the device (and the claude.ai viewer's theme when previewed there)
 const applyTheme = () => { document.documentElement.dataset.mode = ['dark', 'light', 'system'].includes(S.set.theme) ? S.set.theme : 'dark'; };
 const isDark = () => S.set.theme === 'dark' || (S.set.theme === 'system' && (document.documentElement.dataset.theme === 'dark' || (document.documentElement.dataset.theme !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches)));
@@ -64,6 +65,8 @@ const getIL = b => ilCache[b] ??= getJSON(`data/il/${b}.json`).then(d => {
   for (const [c, vs] of Object.entries(d.chapters)) out[c] = vs.map(v => v ? v.split('~').map(w => w.split('¦')) : []);
   return out;
 });
+const getTr = (id, b) => (M.layers.translations || []).some(t => t.id === id && t.books.includes(b)) ? getJSON(`data/tr/${id}/${b}.json`).then(d => d?.chapters) : Promise.resolve(null);
+const trName = id => (M.layers.translations || []).find(t => t.id === id);
 const lay = (name, b) => (M.layers[name]?.books || []).includes(b) ? getJSON(`data/${name}/${b}.json`) : null;
 const lexFile = n => getJSON(n[0] === 'H' ? 'data/lexicon/hebrew.json' : 'data/lexicon/greek.json');
 let LEX = {};
@@ -231,7 +234,7 @@ function applyMarks() {
 async function loadChapter(b, c) {
   const [t, fn, xr, cms] = await Promise.all([
     getBook(b), lay('footnotes', b), lay('xrefs', b),
-    Promise.all((M.layers.commentary || []).map(s => s.books.includes(b) ? getJSON(`data/commentary/${s.id}/${b}.json`).then(d => ({ s, d })) : null)),
+    Promise.all((M.layers.commentary || []).filter(s => S.set.commentaries.includes(s.id)).map(s => s.books.includes(b) ? getJSON(`data/commentary/${s.id}/${b}.json`).then(d => ({ s, d })) : null)),
   ]);
   const cm = [];
   for (const x of cms) if (x?.d) for (const [r, txt] of Object.entries(x.d)) {
@@ -244,7 +247,8 @@ async function loadChapter(b, c) {
     d?.sections.forEach((sec, i) => { const p = sec.ref.split('.'); if (p[0] === b && +p[1] === c) st.push({ s, d, sec, i, v: +p[2], anchor: `st:${s.id}:${i}` }); });
   }
   const il = S.set.layers.interlinear === 'inline' ? (await getIL(b))?.[c] : null;
-  return { b, c, verses: t?.chapters?.[c] || null, h: t?.h || {}, p: t?.p?.[c] || [], il, fn: fn || {}, xr: xr || {}, cm, st };
+  const tr = S.set.layers.compare === 'inline' ? (await getTr(S.set.compareTr, b))?.[c] : null;
+  return { b, c, verses: t?.chapters?.[c] || null, h: t?.h || {}, p: t?.p?.[c] || [], il, tr, fn: fn || {}, xr: xr || {}, cm, st };
 }
 const notesFor = id => groups().filter(g => g.k === 'note' && g.items.some(a => a.a === id));
 function groups() {
@@ -309,6 +313,7 @@ async function render() {
     if (L.xrefs === 'inline' && xrs.length) ib += `<div class="ib xr"><h4>Cross references · ${esc(label(b, c, n))}</h4>${xrs.map(r => `<a href="${hashOf(...r.split('.'))}">${esc(anchorLabel(r))}</a>`).join('')}</div>`;
     if (L.commentary === 'inline') ib += cmEnd.map(x => `<section class="ib cm"><h4>Commentary · ${esc(label(b, x.r.replace('-', '–')))} · ${esc(x.src.name)}</h4><div data-anchor="${x.anchor}">${rich(x.txt)}</div></section>`).join('');
     if (L.studies === 'inline') ib += sts.map(x => `<section class="ib st"><h4>Study · ${esc(x.d.title)} · ${esc(x.sec.heading)}</h4><div data-anchor="${x.anchor}">${rich(x.sec.body)}</div><button class="lnk" data-study="${x.s.id}">Open the full study</button></section>`).join('');
+    if (L.compare === 'inline' && chap.tr?.[i]) ib += `<div class="ib trc"><h4>${esc(trName(S.set.compareTr)?.abbr || '')} · ${esc(label(b, c, n))}</h4><span class="trt">${lord(chap.tr[i])}</span></div>`;
     if (L.notes === 'inline') ib += nts.map(g => `<div class="ib nt"><h4>My note · ${esc(label(b, c, n))}</h4><div class="tc-${esc(g.c || 'black')}" data-anchor="nt:${g.g}">${rich(g.n || '')}</div><button class="lnk" data-note="${g.g}">Edit note</button></div>`).join('');
     const hd = chap.h[key], pstart = n > 1 && chap.p.includes(n) && !hd;
     const pre = (hd ? `<h3 class="shd">${esc(hd[0])}${hd[1] ? `<small>${rich(hd[1]).replace(/^<p>|<\/p>$/g, '')}</small>` : ''}</h3>` : '') + (pstart && !verseMode ? '<span class="pbr"></span>' : '');
@@ -345,6 +350,7 @@ const MI = {
   goto: '<svg viewBox="0 0 24 24"><path d="M5 4.5h9.5a3 3 0 0 1 3 3V20H8a3 3 0 0 1-3-3z"/></svg>',
   study: '<svg viewBox="0 0 24 24"><path d="M3.5 5.5c3-1 6-1 8.5 1v13c-2.5-2-5.5-2-8.5-1zM20.5 5.5c-3-1-6-1-8.5 1v13c2.5-2 5.5-2 8.5-1z"/></svg>',
   saved: '<svg viewBox="0 0 24 24"><path d="M7 3.5h10v17l-5-3.6-5 3.6z"/></svg>',
+  plan: '<svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 9.5h16M8.5 3v4M15.5 3v4M8 13.5l2.2 2.2L16 12"/></svg>',
   tree: '<svg viewBox="0 0 24 24"><rect x="7.5" y="4" width="9" height="12" rx="1"/><path d="M3 8c2 0 3 1 4.5 2M21 8c-2 0-3 1-4.5 2M3 15c1.5 0 3-.5 4.5-1.5M21 15c-1.5 0-3-.5-4.5-1.5"/></svg>',
   set: '<svg viewBox="0 0 24 24"><path d="M12 3.5l8.5 4.5-8.5 4.5L3.5 8z"/><path d="M3.5 12l8.5 4.5 8.5-4.5M3.5 16l8.5 4.5 8.5-4.5"/></svg>',
 };
@@ -363,6 +369,7 @@ function renderMenu() {
     ${LAYERS.map(l => sw(l.k, L[l.k] !== 'off', l.name, L[l.k] !== 'off' && l.modes.length > 2 ? l.labels[L[l.k]] : '')).join('')}
     ${sw('markup', S.set.markup, 'Highlights &amp; markup', '')}
     ${sw('darkmode', isDark(), 'Dark mode', S.set.theme === 'system' ? 'System' : '')}
+    <button class="mi" role="menuitem" id="plansbtn">${MI.plan}<span class="lab">Reading plans</span>${S.plan ? `<span class="sub">day ${Math.max(1, dayIndex(S.plan.start) + 1)}</span>` : ''}</button>
     <button class="mi" role="menuitem" id="treesbtn">${MI.tree}<span class="lab">NoteTrees</span>${Object.keys(S.trees || {}).length ? `<span class="sub">${Object.keys(S.trees).length}</span>` : ''}</button>
     <hr><button class="mi" role="menuitem" id="setbtn">${MI.set}<span class="lab">Layer modes &amp; reading settings</span></button>`;
 }
@@ -422,8 +429,10 @@ async function versePanel(n) {
   if (xrs.length) h += `<h3>Cross references</h3><ul class="list">${xrs.map(r => `<li><a href="${hashOf(...r.split('.'))}"><b>${esc(anchorLabel(r))}</b><span class="xprev" data-ref="${r}"></span></a></li>`).join('')}</ul>`;
   if (cms.length) h += cms.map(x => `<h3>Commentary · ${esc(label(b, x.r.replace('-', '–')))} · ${esc(x.src.name)}</h3><div class="prose" data-anchor="${x.anchor}">${rich(x.txt)}</div>`).join('');
   if (sts.length) h += sts.map(x => `<h3>Study · ${esc(x.d.title)}</h3><div class="prose"><b>${esc(x.sec.heading)}</b><div data-anchor="${x.anchor}">${rich(x.sec.body)}</div></div><button class="btn" data-study="${x.s.id}">Open the full study</button>`).join('');
+  h += `<div id="vpx" data-b="${b}" data-c="${c}" data-v="${n}"></div>`;
   if (nts.length) h += `<h3>My notes</h3>${nts.map(g => `<div class="ib nt" style="margin-left:0"><div class="tc-${esc(g.c || 'black')}" data-anchor="nt:${g.g}">${rich(g.n || '')}</div><button class="lnk" data-note="${g.g}">Edit note</button></div>`).join('')}`;
   openSheet(label(b, c, n), h);
+  versePanelExtras(b, c, n, plain(toks));
   // fill cross-reference previews when that text is available
   $$('.xprev').forEach(async el => { const [rb, rc, rv] = el.dataset.ref.split('.'); const d = await getBook(rb); const v = d?.chapters?.[rc]?.[rv - 1]; el.textContent = v ? plain(v) : 'Not in this data set yet'; });
 }
@@ -479,10 +488,30 @@ async function runSearch(q) {
     if (token !== searchToken) return; // the query changed while books were loading
     for (const [c, vs] of Object.entries(d.chapters)) vs.forEach((toks, i) => { const p = plain(toks), l = p.toLowerCase(); if (words.length && words.every(w => l.includes(w))) hits.push({ b: bk, c, v: i + 1, p }); });
   }
+  if (token !== searchToken) return;
+  const extra = await searchResources(q);
+  if (token !== searchToken) return;
+  h += extra;
   const re = words.length ? new RegExp('(' + words.map(w => esc(w).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')', 'gi') : null;
   h += `<p class="hint">${hits.length} verse${hits.length === 1 ? '' : 's'}${M.sample ? ' in the preview chapters' : ''}</p><ul class="list">${hits.slice(0, 300).map(x => `<li><a href="${hashOf(x.b, x.c, x.v)}"><b>${esc(label(x.b, x.c, x.v))}</b><span>${re ? esc(x.p).replace(re, '<mark>$1</mark>') : esc(x.p)}</span></a></li>`).join('')}</ul>`;
   if (!hits.length && !ref) h += `<p class="empty"><b>No matches</b>Check spelling, or search fewer words.</p>`;
   out.innerHTML = h;
+}
+
+async function searchResources(q) {
+  const ql = q.replace(/"/g, '').trim().toLowerCase(); if (ql.length < 3) return '';
+  let h = '';
+  if (M.layers.topics) {
+    const idx = await loadTopics(), hits = Object.values(idx).filter(t => t[1].toLowerCase().includes(ql)).sort((a, b) => (a[1].toLowerCase().startsWith(ql) ? 0 : 1) - (b[1].toLowerCase().startsWith(ql) ? 0 : 1) || b[3] - a[3]).slice(0, 8);
+    if (hits.length) h += `<h3>Topics</h3><div class="chips">${hits.map(t => `<button class="chip" data-topic="${esc(t[0])}">${esc(t[1])}<small>${t[2] === 'nave' ? 'Nave' : 'Torrey'}</small></button>`).join('')}</div>`;
+  }
+  if (M.layers.dictionary) {
+    const { d, lower } = await loadDict();
+    const keys = Object.keys(lower).filter(x => x === ql || x.startsWith(ql + ' ') || x.startsWith(ql + ',') || (x.startsWith(ql) && x.length < ql.length + 3))
+      .sort((a, b) => (a === ql ? -1 : b === ql ? 1 : a.length - b.length)).slice(0, 4).map(x => lower[x]);
+    if (keys.length) h += `<h3>Easton's Bible Dictionary</h3>${keys.map((k, i) => `<details class="dict"${i ? '' : ' open'}><summary>${esc(k)}</summary><div class="prose">${d[k].map(rich).join('')}</div></details>`).join('')}`;
+  }
+  return h ? h + '<h3>Verses</h3>' : '';
 }
 
 /* ---------- studies ---------- */
@@ -748,6 +777,8 @@ function openSettings() {
     <div><label>Preset</label>${seg('preset', preset || '', [['reading', 'Reading'], ['study', 'Study'], ['original', 'Original language']])}${preset ? '' : '<p class="hint">Custom mix</p>'}</div>
     ${LAYERS.map(l => `<div class="lrow"><span>${l.name}</span><small>${l.help}</small>${seg('layer:' + l.k, L[l.k], l.modes.map(m => [m, l.labels[m]]))}</div>`).join('')}
     <div><label>Appearance</label>${seg('theme', S.set.theme, [['dark', 'Dark'], ['light', 'Light'], ['system', 'Match system']])}</div>
+    ${(M.layers.translations || []).length ? `<div><label>Compare with</label>${seg('compareTr', S.set.compareTr, M.layers.translations.map(t => [t.id, t.abbr]))}<p class="hint">${esc(trName(S.set.compareTr)?.name || '')}. Turn on with the Compare layer.</p></div>` : ''}
+    ${(M.layers.commentary || []).length ? `<div><label>Commentaries</label><div class="chips">${M.layers.commentary.map(cm => `<button class="chip" data-cmsrc="${esc(cm.id)}" aria-pressed="${S.set.commentaries.includes(cm.id)}">${esc(cm.name)}</button>`).join('')}</div></div>` : ''}
     <div><label>Highlights and markup</label>${seg('markup', S.set.markup, [[true, 'Show'], [false, 'Hide']])}</div>
     <div><label for="sz">Text size</label><div class="range"><input id="sz" type="range" min="15" max="26" step="1" value="${S.set.size}"><output id="szo">${S.set.size}px</output></div></div>
     <div><label>Typeface</label>${seg('font', S.set.font, [['serif', 'Serif'], ['sans', 'Sans']])}</div>
@@ -761,6 +792,8 @@ function openSettings() {
   $('#voice').onchange = e => { S.set.voice = e.target.value; save(); };
 }
 sheet.addEventListener('click', e => {
+  const cm = e.target.closest('[data-cmsrc]');
+  if (cm) { const id = cm.dataset.cmsrc, set = new Set(S.set.commentaries); set.has(id) ? set.delete(id) : set.add(id); S.set.commentaries = [...set]; save(); render(); openSettings(); return; }
   const b = e.target.closest('[data-set]'); if (!b) return;
   const name = b.dataset.set, raw = b.dataset.val, val = raw === 'true' ? true : raw === 'false' ? false : raw;
   if (name === 'preset') Object.assign(S.set.layers, PRESETS[val]);
@@ -1009,6 +1042,113 @@ async function openTree(k) {
   openNoteTree(f, t);
 }
 
+/* ---------- study resources: translations, topics, places, dictionary ---------- */
+const STOP = new Set('a an and are as at be but by for from had has have he her him his i in is it its of on or our she so that the their them then there they this to was we were what when which who will with you your all not no shall unto upon thee thou thy ye lord god'.split(' '));
+let topicIdx = null, placeIdx = null, dictIdx = null;
+const loadTopics = async () => topicIdx ??= Object.fromEntries(((await getJSON('data/topics/index.json')) || []).map(t => [t[0], t]));
+const loadPlaces = async () => placeIdx ??= (await getJSON('data/places/index.json')) || {};
+async function loadDict() {
+  if (dictIdx) return dictIdx;
+  const d = (await getJSON('data/dictionary/easton.json')) || {};
+  dictIdx = { d, lower: Object.fromEntries(Object.keys(d).map(k => [k.toLowerCase(), k])) };
+  return dictIdx;
+}
+async function versePanelExtras(b, c, n, text) {
+  const box = $('#vpx'); if (!box) return;
+  const key = `${c}:${n}`, parts = [];
+  // the verse in every other translation
+  const trs = (M.layers.translations || []).filter(t => t.books.includes(b));
+  if (trs.length) {
+    const vs = await Promise.all(trs.map(async t => [t, (await getTr(t.id, b))?.[c]?.[n - 1]]));
+    const rows = vs.filter(([, v]) => v).map(([t, v]) => `<div class="cmp"><b title="${esc(t.name)}">${esc(t.abbr)}</b><span>${lord(v)}</span></div>`).join('');
+    if (rows) parts.push(`<h3>Compare translations</h3><div class="cmps">${rows}</div>`);
+  }
+  // topical Bibles
+  if (M.layers.topics) {
+    const [idx, vmap] = await Promise.all([loadTopics(), getJSON(`data/topics/v/${b}.json`)]);
+    const ids = (vmap?.[key] || []).filter(id => idx[id]);
+    if (ids.length) parts.push(`<h3>Topics · Nave's &amp; Torrey's</h3><div class="chips">${ids.map(id => `<button class="chip" data-topic="${esc(id)}">${esc(idx[id][1])}<small>${idx[id][2] === 'nave' ? 'Nave' : 'Torrey'}</small></button>`).join('')}</div>`);
+  }
+  // places
+  if (M.layers.places) {
+    const [idx, vmap] = await Promise.all([loadPlaces(), getJSON(`data/places/v/${b}.json`)]);
+    const ids = (vmap?.[key] || []).filter(id => idx[id]);
+    if (ids.length) parts.push(`<h3>Places</h3><ul class="list places">${ids.map(id => placeRow(idx[id])).join('')}</ul><p class="hint">Locations: OpenBible.info Bible Geocoding Data (CC BY 4.0)</p>`);
+  }
+  // Easton's entries for names and key words in the verse
+  if (M.layers.dictionary) {
+    const { d, lower } = await loadDict(), seen = new Set(), hits = [];
+    const words = text.replace(/[’']s\b/g, '').match(/[A-Za-z][A-Za-z-]+/g) || [];
+    for (let i = 0; i < words.length && hits.length < 8; i++) {
+      for (const cand of [words[i] + ' ' + (words[i + 1] || ''), words[i]]) {
+        const k = lower[cand.toLowerCase()];
+        if (k && !seen.has(k) && !STOP.has(cand.toLowerCase()) && (cand[0] === cand[0].toUpperCase() || cand.length > 4)) { seen.add(k); hits.push(k); break; }
+      }
+    }
+    if (hits.length) parts.push(`<h3>Easton's Bible Dictionary</h3>${hits.map(k => `<details class="dict"><summary>${esc(k)}</summary><div class="prose" data-anchor="dx:${esc(k)}">${d[k].map(rich).join('')}</div></details>`).join('')}`);
+  }
+  if (!$('#vpx')) return;
+  box.innerHTML = parts.join(''); applyMarks();
+}
+function placeRow(p) {
+  const [name, slug, ll] = p, [lon, lat] = (ll || '').split(',');
+  const map = ll ? `<a href="https://www.openstreetmap.org/?mlat=${lat}&amp;mlon=${lon}#map=10/${lat}/${lon}" target="_blank" rel="noopener">Map</a>` : '';
+  const info = slug ? `<a href="https://www.openbible.info/geo/ancient/${encodeURIComponent(slug)}" target="_blank" rel="noopener">About</a>` : '';
+  return `<li class="prow"><b>${esc(name)}</b><span class="meta">${ll ? `${(+lat).toFixed(3)}°, ${(+lon).toFixed(3)}°` : 'Location uncertain'} ${map} ${info}</span></li>`;
+}
+async function openTopic(id, back) {
+  const shard = (id.replace(/^(nave|torrey)-/, '').replace(/[^a-z]/g, '')[0]) || 'x';
+  const t = (await getJSON(`data/topics/t/${shard}.json`))?.[id];
+  if (!t) return toast('Topic not found');
+  const [name, src, rows, see] = t;
+  openSheet(name, `<p class="hint" style="margin-top:0">${src === 'nave' ? "Nave's Topical Bible" : "Torrey's New Topical Textbook"} · ${rows.length} entr${rows.length === 1 ? 'y' : 'ies'}</p>
+    <ul class="list topic">${rows.map(([text, refs]) => `<li><span class="tt">${esc(text.replace(/\s+(?:[1-3]\s?)?[A-Z][a-z]{0,5}\.?\s+\d+:\d+.*$/, '').replace(/^[\s.,;:-]+/, '') || text)}</span><span class="meta">${refs.map(r => rich(r).replace(/^<p>|<\/p>$/g, '')).join(' · ')}</span></li>`).join('')}</ul>
+    ${see?.length ? `<p class="hint">See also: ${see.map(esc).join(', ')}</p>` : ''}`, back);
+}
+
+/* ---------- reading plans ---------- */
+const PLANS = [
+  { id: 'bible-year', name: 'Whole Bible in a year', days: 365, books: () => BOOKS },
+  { id: 'ot-nt-year', name: 'Old and New Testament together, one year', days: 365, split: true },
+  { id: 'nt-90', name: 'New Testament in 90 days', days: 90, books: () => BOOKS.filter(b => b.t === 'nt') },
+  { id: 'gospels-30', name: 'The four Gospels in 30 days', days: 30, books: () => BOOKS.filter(b => ['matthew', 'mark', 'luke', 'john'].includes(b.id)) },
+  { id: 'psalms-proverbs', name: 'Psalms and Proverbs in a month', days: 31, books: () => BOOKS.filter(b => ['psalms', 'proverbs'].includes(b.id)) },
+];
+const chaptersOf = bs => bs.flatMap(b => Array.from({ length: b.ch }, (_, i) => ({ b: b.id, c: i + 1, w: Object.keys(M.books[b.id] || {}).length ? (M.books[b.id][i + 1] || 25) : 25 })));
+function splitDays(chs, days) { // balance days by verse count, keeping order
+  const total = chs.reduce((a, x) => a + x.w, 0), out = Array.from({ length: days }, () => []); let acc = 0;
+  for (const x of chs) { const d = Math.min(days - 1, Math.floor((acc + x.w / 2) / total * days)); out[d].push(x); acc += x.w; }
+  return out;
+}
+function planDays(p) {
+  if (!p.split) return splitDays(chaptersOf(p.books()), p.days);
+  const ot = splitDays(chaptersOf(BOOKS.filter(b => b.t === 'ot')), p.days), nt = splitDays(chaptersOf(BOOKS.filter(b => b.t === 'nt')), p.days);
+  return ot.map((d, i) => d.concat(nt[i]));
+}
+function rangeLabel(day) {
+  const groups = []; for (const x of day) { const g = groups[groups.length - 1]; if (g && g.b === x.b && g.e === x.c - 1) g.e = x.c; else groups.push({ b: x.b, s: x.c, e: x.c }); }
+  return groups.map(g => ({ text: `${g.b === 'psalms' ? (g.s === g.e ? 'Psalm' : 'Psalms') : BY[g.b].name} ${g.s}${g.e > g.s ? '–' + g.e : ''}`, href: hashOf(g.b, g.s) }));
+}
+const today = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); };
+const dayIndex = start => Math.floor((today() - new Date(start + 'T00:00:00')) / 864e5);
+function openPlans() {
+  const P = S.plan && PLANS.find(p => p.id === S.plan.id);
+  if (!P) {
+    openSheet('Reading plans', `<p class="hint" style="margin-top:0">Pick a plan. Days are balanced by length, and progress is saved on this device.</p><ul class="list">${PLANS.map(p => `<li><button data-plan="${p.id}"><b>${esc(p.name)}</b><span class="meta">${p.days} days</span></button></li>`).join('')}</ul>`);
+    return;
+  }
+  const days = planDays(P), done = new Set(S.plan.done || []), di = Math.max(0, Math.min(days.length - 1, dayIndex(S.plan.start)));
+  const pct = Math.round(done.size / days.length * 100), behind = [...Array(di).keys()].filter(i => !done.has(i));
+  const dayRow = i => `<li class="pday${done.has(i) ? ' done' : ''}"><button class="pcheck" data-pday="${i}" aria-pressed="${done.has(i)}" aria-label="Mark day ${i + 1} ${done.has(i) ? 'not done' : 'done'}">${done.has(i) ? '✓' : ''}</button><b>Day ${i + 1}</b><span>${rangeLabel(days[i]).map(r => `<a class="ref" href="${r.href}">${esc(r.text)}</a>`).join(', ')}</span></li>`;
+  openSheet(P.name, `<div class="pbar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div>
+    <p class="hint" style="margin-top:6px">${done.size} of ${days.length} days read · ${pct}%${behind.length ? ` · ${behind.length} day${behind.length > 1 ? 's' : ''} to catch up` : ''}</p>
+    <h3>Today · day ${di + 1}</h3><ul class="list plan">${dayRow(di)}</ul>
+    ${behind.length ? `<h3>Catch up</h3><ul class="list plan">${behind.slice(-7).map(dayRow).join('')}</ul>` : ''}
+    <h3>Coming up</h3><ul class="list plan">${[...Array(6).keys()].map(k => di + 1 + k).filter(i => i < days.length).map(dayRow).join('')}</ul>
+    <div class="row end"><button class="btn" id="planreset">Change plan</button></div>`);
+  $('#planreset').onclick = () => { S.plan = null; save(); openPlans(); };
+}
+
 /* ---------- global clicks ---------- */
 document.addEventListener('click', async e => {
   const t = e.target;
@@ -1022,6 +1162,7 @@ document.addEventListener('click', async e => {
     if (q('#playbtn')) return speech.on ? stopReading() : startReading(cur.v || 1);
     if (q('#gotobtn')) return openPicker();
     if (q('#treesbtn')) return openTreesList();
+    if (q('#plansbtn')) return openPlans();
   } else closeMenu();
   if (q('#refbtn')) return openPicker();
   if (q('[data-test]')) return openPicker(q('[data-test]').dataset.test);
@@ -1036,6 +1177,10 @@ document.addEventListener('click', async e => {
   if (q('#home')) { e.preventDefault(); return go(cur.b, cur.c); }
   if (q('[data-saved]')) return openSaved(q('[data-saved]').dataset.saved);
   if (q('[data-tree]')) { e.preventDefault(); return openTree(q('[data-tree]').dataset.tree); }
+  if (q('[data-topic]')) { const v = sheet.hidden ? null : $('#sheettitle').textContent; return openTopic(q('[data-topic]').dataset.topic, v && /:\d+$/.test(v) ? () => versePanel(+v.split(':').pop()) : null); }
+  if (q('[data-plan]')) { S.plan = { id: q('[data-plan]').dataset.plan, start: today().toISOString().slice(0, 10), done: [] }; save(); return openPlans(); }
+  if (q('[data-pday]')) { const i = +q('[data-pday]').dataset.pday, d = new Set(S.plan.done); d.has(i) ? d.delete(i) : d.add(i); S.plan.done = [...d]; save(); return openPlans(); }
+  if (q('.plan a.ref')) { closeSheet(); return; }
   if (q('[data-ntopen]')) { const v = +q('[data-ntopen]').dataset.ntopen; return openNoteTree(v, v); }
   if (q('[data-open]')) return openAnchor(q('[data-open]').dataset.open);
   if (q('[data-study]')) return openStudy(q('[data-study]').dataset.study);
