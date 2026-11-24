@@ -322,7 +322,7 @@ async function render() {
     if (L.commentary === 'inline') ib += cmEnd.map(x => `<section class="ib cm"><h4>Commentary · ${esc(label(b, x.r.replace('-', '–')))} · ${esc(x.src.name)}</h4><div data-anchor="${x.anchor}">${rich(x.txt)}</div></section>`).join('');
     if (L.studies === 'inline') ib += sts.map(x => `<section class="ib st"><h4>Study · ${esc(x.d.title)} · ${esc(x.sec.heading)}</h4><div data-anchor="${x.anchor}">${rich(x.sec.body)}</div><button class="lnk" data-study="${x.s.id}">Open the full study</button></section>`).join('');
     if (L.compare === 'inline' && chap.tr?.[i]) ib += `<div class="ib trc"><h4>${esc(trName(S.set.compareTr)?.abbr || '')} · ${esc(label(b, c, n))}</h4><span class="trt">${lord(chap.tr[i])}</span></div>`;
-    if (L.notes === 'inline') ib += nts.map(g => `<div class="ib nt"><h4>My note · ${esc(label(b, c, n))}</h4><div class="tc-${esc(g.c || 'black')}" data-anchor="nt:${g.g}">${rich(g.n || '')}</div><button class="lnk" data-note="${g.g}">Edit note</button></div>`).join('');
+    if (L.notes === 'inline') ib += nts.map(g => `<div class="ib mynote"><h4>My note · ${esc(label(b, c, n))}</h4><div class="tc-${esc(g.c || 'black')}" data-anchor="nt:${g.g}">${rich(g.n || '')}</div><button class="lnk" data-note="${g.g}">Edit note</button></div>`).join('');
     const hd = chap.h[key], pstart = n > 1 && chap.p.includes(n) && !hd;
     const pre = (hd ? `<h3 class="shd">${esc(hd[0])}${hd[1] ? `<small>${rich(hd[1]).replace(/^<p>|<\/p>$/g, '')}</small>` : ''}</h3>` : '') + (pstart && !verseMode ? '<span class="pbr"></span>' : '');
     return pre + `<div class="vb" id="v${n}" data-v="${n}"><span class="v" data-anchor="${id}" data-v="${n}"><a class="vn" data-skip href="${hashOf(b, c, n)}" data-panel="${n}">${n}</a>${words}</span>${mk ? '&#8288;' + mk : ''}${verseMode ? '' : ' '}</div>${ib}`;
@@ -444,7 +444,7 @@ async function versePanel(n) {
   if (cms.length) h += cms.map(x => `<h3>Commentary · ${esc(label(b, x.r.replace('-', '–')))} · ${esc(x.src.name)}</h3><div class="prose" data-anchor="${x.anchor}">${rich(x.txt)}</div>`).join('');
   if (sts.length) h += sts.map(x => `<h3>Study · ${esc(x.d.title)}</h3><div class="prose"><b>${esc(x.sec.heading)}</b><div data-anchor="${x.anchor}">${rich(x.sec.body)}</div></div><button class="btn" data-study="${x.s.id}">Open the full study</button>`).join('');
   h += `<div id="vpx" data-b="${b}" data-c="${c}" data-v="${n}"></div>`;
-  if (nts.length) h += `<h3>My notes</h3>${nts.map(g => `<div class="ib nt" style="margin-left:0"><div class="tc-${esc(g.c || 'black')}" data-anchor="nt:${g.g}">${rich(g.n || '')}</div><button class="lnk" data-note="${g.g}">Edit note</button></div>`).join('')}`;
+  if (nts.length) h += `<h3>My notes</h3>${nts.map(g => `<div class="ib mynote" style="margin-left:0"><div class="tc-${esc(g.c || 'black')}" data-anchor="nt:${g.g}">${rich(g.n || '')}</div><button class="lnk" data-note="${g.g}">Edit note</button></div>`).join('')}`;
   openSheet(label(b, c, n), h);
   versePanelExtras(b, c, n, plain(toks));
   // fill cross-reference previews when that text is available

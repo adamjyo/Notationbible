@@ -136,7 +136,7 @@ main{max-width:760px;margin:0 auto;padding:clamp(24px,4vw,56px) max(5vw,20px) 22
 .ib p{margin:0 0 .5em}.ib p:last-child{margin:0}
 .ib.cm{border-left-color:color-mix(in srgb,var(--accent) 55%,var(--rule))}
 .ib.st{border-left-color:#3b6fb6;background:color-mix(in srgb,var(--sky) 35%,transparent);border-radius:0 8px 8px 0}
-.ib.nt{border-left-color:#b8901c;background:color-mix(in srgb,var(--gold) 35%,transparent);border-radius:0 8px 8px 0}
+.ib.mynote{border-left-color:#b8901c;background:color-mix(in srgb,var(--gold) 35%,transparent);border-radius:0 8px 8px 0}
 .ib.xr a,.xlist a{display:inline-block;margin-right:12px;text-decoration:none;white-space:nowrap}
 .ib .lnk{font-size:13px;color:var(--accent);padding:6px 0 0;min-height:32px}
 /* annotations */
