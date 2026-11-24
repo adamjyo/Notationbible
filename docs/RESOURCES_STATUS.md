@@ -14,6 +14,8 @@ Resource importing is **paused**. The importer (`scripts/build_resources.py`) an
 | Bible places | openbibleinfo/Bible-Geocoding-Data `data/` | CC BY 4.0 (attribution shown in the app) | 1,342 places, 1,335 with coordinates |
 
 ## Where it stopped / next steps
+
+Note: after any import, `scripts/pack_data.py` merges small per-book folders into single files (the workflows run it). Artifacts hold at most 512 files; the app is ~313.
 1. **WEB translation missing**: `formats/csv/WEB.csv` doesn't exist in scrollmapper. Check the real file name in their translation list (data/RESOURCES_REPORT.md was cut off before "W"), add it to `translations()` and rerun.
 2. **More commentaries not yet imported**: Matthew Henry (complete), Adam Clarke, John Gill and Keil-Delitzsch are available from HelloAO (`helloao_commentary('<id>')`). Calvin, Gaebelein and F. B. Meyer are available in pillar-commentary-data. Watch the size: JFB alone is ~5 MB.
 3. **Considered, not imported**: theographic-bible-metadata (people, places and events; CC BY-SA, share-alike), MACULA Greek/Hebrew syntax (CC BY 4.0), public-domain BSB audio (Barry Hays narration), chronological reading-plan data.

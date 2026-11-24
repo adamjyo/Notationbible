@@ -65,9 +65,11 @@ const getIL = b => ilCache[b] ??= getJSON(`data/il/${b}.json`).then(d => {
   for (const [c, vs] of Object.entries(d.chapters)) out[c] = vs.map(v => v ? v.split('~').map(w => w.split('¦')) : []);
   return out;
 });
-const getTr = (id, b) => (M.layers.translations || []).some(t => t.id === id && t.books.includes(b)) ? getJSON(`data/tr/${id}/${b}.json`).then(d => d?.chapters) : Promise.resolve(null);
+// Small layers are packed into one file per folder (manifest.packed); big ones stay one file per book.
+const bookData = (path, b) => (M.packed || []).includes(path) ? getJSON(`data/${path}.json`).then(d => d?.[b] ?? null) : getJSON(`data/${path}/${b}.json`);
+const getTr = (id, b) => (M.layers.translations || []).some(t => t.id === id && t.books.includes(b)) ? bookData(`tr/${id}`, b).then(d => d?.chapters) : Promise.resolve(null);
 const trName = id => (M.layers.translations || []).find(t => t.id === id);
-const lay = (name, b) => (M.layers[name]?.books || []).includes(b) ? getJSON(`data/${name}/${b}.json`) : null;
+const lay = (name, b) => (M.layers[name]?.books || []).includes(b) ? bookData(name, b) : null;
 const lexFile = n => getJSON(n[0] === 'H' ? 'data/lexicon/hebrew.json' : 'data/lexicon/greek.json');
 let LEX = {};
 async function loadLex() { const [g, h] = await Promise.all([lexFile('G'), lexFile('H')]); LEX = { ...(g || {}), ...(h || {}) }; }
@@ -234,7 +236,7 @@ function applyMarks() {
 async function loadChapter(b, c) {
   const [t, fn, xr, cms] = await Promise.all([
     getBook(b), lay('footnotes', b), lay('xrefs', b),
-    Promise.all((M.layers.commentary || []).filter(s => S.set.commentaries.includes(s.id)).map(s => s.books.includes(b) ? getJSON(`data/commentary/${s.id}/${b}.json`).then(d => ({ s, d })) : null)),
+    Promise.all((M.layers.commentary || []).filter(s => S.set.commentaries.includes(s.id)).map(s => s.books.includes(b) ? bookData(`commentary/${s.id}`, b).then(d => ({ s, d })) : null)),
   ]);
   const cm = [];
   for (const x of cms) if (x?.d) for (const [r, txt] of Object.entries(x.d)) {
@@ -273,7 +275,7 @@ async function render() {
   $('#pprev').textContent = pr ? '← ' + label(pr.b, pr.c) : ''; $('#pprev').href = pr ? hashOf(pr.b, pr.c) : '#';
   $('#pnext').textContent = nx ? label(nx.b, nx.c) + ' →' : ''; $('#pnext').href = nx ? hashOf(nx.b, nx.c) : '#';
   const head = `<header class="chead"><h1 class="cbook">${esc(book.name)}</h1><p class="csub"><span class="cnum">${b === 'psalms' ? 'Psalm' : 'Chapter'} ${c}</span><span>Berean Standard Bible</span></p></header>` +
-    (M.sample ? `<p class="sample">Preview data: a few sample chapters with hand-entered Strong's tags. Footnotes, commentary and the study here are samples; the import scripts bring in the full BSB and real sources.</p>` : '');
+    (M.demoNote ? `<p class="sample">${esc(M.demoNote)}</p>` : '') + (M.sample ? `<p class="sample">Preview data: a few sample chapters with hand-entered Strong's tags. Footnotes, commentary and the study here are samples; the import scripts bring in the full BSB and real sources.</p>` : '');
   if (!chap.verses) {
     const have = Object.entries(M.books).flatMap(([bk, chs]) => Object.keys(chs).map(ch => `<a href="${hashOf(bk, ch)}">${label(bk, ch)}</a>`));
     reader.className = 'reader';
@@ -1065,13 +1067,13 @@ async function versePanelExtras(b, c, n, text) {
   }
   // topical Bibles
   if (M.layers.topics) {
-    const [idx, vmap] = await Promise.all([loadTopics(), getJSON(`data/topics/v/${b}.json`)]);
+    const [idx, vmap] = await Promise.all([loadTopics(), bookData('topics/v', b)]);
     const ids = (vmap?.[key] || []).filter(id => idx[id]);
     if (ids.length) parts.push(`<h3>Topics · Nave's &amp; Torrey's</h3><div class="chips">${ids.map(id => `<button class="chip" data-topic="${esc(id)}">${esc(idx[id][1])}<small>${idx[id][2] === 'nave' ? 'Nave' : 'Torrey'}</small></button>`).join('')}</div>`);
   }
   // places
   if (M.layers.places) {
-    const [idx, vmap] = await Promise.all([loadPlaces(), getJSON(`data/places/v/${b}.json`)]);
+    const [idx, vmap] = await Promise.all([loadPlaces(), bookData('places/v', b)]);
     const ids = (vmap?.[key] || []).filter(id => idx[id]);
     if (ids.length) parts.push(`<h3>Places</h3><ul class="list places">${ids.map(id => placeRow(idx[id])).join('')}</ul><p class="hint">Locations: OpenBible.info Bible Geocoding Data (CC BY 4.0)</p>`);
   }

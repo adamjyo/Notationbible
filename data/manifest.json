@@ -1866,5 +1866,15 @@
   "places": {
    "source": "OpenBible.info Bible Geocoding Data, CC BY 4.0"
   }
- }
+ },
+ "packed": [
+  "commentary/preview",
+  "commentary/scofield",
+  "footnotes",
+  "places/v",
+  "topics/v",
+  "tr/asv",
+  "tr/kjv",
+  "tr/ylt"
+ ]
 }

@@ -34,6 +34,7 @@ jobs:
           python3 scripts/build_bsb.py --text raw/bsb.txt --tables raw/bsb_tables.tsv \
             --tbesg "$(ls raw/step/Lexicons/TBESG*)" --tbesh "$(ls raw/step/Lexicons/TBESH*)"
           node scripts/import.mjs xrefs raw/cross_references.txt
+          python3 scripts/pack_data.py
           du -sh data/*
       - name: Commit data
         run: |

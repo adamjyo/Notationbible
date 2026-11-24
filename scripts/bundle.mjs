@@ -18,31 +18,32 @@ async function jsonFiles(dir) {
   return out;
 }
 
-// The whole Bible is too heavy for a one-file demo, so it carries a few books (override with BUNDLE_BOOKS=a,b,c).
+// The one-file demo carries the complete Bible text (all 66 books, with footnotes, cross references,
+// lexicon, Scofield notes and places). The heaviest extras (interlinear, JFB, other translations,
+// topics) are limited to a few books to keep the file small; override with BUNDLE_BOOKS=a,b,c.
 const KEEP = new Set((process.env.BUNDLE_BOOKS || 'genesis,psalms,john,romans').split(','));
-const perBook = /^data\/(bsb|il|footnotes|xrefs|commentary\/[^/]+|tr\/[^/]+|topics\/v|places\/v)\/([\w-]+)\.json$/;
+const LIMITED = /^data\/(il|commentary\/jfb)\/([\w-]+)\.json$/;          // per-book folders to trim
+const LIMITED_PACKED = ['data/tr/kjv.json', 'data/tr/asv.json', 'data/tr/ylt.json', 'data/tr/web.json', 'data/topics/v.json'];
 const data = {};
 for (const f of await jsonFiles('data')) {
-  const m = f.match(perBook);
+  const m = f.match(LIMITED);
   if (m && !KEEP.has(m[2])) continue;
   if (/REPORT|IMPORT/.test(f)) continue;
   data[f] = JSON.parse(await read(f));
+  if (LIMITED_PACKED.includes(f)) for (const b of Object.keys(data[f])) if (!KEEP.has(b)) delete data[f][b];
 }
-// keep only the lexicon entries and topics that the demo books use
-const usedStrongs = new Set(), usedTopics = new Set();
-for (const [f, d] of Object.entries(data)) {
-  if (f.startsWith('data/bsb/') && d.fmt === 2) for (const vs of Object.values(d.chapters)) for (const v of vs) for (const m of v.matchAll(/¦([\d+]+)⟩/g)) m[1].split('+').forEach(n => usedStrongs.add(d.t + n));
-  if (f.startsWith('data/topics/v/')) for (const ids of Object.values(d)) ids.forEach(id => usedTopics.add(id));
-}
-for (const f of ['data/lexicon/greek.json', 'data/lexicon/hebrew.json']) if (data[f] && usedStrongs.size) for (const k in data[f]) if (!usedStrongs.has(k)) delete data[f][k];
-for (const f of Object.keys(data)) if (f.startsWith('data/topics/t/')) for (const k in data[f]) if (!usedTopics.has(k)) delete data[f][k];
-if (data['data/topics/index.json']) data['data/topics/index.json'] = data['data/topics/index.json'].filter(t => usedTopics.has(t[0]));
 const mf = data['data/manifest.json'];
 if (mf && !mf.sample) {
-  mf.books = Object.fromEntries(Object.entries(mf.books).filter(([b]) => KEEP.has(b)));
-  for (const l of Object.values(mf.layers)) for (const x of [l].flat()) if (Array.isArray(x?.books)) x.books = x.books.filter(b => KEEP.has(b));
-  mf.demoNote = `This one-file demo carries ${[...KEEP].length} books; the published app has all 66.`;
+  for (const t of mf.layers.translations || []) t.books = t.books.filter(b => KEEP.has(b));
+  for (const c of mf.layers.commentary || []) if (c.id === 'jfb') c.books = c.books.filter(b => KEEP.has(b));
+  const names = [...KEEP].map(b => b[0].toUpperCase() + b.slice(1)).join(', ');
+  mf.demoNote = `Demo file: the complete Berean Standard Bible is here; interlinear, Jamieson-Fausset-Brown, other translations and topics are included for ${names}. The published app has them for every book.`;
 }
+// keep only the topics that the demo's verse links use
+const usedTopics = new Set();
+for (const ids of Object.values(data['data/topics/v.json'] || {}).flatMap(o => Object.values(o))) ids.forEach(id => usedTopics.add(id));
+for (const f of Object.keys(data)) if (f.startsWith('data/topics/t/')) for (const k in data[f]) if (!usedTopics.has(k)) delete data[f][k];
+if (data['data/topics/index.json']) data['data/topics/index.json'] = data['data/topics/index.json'].filter(t => usedTopics.has(t[0]));
 for (const f of ['data/lexicon/greek.json', 'data/lexicon/hebrew.json']) // shorter definitions keep the demo light
   if (data[f]) for (const k in data[f]) { const d = data[f][k][3] || ''; if (d.length > 400) data[f][k][3] = d.slice(0, 400) + '…'; }
 const [css, books, app] = await Promise.all([read('styles.css'), read('books.js'), read('app.js')]);
