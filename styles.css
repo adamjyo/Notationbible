@@ -372,3 +372,5 @@ body.nt-open .dock{z-index:30}
 .linkbtn{color:var(--accent);font:inherit;background:none;border:0;padding:0;cursor:pointer}
 .linkbtn:hover{text-decoration:underline}
 .acct .who .meta{display:block;margin-top:2px}
+/* interlinear: a selection over English words doesn't paint the original-language rows */
+.selw .il [data-skip]::selection,.selw .il [data-skip] *::selection{background:transparent;color:inherit}

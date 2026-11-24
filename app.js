@@ -140,7 +140,9 @@ function wrap(el, s, e, cls, aid) {
   let pos = 0; const made = [];
   for (const n of textNodes(el)) {
     const L = n.length, a = Math.max(s, pos), z = Math.min(e, pos + L);
-    if (a < z) {
+    // In the interlinear, skip the bare spaces between word blocks so no slivers of colour appear between them.
+    const gap = a < z && !n.data.trim() && [n.previousSibling, n.nextSibling].some(x => x && x.classList && x.classList.contains('il'));
+    if (a < z && !gap) {
       let t = n;
       if (z < pos + L) t.splitText(z - pos);
       if (a > pos) t = t.splitText(a - pos);
@@ -397,6 +399,11 @@ menu.addEventListener('keydown', e => {
   else if (e.key === 'Escape') { e.stopPropagation(); closeMenu(true); }
 });
 
+// While a selection takes in English words, paint it on the English row only (not the Greek/Hebrew rows under each word).
+document.addEventListener('selectionchange', () => {
+  const sel = getSelection(), r = sel.rangeCount && !sel.isCollapsed ? sel.getRangeAt(0) : null;
+  reader.classList.toggle('selw', !!r && [...reader.querySelectorAll('.il .w')].some(w => r.intersectsNode(w)));
+});
 /* ---------- sheet ---------- */
 const sheet = $('#sheet'), scrim = $('#scrim'); let backFn = null;
 function openSheet(title, html, back) {
