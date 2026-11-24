@@ -46,18 +46,27 @@ Highlights, notes and settings are stored in the browser (`localStorage`). See *
 
 ## Data
 
-The repo ships **sample data only**: John 1:1–18, Genesis 1:1–5 and Psalm 23, with hand-entered Strong's tags. The footnotes, commentary and the study in the sample were written for this preview. Replace them with real sources using the importer:
+The repo ships the **complete Berean Standard Bible**: all 66 books and 31,102 verses. It includes:
 
-| Layer | Source | Licence | Command |
-|---|---|---|---|
-| Text + Strong's + original words + footnotes | Berean translation tables (`bsb_tables`, from berean.bible / biblehub.com/downloads) | Public domain | `node scripts/import.mjs bsb bsb_tables.tsv` |
-| Lexicon | STEPBible-Data TBESG (Greek) and TBESH (Hebrew), github.com/STEPBible/STEPBible-Data | CC BY 4.0, attribution required | `node scripts/import.mjs lexicon TBESG.txt TBESH.txt` |
-| Cross-references | openbible.info/labs/cross-references | CC BY | `node scripts/import.mjs xrefs cross_references.txt` |
-| Commentary | Any public-domain commentary (e.g. Matthew Henry Concise) converted to `ref,text` CSV | Public domain | `node scripts/import.mjs commentary mhc "Matthew Henry (Concise)" mhc.csv` |
+- **Strong's numbers:** 381,884 tagged words, 99.98% of the translation tables' phrases aligned.
+- **Interlinear:** the Hebrew or Greek word, transliteration and parsing for every tagged word.
+- **BSB extras:** section headings with parallel passages, paragraph breaks, and footnotes.
+- **Lexicons:** 9,362 Greek and 8,181 Hebrew entries.
+- **Cross-references:** up to 12 per verse, the most-voted ones.
 
-The cross-reference and commentary importers are tested. The **BSB and lexicon importers** find columns by header name, so run `node scripts/import.mjs bsb --inspect <file>` first and check the column names in `scripts/import.mjs` against your download. Then spot-check a few chapters against bereanbible.com.
+| Layer | Source | Licence |
+|---|---|---|
+| Text, Strong's, interlinear, headings, paragraphs, footnotes | BereanBible.com: `bsb.txt` and `bsb_tables.tsv` | Public domain |
+| Greek and Hebrew lexicons | STEPBible.org TBESG and TBESH (Tyndale House, Cambridge) | CC BY 4.0, attribution required |
+| Cross-references | OpenBible.info | CC BY |
 
-Studies are hand-authored JSON in `data/studies/`.
+**Rebuilding:** the data is built on GitHub's servers by `.github/workflows/import-bible.yml`, which downloads the sources, runs `scripts/build_bsb.py` and `scripts/import.mjs xrefs`, and commits `data/`. It runs whenever the converter changes, or by hand from **Actions → Import full Bible → Run workflow**. `data/IMPORT_REPORT.md` records the counts and any phrases that couldn't be aligned.
+
+**Commentary:** the only commentary is still the short *preview commentary* on Genesis 1, Psalm 23 and John 1. Add a public-domain commentary as a `ref,text` CSV with `node scripts/import.mjs commentary <id> "<Name>" file.csv`.
+
+**Studies:** hand-authored JSON in `data/studies/`.
+
+Each verse in `data/bsb/<book>.json` is stored as its exact text with tagged phrases written `⟨english¦7225+430⟩`, prefixed H for the Old Testament and G for the New. The app turns these into tokens when a book loads. Interlinear details sit in `data/il/<book>.json` and load only when needed.
 
 ## Files
 
