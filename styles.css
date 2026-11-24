@@ -447,3 +447,6 @@ body.nt-open .dock{z-index:30}
 .copypop[hidden]{display:none}
 /* touch screens: sideways drags select text (see touchDragSelect), up-and-down drags scroll */
 @media (pointer:coarse){#reader{touch-action:pan-y;-webkit-touch-callout:none}}
+/* notes under verses are handwritten */
+.ib.mynote>div,.preview.notebg{font:400 17px/1.5 'Architects Daughter','Segoe Print','Bradley Hand',cursive;letter-spacing:.01em}
+.ib.mynote>div p{margin:0 0 .35em}.ib.mynote>div p:last-child{margin-bottom:0}
