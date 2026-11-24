@@ -122,7 +122,9 @@ function insertAt(el, off, node) {
   el.appendChild(node);
 }
 /* ---------- ink: six hand-drawn highlighter and pen colours ---------- */
-const COLORS = ['yellow', 'green', 'blue', 'pink', 'orange', 'purple'];
+const INKS = ['black', 'red', 'inkblue'], HILITES = ['yellow', 'green', 'blue', 'pink', 'orange', 'purple'];
+const COLORS = [...INKS, ...HILITES];
+const CNAME = { black: 'Black', red: 'Red', inkblue: 'Blue ink', yellow: 'Yellow', green: 'Green', blue: 'Blue', pink: 'Pink', orange: 'Orange', purple: 'Purple' };
 const LEGACY = { gold: 'yellow', sage: 'green', sky: 'blue', rose: 'pink' }; // colours saved by earlier versions
 const kindOf = a => LEGACY[a.k] ? 'hl' : a.k;
 const colorOf = a => a.c || LEGACY[a.k] || 'yellow';
@@ -133,8 +135,8 @@ function annCls(a) {
 }
 (function inkCSS() {
   // translucent fills: overlapping colours blend like real highlighter ink
-  const HL = { yellow: ['255,214,0', .45, .30], green: ['64,200,90', .34, .28], blue: ['60,150,245', .30, .32], pink: ['245,90,150', .30, .32], orange: ['255,150,40', .40, .32], purple: ['150,110,250', .30, .34] };
-  const PEN = { yellow: ['#c99700', '#ffd43b'], green: ['#2b8a3e', '#69db7c'], blue: ['#1971c2', '#74c0fc'], pink: ['#d6336c', '#f783ac'], orange: ['#e8590c', '#ffa94d'], purple: ['#6741d9', '#b197fc'] };
+  const HL = { black: ['20,20,20', .16, .0], red: ['230,30,45', .26, .34], inkblue: ['35,70,210', .22, .38], yellow: ['255,214,0', .45, .30], green: ['64,200,90', .34, .28], blue: ['60,150,245', .30, .32], pink: ['245,90,150', .30, .32], orange: ['255,150,40', .40, .32], purple: ['150,110,250', .30, .34] };
+  const PEN = { black: ['#1a1a1a', '#f1efea'], red: ['#d6202f', '#ff6b6b'], inkblue: ['#1f3fbf', '#91a7ff'], yellow: ['#b08800', '#ffd43b'], green: ['#2b8a3e', '#69db7c'], blue: ['#1971c2', '#74c0fc'], pink: ['#d6336c', '#f783ac'], orange: ['#e8590c', '#ffa94d'], purple: ['#6741d9', '#b197fc'] };
   // a marker stroke: wobbly top and bottom edges, rough start (hs) and end (he) caps
   const SHAPE = {
     '': 'M0 2.4C14 1.2 30 3.4 47 2.2S82 1.2 100 2.6L100 17.8C84 18.9 66 16.9 50 18S16 18.6 0 17.4Z',
@@ -149,9 +151,10 @@ function annCls(a) {
     const [rgb, lo, dk] = HL[c];
     for (const [sel, d] of Object.entries(SHAPE)) {
       light += `.hl.c-${c}${sel}{background-image:${svg(`<path d='${d}' fill='rgb(${rgb})' fill-opacity='${lo}'/>`)}}`;
-      dark += `.hl.c-${c}${sel}{background-image:${svg(`<path d='${d}' fill='rgb(${rgb})' fill-opacity='${dk}'/>`)}}`;
+      const night = c === 'black' ? ['255,255,255', .18] : [rgb, dk]; // black highlighter reads as a grey wash at night
+      dark += `.hl.c-${c}${sel}{background-image:${svg(`<path d='${d}' fill='rgb(${night[0]})' fill-opacity='${night[1]}'/>`)}}`;
     }
-    light += `.pen.p-${c}{background-image:${pen(PEN[c][0])}}`; dark += `.pen.p-${c}{background-image:${pen(PEN[c][1])}}`;
+    light += `.pen.p-${c}{background-image:${pen(PEN[c][0])}}.tc-${c}{color:${PEN[c][0]}}`; dark += `.pen.p-${c}{background-image:${pen(PEN[c][1])}}.tc-${c}{color:${PEN[c][1]}}`;
   }
   const scope = (css, pre) => css.replace(/(^|})\./g, `$1${pre} .`);
   const st = document.createElement('style');
@@ -160,16 +163,22 @@ function annCls(a) {
 })();
 function anchorText(el) { return textNodes(el).map(n => n.data).join(''); }
 function applyMarks() {
-  $$('.sticky').forEach(x => { const p = x.parentNode; x.remove(); p?.normalize(); });
+  $$('.sticky, .nbr').forEach(x => { const p = x.parentNode; x.remove(); p?.normalize(); });
   $$('mark[data-aid]').forEach(m => { const p = m.parentNode; m.replaceWith(...m.childNodes); p.normalize(); });
-  const byA = {}, lastOfGroup = {};
-  for (const a of S.ann) { (byA[a.a] ||= []).push(a); lastOfGroup[a.g] = a.id; }
+  const byA = {}, lastOfGroup = {}, firstOfGroup = {}, span = {};
+  for (const a of S.ann) {
+    (byA[a.a] ||= []).push(a); lastOfGroup[a.g] = a.id; firstOfGroup[a.g] ??= a.id;
+    const sp = span[a.g] ||= { len: 0, n: 0 }; sp.len += Math.max(0, a.e - a.s); sp.n++;
+  }
+  // a note on a long passage (several verses, or more than a few words) gets big gold [ ] around it
+  const isLong = a => kindOf(a) === 'note' && (span[a.g].n > 1 || span[a.g].len >= 30);
+  const bracket = (ch, a) => { const x = document.createElement('span'); x.className = 'nbr'; x.textContent = ch; x.dataset.skip = ''; x.dataset.note = a.g; x.setAttribute('aria-hidden', 'true'); return x; };
   const order = a => kindOf(a) === 'hl' ? 0 : kindOf(a) === 'note' ? 2 : 1; // highlighter under pen under notes
   const showNotes = S.set.layers.notes !== 'off';
   for (const el of $$('[data-anchor]')) {
     const list = (byA[el.dataset.anchor] || []).slice().sort((x, y) => order(x) - order(y));
     for (const a of list) {
-      if (a.e > a.s) {
+      if (a.e > a.s && !(isLong(a) && showNotes)) {
         const ms = wrap(el, a.s, a.e, annCls(a), a.id);
         if (ms.length && kindOf(a) === 'hl') { ms[0].classList.add('hs'); ms[ms.length - 1].classList.add('he'); }
       }
@@ -178,6 +187,11 @@ function applyMarks() {
         st.className = 'sticky'; st.dataset.skip = ''; st.dataset.note = a.g; st.setAttribute('role', 'button'); st.tabIndex = 0;
         st.title = 'Note: ' + (a.n || '').slice(0, 80); st.setAttribute('aria-label', st.title);
         insertAt(el, a.e, st);
+      }
+      // inserted after the sticky so ] lands before it
+      if (isLong(a) && showNotes) {
+        if (lastOfGroup[a.g] === a.id) insertAt(el, a.e, bracket(']', a));
+        if (firstOfGroup[a.g] === a.id) insertAt(el, a.s, bracket('[', a));
       }
     }
   }
@@ -205,7 +219,7 @@ async function loadChapter(b, c) {
 const notesFor = id => groups().filter(g => g.k === 'note' && g.items.some(a => a.a === id));
 function groups() {
   const m = new Map();
-  for (const a of S.ann) { if (!m.has(a.g)) m.set(a.g, { g: a.g, k: a.k, n: a.n, t: a.t, q: a.q, items: [] }); const g = m.get(a.g); g.items.push(a); if (a.n) g.n = a.n; }
+  for (const a of S.ann) { if (!m.has(a.g)) m.set(a.g, { g: a.g, k: a.k, n: a.n, c: a.c, t: a.t, q: a.q, items: [] }); const g = m.get(a.g); g.items.push(a); if (a.n) g.n = a.n; }
   return [...m.values()];
 }
 const ICON = {
@@ -253,7 +267,7 @@ async function render() {
     }).join('');
     const fns = chap.fn[key] || [], xrs = chap.xr[key] || [];
     const cmStart = chap.cm.filter(x => x.s === n), cmEnd = chap.cm.filter(x => x.e === n);
-    const sts = chap.st.filter(x => x.v === n), nts = notesFor(id);
+    const sts = chap.st.filter(x => x.v === n), nts = notesFor(id).filter(g => g.items[g.items.length - 1].a === id); // a note shows once, after the last verse it covers
     let mk = '';
     if (L.xrefs === 'markers' && xrs.length) mk += `<span class="mk" role="button" tabindex="0" data-skip data-panel="${n}" title="Cross references">↗</span>`;
     if (L.commentary === 'markers' && cmStart.length) mk += `<span class="mk" role="button" tabindex="0" data-skip data-panel="${n}" title="Commentary">C</span>`;
@@ -264,7 +278,7 @@ async function render() {
     if (L.xrefs === 'inline' && xrs.length) ib += `<div class="ib xr"><h4>Cross references · ${esc(label(b, c, n))}</h4>${xrs.map(r => `<a href="${hashOf(...r.split('.'))}">${esc(anchorLabel(r))}</a>`).join('')}</div>`;
     if (L.commentary === 'inline') ib += cmEnd.map(x => `<section class="ib cm"><h4>Commentary · ${esc(label(b, x.r.replace('-', '–')))} · ${esc(x.src.name)}</h4><div data-anchor="${x.anchor}">${rich(x.txt)}</div></section>`).join('');
     if (L.studies === 'inline') ib += sts.map(x => `<section class="ib st"><h4>Study · ${esc(x.d.title)} · ${esc(x.sec.heading)}</h4><div data-anchor="${x.anchor}">${rich(x.sec.body)}</div><button class="lnk" data-study="${x.s.id}">Open the full study</button></section>`).join('');
-    if (L.notes === 'inline') ib += nts.map(g => `<div class="ib nt"><h4>My note · ${esc(label(b, c, n))}</h4><div data-anchor="nt:${g.g}">${rich(g.n || '')}</div><button class="lnk" data-note="${g.g}">Edit note</button></div>`).join('');
+    if (L.notes === 'inline') ib += nts.map(g => `<div class="ib nt"><h4>My note · ${esc(label(b, c, n))}</h4><div class="tc-${esc(g.c || 'black')}" data-anchor="nt:${g.g}">${rich(g.n || '')}</div><button class="lnk" data-note="${g.g}">Edit note</button></div>`).join('');
     return `<div class="vb" id="v${n}" data-v="${n}"><span class="v" data-anchor="${id}" data-v="${n}"><a class="vn" data-skip href="${hashOf(b, c, n)}" data-panel="${n}">${n}</a>${words}</span>${mk ? '&#8288;' + mk : ''}${verseMode ? '' : ' '}</div>${ib}`;
   }).join('');
   reader.innerHTML = head + `<div class="text">${html}</div>`;
@@ -370,7 +384,7 @@ function versePanel(n) {
   if (xrs.length) h += `<h3>Cross references</h3><ul class="list">${xrs.map(r => `<li><a href="${hashOf(...r.split('.'))}"><b>${esc(anchorLabel(r))}</b><span class="xprev" data-ref="${r}"></span></a></li>`).join('')}</ul>`;
   if (cms.length) h += cms.map(x => `<h3>Commentary · ${esc(label(b, x.r.replace('-', '–')))} · ${esc(x.src.name)}</h3><div class="prose" data-anchor="${x.anchor}">${rich(x.txt)}</div>`).join('');
   if (sts.length) h += sts.map(x => `<h3>Study · ${esc(x.d.title)}</h3><div class="prose"><b>${esc(x.sec.heading)}</b><div data-anchor="${x.anchor}">${rich(x.sec.body)}</div></div><button class="btn" data-study="${x.s.id}">Open the full study</button>`).join('');
-  if (nts.length) h += `<h3>My notes</h3>${nts.map(g => `<div class="ib nt" style="margin-left:0"><div data-anchor="nt:${g.g}">${rich(g.n || '')}</div><button class="lnk" data-note="${g.g}">Edit note</button></div>`).join('')}`;
+  if (nts.length) h += `<h3>My notes</h3>${nts.map(g => `<div class="ib nt" style="margin-left:0"><div class="tc-${esc(g.c || 'black')}" data-anchor="nt:${g.g}">${rich(g.n || '')}</div><button class="lnk" data-note="${g.g}">Edit note</button></div>`).join('')}`;
   openSheet(label(b, c, n), h);
   // fill cross-reference previews when that text is available
   $$('.xprev').forEach(async el => { const [rb, rc, rv] = el.dataset.ref.split('.'); const d = await getJSON(`data/bsb/${rb}.json`); const v = d?.chapters?.[rc]?.[rv - 1]; el.textContent = v ? plain(v) : 'Not in this data set yet'; });
@@ -575,17 +589,24 @@ function noteEditor({ targets: t, g, verse, listen }) {
   const quote = existing ? existing.q : t?.q;
   openSheet(existing ? 'Edit note' : 'New note', `<p class="quote">${esc(quote || '')}</p>
     <textarea id="ntext" autofocus placeholder="Write a note. **bold**, *italic*, ==highlight==, and references like John 3:16 or G3056 become links.">${esc(existing?.n || '')}</textarea>
+    <div class="ncolors" role="group" aria-label="Note text colour">${COLORS.map(c => `<button data-nc="${c}" style="--s:var(--sw-${c})" aria-label="${CNAME[c]} text" title="${CNAME[c]}"></button>`).join('')}</div>
     <div class="row" style="margin-top:10px"><button class="btn rec" id="nmic">${ICON.mic}<span>Dictate</span></button><span class="hint" id="nmicstate" style="margin:0"></span></div>
     <div class="preview prose" id="nprev"></div>
     <div class="row end">${existing ? '<button class="btn" id="ndel">Delete</button>' : ''}<button class="btn primary" id="nsave">Save note</button></div>`);
   const ta = $('#ntext'), pv = $('#nprev');
-  const upd = () => { pv.innerHTML = ta.value.trim() ? rich(ta.value) : '<span class="hint">Preview</span>'; };
+  let nc = existing?.c || S.set.noteColor || 'black';
+  const upd = () => {
+    pv.className = 'preview prose tc-' + nc; ta.className = 'tc-' + nc;
+    pv.innerHTML = ta.value.trim() ? rich(ta.value) : '<span class="hint">Preview</span>';
+    $$('[data-nc]', sheet).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.nc === nc)));
+  };
+  $$('[data-nc]', sheet).forEach(b => b.onclick = () => { nc = b.dataset.nc; S.set.noteColor = nc; save(); upd(); });
   ta.addEventListener('input', upd); upd();
   $('#nmic').onclick = () => dictate(txt => { ta.value = (ta.value ? ta.value.replace(/\s*$/, ' ') : '') + txt; upd(); }, $('#nmic'), $('#nmicstate'));
   $('#nsave').onclick = () => {
     const n = ta.value.trim(); if (!n) return toast('Write something first');
-    if (existing) S.ann.forEach(a => { if (a.g === g) a.n = n; });
-    else { const gg = uid(); for (const x of t) S.ann.push({ id: uid(), g: gg, a: x.a, s: x.s, e: x.e, k: 'note', n, q: t.q, t: Date.now() }); }
+    if (existing) S.ann.forEach(a => { if (a.g === g) { a.n = n; a.c = nc; } });
+    else { const gg = uid(); for (const x of t) S.ann.push({ id: uid(), g: gg, a: x.a, s: x.s, e: x.e, k: 'note', n, c: nc, q: t.q, t: Date.now() }); }
     save(); closeSheet(); render(); toast('Note saved');
   };
   if (existing) $('#ndel').onclick = () => { S.ann = S.ann.filter(a => a.g !== g); save(); closeSheet(); render(); toast('Note deleted'); };
@@ -695,7 +716,7 @@ document.addEventListener('click', async e => {
   if (q('[data-ch]')) { const x = q('[data-ch]'); closeSheet(); return go(x.dataset.b, x.dataset.ch); }
   if (q('#prev')) { const p = prevOf(cur.b, cur.c); return p && go(p.b, p.c); }
   if (q('#next')) { const p = nextOf(cur.b, cur.c); return p && go(p.b, p.c); }
-  if (q('#searchbtn')) return openSearch();
+  if (q('#searchbtn, #hsearch')) return openSearch();
   if (q('#studybtn')) return openStudies();
   if (q('#savedbtn')) return openSaved();
   if (q('#setbtn')) return openSettings();

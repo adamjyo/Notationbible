@@ -22,6 +22,7 @@
   </nav>
   <div class="tools">
     <span class="tr" title="Berean Standard Bible">BSB</span>
+    <button class="ico" id="hsearch" aria-label="Search" title="Search (/)"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
     <button class="menubtn" id="menubtn" aria-haspopup="menu" aria-expanded="false" aria-controls="menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span>Menu</span></button>
   </div>
 </header>
@@ -49,13 +50,20 @@
 </div>
 
 <p class="toolhint" id="toolhint" role="status" hidden></p>
-<div class="palette" id="palette" role="group" aria-label="Ink colour" hidden>
-  <button data-c="yellow" style="--s:var(--sw-yellow)" aria-label="Yellow"></button>
-  <button data-c="green" style="--s:var(--sw-green)" aria-label="Green"></button>
-  <button data-c="blue" style="--s:var(--sw-blue)" aria-label="Blue"></button>
-  <button data-c="pink" style="--s:var(--sw-pink)" aria-label="Pink"></button>
-  <button data-c="orange" style="--s:var(--sw-orange)" aria-label="Orange"></button>
-  <button data-c="purple" style="--s:var(--sw-purple)" aria-label="Purple"></button>
+<div class="palette" id="palette" role="group" aria-label="Colour for highlighter and pen" hidden>
+  <div class="prow"><span>Ink</span>
+    <button data-c="black" style="--s:var(--sw-black)" aria-label="Black"></button>
+    <button data-c="red" style="--s:var(--sw-red)" aria-label="Red"></button>
+    <button data-c="inkblue" style="--s:var(--sw-inkblue)" aria-label="Blue ink"></button>
+  </div>
+  <div class="prow"><span>Highlighter</span>
+    <button data-c="yellow" style="--s:var(--sw-yellow)" aria-label="Yellow"></button>
+    <button data-c="green" style="--s:var(--sw-green)" aria-label="Green"></button>
+    <button data-c="blue" style="--s:var(--sw-blue)" aria-label="Blue"></button>
+    <button data-c="pink" style="--s:var(--sw-pink)" aria-label="Pink"></button>
+    <button data-c="orange" style="--s:var(--sw-orange)" aria-label="Orange"></button>
+    <button data-c="purple" style="--s:var(--sw-purple)" aria-label="Purple"></button>
+  </div>
 </div>
 <nav class="toolbar" id="toolbar" aria-label="Markup tools">
   <button data-tool="hl" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M14.5 3.8l5.7 5.7-8.4 8.4H6.1v-5.7z"/><path class="tip" d="M6.1 12.2v5.7h5.7z"/><path d="M3.5 21h9"/></svg><span>Highlighter</span></button>
