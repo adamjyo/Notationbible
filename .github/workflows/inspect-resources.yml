@@ -1,0 +1,42 @@
+# Clones candidate free Bible resources on GitHub's servers and commits a report of their
+# layout, license and sample content (data/RESOURCES_REPORT.md). Nothing else is committed.
+name: Inspect Bible resources
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/initial-reader]
+    paths: ['.github/workflows/inspect-resources.yml']
+permissions:
+  contents: write
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: claude/initial-reader }
+      - name: Clone and report
+        run: |
+          mkdir -p res && cd res
+          R="SOTW-Historical-Commentaries/historical-commentary-resources Jackboby/MHCC-JSON thefrenchpressed/pillar-commentary-data garydavenport73/eastons-bible-dictionary-json neuu-org/bible-dictionary-dataset j86schroeder/topical-bible-search openbibleinfo/Bible-Geocoding-Data scrollmapper/bible_databases"
+          {
+          echo "# Resources report"; date -u
+          for r in $R; do
+            d=$(echo $r | tr / _)
+            echo; echo "## $r"
+            git clone -q --depth 1 --filter=blob:limit=200m https://github.com/$r.git $d 2>&1 | tail -2 || { echo "clone failed"; continue; }
+            (cd $d && du -sh . && echo '```' && git ls-files | head -70 && echo "... $(git ls-files | wc -l) files" && echo '```')
+            for L in $d/LICENSE* $d/COPYING* $d/license*; do [ -f "$L" ] && { echo "### $(basename $L)"; head -8 "$L"; }; done
+            echo "### README (head)"; head -c 1800 $d/README* 2>/dev/null; echo
+            # small samples of the main data files
+            for f in $(cd $d && git ls-files | grep -iE '\.(json|jsonl|csv|tsv|txt|md)$' | grep -viE 'readme|license|package|\.github' | head -6); do
+              echo "### sample $f ($(stat -c%s $d/$f) bytes)"; echo '```'; head -c 700 "$d/$f"; echo; echo '```'
+            done
+          done
+          echo; echo "## scrollmapper formats"; ls scrollmapper_bible_databases 2>/dev/null; ls scrollmapper_bible_databases/formats 2>/dev/null | head; ls scrollmapper_bible_databases/formats/json 2>/dev/null | head -80
+          } > ../data/RESOURCES_REPORT.md 2>&1
+          wc -c ../data/RESOURCES_REPORT.md
+      - name: Commit report
+        run: |
+          git config user.name "notationbible-bot"; git config user.email "actions@users.noreply.github.com"
+          git add data/RESOURCES_REPORT.md && git commit -q -m "Resources report from inspect-resources workflow" && git push || echo "nothing to commit"
