@@ -4,9 +4,6 @@
 name: Fetch Bible sources (report)
 on:
   workflow_dispatch:
-  push:
-    branches: [claude/initial-reader]
-    paths: ['.github/workflows/fetch-sources.yml']
 permissions:
   contents: write
 jobs:

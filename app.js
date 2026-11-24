@@ -40,6 +40,30 @@ const cache = {};
 // window.__DATA is filled only in the single-file preview build (scripts/bundle.mjs)
 const getJSON = p => cache[p] ??= (window.__DATA && p in window.__DATA ? Promise.resolve(window.__DATA[p]) : fetch(p).then(r => r.ok ? r.json() : null).catch(() => null));
 let M = { books: {}, layers: { footnotes: { books: [] }, xrefs: { books: [] }, commentary: [] } };
+// Full-Bible files (fmt 2) store each verse as its exact text with tagged phrases written ⟨english¦7225+430⟩;
+// they are turned into tokens here, once per book. Interlinear details live in data/il/ and load only when needed.
+const TOKRE = /⟨([^¦⟩]*)¦([^⟩]*)⟩/g;
+function parseVerse(v, pre) {
+  const out = []; let i = 0;
+  for (const m of v.matchAll(TOKRE)) {
+    if (m.index > i) out.push(v.slice(i, m.index));
+    out.push([m[1], m[2].split('+').map(n => pre + n).join(' ')]); i = m.index + m[0].length;
+  }
+  if (i < v.length) out.push(v.slice(i));
+  return out;
+}
+const bookCache = {};
+const getBook = b => bookCache[b] ??= getJSON(`data/bsb/${b}.json`).then(d => {
+  if (!d || d.fmt !== 2) return d && { chapters: d.chapters, h: {}, p: {} };
+  const chapters = {}; for (const [c, vs] of Object.entries(d.chapters)) chapters[c] = vs.map(v => parseVerse(v, d.t));
+  return { chapters, h: d.h || {}, p: d.p || {} };
+});
+const ilCache = {};
+const getIL = b => ilCache[b] ??= getJSON(`data/il/${b}.json`).then(d => {
+  if (!d) return null; const out = {};
+  for (const [c, vs] of Object.entries(d.chapters)) out[c] = vs.map(v => v ? v.split('~').map(w => w.split('¦')) : []);
+  return out;
+});
 const lay = (name, b) => (M.layers[name]?.books || []).includes(b) ? getJSON(`data/${name}/${b}.json`) : null;
 const lexFile = n => getJSON(n[0] === 'H' ? 'data/lexicon/hebrew.json' : 'data/lexicon/greek.json');
 let LEX = {};
@@ -206,7 +230,7 @@ function applyMarks() {
 /* ---------- render chapter ---------- */
 async function loadChapter(b, c) {
   const [t, fn, xr, cms] = await Promise.all([
-    getJSON(`data/bsb/${b}.json`), lay('footnotes', b), lay('xrefs', b),
+    getBook(b), lay('footnotes', b), lay('xrefs', b),
     Promise.all((M.layers.commentary || []).map(s => s.books.includes(b) ? getJSON(`data/commentary/${s.id}/${b}.json`).then(d => ({ s, d })) : null)),
   ]);
   const cm = [];
@@ -219,7 +243,8 @@ async function loadChapter(b, c) {
     const d = await getJSON(`data/studies/${s.id}.json`);
     d?.sections.forEach((sec, i) => { const p = sec.ref.split('.'); if (p[0] === b && +p[1] === c) st.push({ s, d, sec, i, v: +p[2], anchor: `st:${s.id}:${i}` }); });
   }
-  return { b, c, verses: t?.chapters?.[c] || null, fn: fn || {}, xr: xr || {}, cm, st };
+  const il = S.set.layers.interlinear === 'inline' ? (await getIL(b))?.[c] : null;
+  return { b, c, verses: t?.chapters?.[c] || null, h: t?.h || {}, p: t?.p?.[c] || [], il, fn: fn || {}, xr: xr || {}, cm, st };
 }
 const notesFor = id => groups().filter(g => g.k === 'note' && g.items.some(a => a.a === id));
 function groups() {
@@ -259,13 +284,14 @@ async function render() {
   let fnLetter = 0;
   const html = chap.verses.map((toks, i) => {
     const n = i + 1, id = `${b}.${c}.${n}`, key = `${c}:${n}`;
+    const ilv = chap.il?.[i] || []; let k = 0;
     const words = toks.map(t => {
       if (typeof t === 'string') return esc(t);
-      const [en, s, orig] = t;
+      const [en, s] = t, w = ilv[k++] || [], orig = w[0] || t[2];
       if (L.interlinear === 'inline') {
         const lx = LEX[nums(t)[0]] || [];
         const lang = s[0] === 'H' ? 'he' : 'gr';
-        return `<span class="il" data-s="${esc(s)}"><span class="w">${lord(en)}</span><span class="og ${lang}${orig ? '' : ' lemma'}" data-skip title="${orig ? 'Original word' : 'Lexical form'}">${esc(orig || lx[0] || '')}</span><span class="tl" data-skip>${esc(lx[1] || '')}</span><span class="snl" data-skip>${esc(s)}</span></span>`;
+        return `<span class="il" data-s="${esc(s)}"><span class="w">${lord(en)}</span><span class="og ${lang}${orig ? '' : ' lemma'}" data-skip title="${orig ? 'Original word' : 'Lexical form'}">${esc(orig || lx[0] || '')}</span><span class="tl" data-skip>${esc(w[1] || lx[1] || '')}</span>${w[2] ? `<span class="mo" data-skip>${esc(w[2])}</span>` : ''}<span class="snl" data-skip>${esc(s)}</span></span>`;
       }
       const sup = L.strongs === 'inline' ? `<sup class="sn" data-skip data-s="${esc(s)}">${esc(s.replace(/[GH]/g, ''))}</sup>` : '';
       return `<span class="w${L.strongs !== 'off' ? ' tag' : ''}" data-s="${esc(s)}">${lord(en)}</span>${sup}`;
@@ -284,7 +310,9 @@ async function render() {
     if (L.commentary === 'inline') ib += cmEnd.map(x => `<section class="ib cm"><h4>Commentary · ${esc(label(b, x.r.replace('-', '–')))} · ${esc(x.src.name)}</h4><div data-anchor="${x.anchor}">${rich(x.txt)}</div></section>`).join('');
     if (L.studies === 'inline') ib += sts.map(x => `<section class="ib st"><h4>Study · ${esc(x.d.title)} · ${esc(x.sec.heading)}</h4><div data-anchor="${x.anchor}">${rich(x.sec.body)}</div><button class="lnk" data-study="${x.s.id}">Open the full study</button></section>`).join('');
     if (L.notes === 'inline') ib += nts.map(g => `<div class="ib nt"><h4>My note · ${esc(label(b, c, n))}</h4><div class="tc-${esc(g.c || 'black')}" data-anchor="nt:${g.g}">${rich(g.n || '')}</div><button class="lnk" data-note="${g.g}">Edit note</button></div>`).join('');
-    return `<div class="vb" id="v${n}" data-v="${n}"><span class="v" data-anchor="${id}" data-v="${n}"><a class="vn" data-skip href="${hashOf(b, c, n)}" data-panel="${n}">${n}</a>${words}</span>${mk ? '&#8288;' + mk : ''}${verseMode ? '' : ' '}</div>${ib}`;
+    const hd = chap.h[key], pstart = n > 1 && chap.p.includes(n) && !hd;
+    const pre = (hd ? `<h3 class="shd">${esc(hd[0])}${hd[1] ? `<small>${rich(hd[1]).replace(/^<p>|<\/p>$/g, '')}</small>` : ''}</h3>` : '') + (pstart && !verseMode ? '<span class="pbr"></span>' : '');
+    return pre + `<div class="vb" id="v${n}" data-v="${n}"><span class="v" data-anchor="${id}" data-v="${n}"><a class="vn" data-skip href="${hashOf(b, c, n)}" data-panel="${n}">${n}</a>${words}</span>${mk ? '&#8288;' + mk : ''}${verseMode ? '' : ' '}</div>${ib}`;
   }).join('');
   reader.innerHTML = head + `<div class="text">${html}</div>`;
   // footnote letters sit right after the phrase they annotate
@@ -293,10 +321,10 @@ async function render() {
     chap.verses.forEach((toks, i) => {
       const n = i + 1, fns = chap.fn[`${c}:${n}`] || []; const el = reader.querySelector(`#v${n} .v`);
       fns.forEach(f => {
-        const at = plain(toks).indexOf(f[0]);
+        const at = typeof f[0] === 'number' ? f[0] : plain(toks).indexOf(f[0]);
         const btn = document.createElement('span'); btn.className = 'fm'; btn.setAttribute('role', 'button'); btn.tabIndex = 0; btn.dataset.skip = ''; btn.dataset.panel = n; btn.title = f[1];
         btn.textContent = String.fromCharCode(97 + k++);
-        insertAt(el, at < 0 ? plainLen(el) : at + f[0].length, btn);
+        insertAt(el, typeof f[0] === 'number' ? at : at < 0 ? plainLen(el) : at + f[0].length, btn);
       });
     });
   }
@@ -380,45 +408,52 @@ function openChapters(b) {
 }
 
 /* ---------- verse panel: every layer for one verse ---------- */
-function versePanel(n) {
+async function versePanel(n) {
   if (!chap?.verses) return;
+  const ilv = (await getIL(chap.b))?.[chap.c]?.[n - 1] || []; let wi = 0;
   const { b, c } = chap, id = `${b}.${c}.${n}`, key = `${c}:${n}`, toks = chap.verses[n - 1];
   const tagged = toks.filter(t => typeof t !== 'string');
   const fns = chap.fn[key] || [], xrs = chap.xr[key] || [];
   const cms = chap.cm.filter(x => x.s <= n && x.e >= n), sts = chap.st.filter(x => x.v === n), nts = notesFor(id);
   let h = `<div class="row"><button class="btn" data-read="${n}">${ICON.play}Read from here</button><button class="btn" data-copy="${n}">Copy</button><button class="btn" data-newnote="${n}">${ICON.note}Note</button><button class="btn rec" data-voicenote="${n}">${ICON.mic}Dictate note</button>${canEditTrees() ? `<button class="btn" data-ntopen="${n}">${MI.tree}NoteTree</button>` : ''}${treeHas(b, c, n).map(([k]) => `<button class="btn" data-tree="${esc(k)}">${MI.tree}${canEditTrees() ? 'Open' : 'View'} NoteTree ${esc(treeLabel(k).split(' ').pop())}</button>`).join('')}</div>
   <p class="quote" style="margin-top:16px">${lord(plain(toks))}</p>`;
-  if (tagged.length) h += `<h3>Words · Strong's concordance</h3><div class="words">${tagged.map(t => { const x = LEX[nums(t)[0]] || []; return `<button data-s="${esc(t[1])}"><span class="en">${lord(t[0])}</span><span class="og ${t[1][0] === 'H' ? 'he' : 'gr'}">${esc(t[2] || x[0] || '')}</span><span class="gl">${esc(t[1])} · ${esc(x[1] || '')} · ${esc(x[2] || '')}</span></button>`; }).join('')}</div>`;
-  if (fns.length) h += `<h3>Footnotes</h3>${fns.map((f, j) => `<div class="prose"><b>${esc(f[0])}:</b> <span data-anchor="fn:${id}:${j}">${rich(f[1])}</span></div>`).join('')}`;
+  if (tagged.length) h += `<h3>Words · Strong's concordance</h3><div class="words">${tagged.map(t => { const x = LEX[nums(t)[0]] || [], w = ilv[wi++] || []; return `<button data-s="${esc(t[1])}"><span class="en">${lord(t[0])}</span><span class="og ${t[1][0] === 'H' ? 'he' : 'gr'}">${esc(w[0] || t[2] || x[0] || '')}</span><span class="gl">${esc(t[1])} · ${esc(w[1] || x[1] || '')}${w[2] ? ' · ' + esc(w[2]) : ''} · ${esc(x[2] || '')}</span></button>`; }).join('')}</div>`;
+  if (fns.length) h += `<h3>Footnotes</h3>${fns.map((f, j) => `<div class="prose"><b>${esc(f[2] ?? f[0])}:</b> <span data-anchor="fn:${id}:${j}">${rich(f[1])}</span></div>`).join('')}`;
   if (xrs.length) h += `<h3>Cross references</h3><ul class="list">${xrs.map(r => `<li><a href="${hashOf(...r.split('.'))}"><b>${esc(anchorLabel(r))}</b><span class="xprev" data-ref="${r}"></span></a></li>`).join('')}</ul>`;
   if (cms.length) h += cms.map(x => `<h3>Commentary · ${esc(label(b, x.r.replace('-', '–')))} · ${esc(x.src.name)}</h3><div class="prose" data-anchor="${x.anchor}">${rich(x.txt)}</div>`).join('');
   if (sts.length) h += sts.map(x => `<h3>Study · ${esc(x.d.title)}</h3><div class="prose"><b>${esc(x.sec.heading)}</b><div data-anchor="${x.anchor}">${rich(x.sec.body)}</div></div><button class="btn" data-study="${x.s.id}">Open the full study</button>`).join('');
   if (nts.length) h += `<h3>My notes</h3>${nts.map(g => `<div class="ib nt" style="margin-left:0"><div class="tc-${esc(g.c || 'black')}" data-anchor="nt:${g.g}">${rich(g.n || '')}</div><button class="lnk" data-note="${g.g}">Edit note</button></div>`).join('')}`;
   openSheet(label(b, c, n), h);
   // fill cross-reference previews when that text is available
-  $$('.xprev').forEach(async el => { const [rb, rc, rv] = el.dataset.ref.split('.'); const d = await getJSON(`data/bsb/${rb}.json`); const v = d?.chapters?.[rc]?.[rv - 1]; el.textContent = v ? plain(v) : 'Not in this data set yet'; });
+  $$('.xprev').forEach(async el => { const [rb, rc, rv] = el.dataset.ref.split('.'); const d = await getBook(rb); const v = d?.chapters?.[rc]?.[rv - 1]; el.textContent = v ? plain(v) : 'Not in this data set yet'; });
 }
 
 /* ---------- lexicon + concordance ---------- */
+let lexToken = 0, searchToken = 0;
 async function lexPanel(s, back) {
   const list = s.split(' ');
   if (list.length > 1) { openSheet('Strong\'s numbers', `<div class="words">${list.map(n => { const x = LEX[n] || []; return `<button data-s="${n}"><span class="en">${esc(x[2] || n)}</span><span class="og ${n[0] === 'H' ? 'he' : 'gr'}">${esc(x[0] || '')}</span><span class="gl">${n} · ${esc(x[1] || '')}</span></button>`; }).join('')}</div>`, back); return; }
   const n = list[0], x = LEX[n];
-  const occ = [], tally = {};
-  for (const bk of Object.keys(M.books)) {
-    const d = await getJSON(`data/bsb/${bk}.json`); if (!d) continue;
+  const occ = [], tally = {}, SHOW = 400;
+  openSheet(n, '<p class="hint">Gathering every occurrence across the Bible…</p>', back);
+  const token = ++lexToken;
+  // Old Testament numbers (H) only occur in the OT and New Testament numbers (G) only in the NT
+  for (const bk of Object.keys(M.books).filter(bk => (BY[bk].t === 'ot') === (n[0] === 'H'))) {
+    const d = await getBook(bk); if (!d) continue;
+    if (token !== lexToken) return; // another word was opened meanwhile
     for (const [c, vs] of Object.entries(d.chapters)) vs.forEach((toks, i) => {
       if (!toks.some(t => typeof t !== 'string' && nums(t).includes(n))) return;
       toks.forEach(t => { if (typeof t !== 'string' && nums(t).includes(n)) { const w = t[0].toLowerCase(); tally[w] = (tally[w] || 0) + 1; } });
-      occ.push({ b: bk, c, v: i + 1, html: toks.map(t => typeof t === 'string' ? esc(t) : nums(t).includes(n) ? `<mark>${lord(t[0])}</mark>` : lord(t[0])).join('') });
+      occ.push({ b: bk, c, v: i + 1, toks });
     });
   }
+  if (token !== lexToken) return;
   const lang = n[0] === 'H' ? 'he' : 'gr';
   const h = x ? `<div class="lexhead"><span class="og ${lang}">${esc(x[0])}</span><span class="tl">${esc(x[1])}</span><span class="snl">${n}</span></div>
     <p class="gloss">${esc(x[2])}</p><div class="prose" data-anchor="lx:${n}">${rich(x[3])}</div><p class="hint">${esc(M.layers.lexicon?.source || '')}</p>` : `<p class="empty">No lexicon entry for ${esc(n)} in this data set.</p>`;
   openSheet(n, h + `<h3>Translated in the BSB as</h3><div class="tally">${Object.entries(tally).sort((a, b) => b[1] - a[1]).map(([w, k]) => `<span>${esc(w)}<b>${k}</b></span>`).join('')}</div>
-    <h3>Concordance · ${occ.length} verse${occ.length === 1 ? '' : 's'}${M.sample ? ' in the preview chapters' : ''}</h3>
-    <ul class="list">${occ.map(o => `<li><a href="${hashOf(o.b, o.c, o.v)}"><b>${esc(label(o.b, o.c, o.v))}</b><span>${o.html}</span></a></li>`).join('')}</ul>`, back);
+    <h3>Concordance · ${occ.length} verse${occ.length === 1 ? '' : 's'}${M.sample ? ' in the preview chapters' : ''}${occ.length > SHOW ? ` · first ${SHOW} shown` : ''}</h3>
+    <ul class="list">${occ.slice(0, SHOW).map(o => `<li><a href="${hashOf(o.b, o.c, o.v)}"><b>${esc(label(o.b, o.c, o.v))}</b><span>${o.toks.map(t => typeof t === 'string' ? esc(t) : nums(t).includes(n) ? `<mark>${lord(t[0])}</mark>` : lord(t[0])).join('')}</span></a></li>`).join('')}</ul>`, back);
 }
 
 /* ---------- search ---------- */
@@ -437,9 +472,11 @@ async function runSearch(q) {
   let h = ref ? `<a class="goto" href="${hashOf(ref.b, ref.c, ref.v)}">Go to ${esc(label(ref.b, ref.c, ref.v))}<span>→</span></a>` : '';
   const phrase = q.match(/^"(.+)"$/)?.[1]?.toLowerCase();
   const words = phrase ? [phrase] : q.toLowerCase().split(/\s+/).filter(w => w.length > 1);
-  const hits = [];
+  const hits = [], token = ++searchToken;
+  out.innerHTML = h + '<p class="hint">Searching all 66 books…</p>';
   for (const bk of Object.keys(M.books)) {
-    const d = await getJSON(`data/bsb/${bk}.json`); if (!d) continue;
+    const d = await getBook(bk); if (!d) continue;
+    if (token !== searchToken) return; // the query changed while books were loading
     for (const [c, vs] of Object.entries(d.chapters)) vs.forEach((toks, i) => { const p = plain(toks), l = p.toLowerCase(); if (words.length && words.every(w => l.includes(w))) hits.push({ b: bk, c, v: i + 1, p }); });
   }
   const re = words.length ? new RegExp('(' + words.map(w => esc(w).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')', 'gi') : null;

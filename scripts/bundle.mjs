@@ -18,8 +18,24 @@ async function jsonFiles(dir) {
   return out;
 }
 
+// The whole Bible is too heavy for a one-file demo, so it carries a few books (override with BUNDLE_BOOKS=a,b,c).
+const KEEP = new Set((process.env.BUNDLE_BOOKS || 'genesis,psalms,proverbs,isaiah,matthew,john,romans,ephesians').split(','));
+const perBook = /^data\/(bsb|il|footnotes|xrefs|commentary\/[^/]+)\/([\w-]+)\.json$/;
 const data = {};
-for (const f of await jsonFiles('data')) data[f] = JSON.parse(await read(f));
+for (const f of await jsonFiles('data')) {
+  const m = f.match(perBook);
+  if (m && !KEEP.has(m[2])) continue;
+  if (/SOURCE_REPORT|IMPORT_REPORT/.test(f)) continue;
+  data[f] = JSON.parse(await read(f));
+}
+const mf = data['data/manifest.json'];
+if (mf && !mf.sample) {
+  mf.books = Object.fromEntries(Object.entries(mf.books).filter(([b]) => KEEP.has(b)));
+  for (const l of Object.values(mf.layers)) for (const x of [l].flat()) if (Array.isArray(x?.books)) x.books = x.books.filter(b => KEEP.has(b));
+  mf.demoNote = `This one-file demo carries ${[...KEEP].length} books; the published app has all 66.`;
+}
+for (const f of ['data/lexicon/greek.json', 'data/lexicon/hebrew.json']) // shorter definitions keep the demo light
+  if (data[f]) for (const k in data[f]) { const d = data[f][k][3] || ''; if (d.length > 400) data[f][k][3] = d.slice(0, 400) + '…'; }
 const [css, books, app] = await Promise.all([read('styles.css'), read('books.js'), read('app.js')]);
 const inline = s => s.replace(/<\/script/gi, '<\\/script'); // keep inlined code from closing its tag
 

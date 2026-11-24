@@ -1,0 +1,41 @@
+# Builds the full-Bible data set in data/ on GitHub's servers and commits it.
+# Runs when the converter or this workflow changes on the branch, or by hand (Actions > Import full Bible > Run workflow).
+# Sources: BereanBible.com (BSB text + translation tables, public domain), STEPBible.org lexicons (CC BY 4.0),
+# OpenBible.info cross references (CC BY).
+name: Import full Bible
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/initial-reader]
+    paths: ['scripts/build_bsb.py', '.github/workflows/import-bible.yml']
+permissions:
+  contents: write
+concurrency: { group: import-bible, cancel-in-progress: true }
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: claude/initial-reader }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Download sources
+        run: |
+          mkdir -p raw && cd raw
+          UA='Mozilla/5.0 (compatible; NotationBibleImporter/1.0)'
+          curl -sSfL -A "$UA" -o bsb.txt https://bereanbible.com/bsb.txt
+          curl -sSfL -A "$UA" -o bsb_tables.tsv https://bereanbible.com/bsb_tables.tsv
+          curl -sSfL -A "$UA" -o xrefs.zip https://a.openbible.info/data/cross-references.zip && unzip -oq xrefs.zip
+          git clone -q --depth 1 --filter=blob:none --sparse https://github.com/STEPBible/STEPBible-Data.git step
+          cd step && git sparse-checkout set --no-cone '/Lexicons/TBESG*' '/Lexicons/TBESH*' && ls Lexicons
+      - name: Build data
+        run: |
+          python3 scripts/build_bsb.py --text raw/bsb.txt --tables raw/bsb_tables.tsv \
+            --tbesg "$(ls raw/step/Lexicons/TBESG*)" --tbesh "$(ls raw/step/Lexicons/TBESH*)"
+          node scripts/import.mjs xrefs raw/cross_references.txt
+          du -sh data/*
+      - name: Commit data
+        run: |
+          git config user.name "notationbible-bot"; git config user.email "actions@users.noreply.github.com"
+          git add data && git commit -q -m "Import the full Berean Standard Bible, lexicons and cross references" && git push || echo "no changes"
