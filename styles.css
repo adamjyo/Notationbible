@@ -13,10 +13,11 @@ TYPE    Source Serif 4 for Scripture, Inter for chrome, Gentium for Greek, Noto 
   --rule:light-dark(#e6e4e1,#2c2b29);
   --chip:light-dark(#f4f3f1,#201f1e);
   --accent:light-dark(#b0172f,#ff7383);
-  --gold:light-dark(#fbe7a1,#5c4a12);
-  --sage:light-dark(#d4ecd0,#20452a);
-  --sky:light-dark(#d5e6fa,#1d3b5c);
-  --rose:light-dark(#f8d6dc,#5a2430);
+  /* highlighter inks are translucent so overlapping colours blend, like real highlighters */
+  --gold:light-dark(rgb(250 204 21/.40),rgb(250 204 21/.30));
+  --sage:light-dark(rgb(52 199 89/.30),rgb(74 222 128/.24));
+  --sky:light-dark(rgb(59 130 246/.26),rgb(96 165 250/.28));
+  --rose:light-dark(rgb(244 63 120/.24),rgb(251 113 133/.28));
   --size:19px;
   --serif:"Source Serif 4",Georgia,serif;
   --sans:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -68,10 +69,10 @@ a{color:var(--accent)}
 /* reader */
 main{max-width:760px;margin:0 auto;padding:clamp(24px,4vw,56px) max(5vw,20px) 180px}
 .reader{font-family:var(--text);font-size:var(--size);line-height:1.75}
-.chead{display:flex;align-items:flex-end;gap:16px;margin:0 0 8px;padding-bottom:14px;border-bottom:1px solid var(--rule)}
-.cnum{font-family:var(--serif);font-weight:600;font-size:clamp(64px,13vw,112px);line-height:.85;color:var(--accent)}
-.cbook{font:15px var(--sans);color:var(--soft);padding-bottom:6px}
-.cbook b{display:block;font:600 clamp(26px,4vw,34px)/1.1 var(--serif);color:var(--ink)}
+.chead{margin:0 0 8px;padding-bottom:16px;border-bottom:1px solid var(--rule)}
+.cbook{margin:0;font:600 clamp(36px,7vw,52px)/1.05 var(--serif);color:var(--ink);text-wrap:balance}
+.csub{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;margin:10px 0 0;font:15px var(--sans);color:var(--soft)}
+.cnum{font:600 clamp(20px,3vw,24px) var(--serif);color:var(--accent);white-space:nowrap}
 .sample{font:13px/1.5 var(--sans);color:var(--soft);margin:0 0 22px}
 .vb{display:inline}
 .verse .vb{display:block;margin-bottom:.35em}
@@ -110,7 +111,7 @@ main{max-width:760px;margin:0 auto;padding:clamp(24px,4vw,56px) max(5vw,20px) 18
 .ib.xr a,.xlist a{display:inline-block;margin-right:12px;text-decoration:none;white-space:nowrap}
 .ib .lnk{font-size:13px;color:var(--accent);padding:6px 0 0;min-height:32px}
 /* annotations */
-mark{color:inherit;background:none;border-radius:2px}
+mark{color:inherit;background:none}
 .hl-gold{background:var(--gold)}.hl-sage{background:var(--sage)}.hl-sky{background:var(--sky)}.hl-rose{background:var(--rose)}
 .mk-u{text-decoration:underline;text-decoration-color:var(--accent);text-decoration-thickness:2px;text-underline-offset:3px}
 .mk-b{font-weight:600}

@@ -162,14 +162,14 @@ const ICON = {
 
 async function render() {
   const { b, c } = cur, book = BY[b];
-  $('#reflabel').textContent = `${book.name} ${c}`;
-  document.title = `${book.name} ${c} · Notation Bible`;
+  $('#reflabel').textContent = label(b, c);
+  document.title = `${label(b, c)} · Notation Bible`;
   chap = await loadChapter(b, c);
   const L = S.set.layers;
   const pr = prevOf(b, c), nx = nextOf(b, c);
   $('#pprev').textContent = pr ? '← ' + label(pr.b, pr.c) : ''; $('#pprev').href = pr ? hashOf(pr.b, pr.c) : '#';
   $('#pnext').textContent = nx ? label(nx.b, nx.c) + ' →' : ''; $('#pnext').href = nx ? hashOf(nx.b, nx.c) : '#';
-  const head = `<header class="chead"><span class="cnum">${c}</span><span class="cbook"><b>${esc(book.name)}</b>Berean Standard Bible</span></header>` +
+  const head = `<header class="chead"><h1 class="cbook">${esc(book.name)}</h1><p class="csub"><span class="cnum">${b === 'psalms' ? 'Psalm' : 'Chapter'} ${c}</span><span>Berean Standard Bible</span></p></header>` +
     (M.sample ? `<p class="sample">Preview data: a few sample chapters with hand-entered Strong's tags. Footnotes, commentary and the study here are samples; the import scripts bring in the full BSB and real sources.</p>` : '');
   if (!chap.verses) {
     const have = Object.entries(M.books).flatMap(([bk, chs]) => Object.keys(chs).map(ch => `<a href="${hashOf(bk, ch)}">${label(bk, ch)}</a>`));
@@ -208,7 +208,7 @@ async function render() {
     if (L.footnotes === 'inline' && fns.length) ib += fns.map((f, j) => `<div class="ib fn"><h4>Footnote ${String.fromCharCode(97 + fnLetter + j)} · ${esc(label(b, c, n))}</h4><span data-anchor="fn:${id}:${j}">${rich(f[1])}</span></div>`).join('');
     if (L.footnotes !== 'off') fnLetter += fns.length;
     if (L.xrefs === 'inline' && xrs.length) ib += `<div class="ib xr"><h4>Cross references · ${esc(label(b, c, n))}</h4>${xrs.map(r => `<a href="${hashOf(...r.split('.'))}">${esc(anchorLabel(r))}</a>`).join('')}</div>`;
-    if (L.commentary === 'inline') ib += cmEnd.map(x => `<section class="ib cm"><h4>Commentary · ${esc(BY[b].name)} ${esc(x.r.replace('-', '–'))} · ${esc(x.src.name)}</h4><div data-anchor="${x.anchor}">${rich(x.txt)}</div></section>`).join('');
+    if (L.commentary === 'inline') ib += cmEnd.map(x => `<section class="ib cm"><h4>Commentary · ${esc(label(b, x.r.replace('-', '–')))} · ${esc(x.src.name)}</h4><div data-anchor="${x.anchor}">${rich(x.txt)}</div></section>`).join('');
     if (L.studies === 'inline') ib += sts.map(x => `<section class="ib st"><h4>Study · ${esc(x.d.title)} · ${esc(x.sec.heading)}</h4><div data-anchor="${x.anchor}">${rich(x.sec.body)}</div><button class="lnk" data-study="${x.s.id}">Open the full study</button></section>`).join('');
     if (L.notes === 'inline') ib += nts.map(g => `<div class="ib nt"><h4>My note · ${esc(label(b, c, n))}</h4><div data-anchor="nt:${g.g}">${rich(g.n || '')}</div><button class="lnk" data-note="${g.g}">Edit note</button></div>`).join('');
     return `<div class="vb" id="v${n}" data-v="${n}"><span class="v" data-anchor="${id}" data-v="${n}"><a class="vn" data-skip href="${hashOf(b, c, n)}" data-panel="${n}">${n}</a>${words}</span>${mk ? '&#8288;' + mk : ''}${verseMode ? '' : ' '}</div>${ib}`;
@@ -314,7 +314,7 @@ function versePanel(n) {
   if (tagged.length) h += `<h3>Words · Strong's concordance</h3><div class="words">${tagged.map(t => { const x = LEX[nums(t)[0]] || []; return `<button data-s="${esc(t[1])}"><span class="en">${lord(t[0])}</span><span class="og ${t[1][0] === 'H' ? 'he' : 'gr'}">${esc(t[2] || x[0] || '')}</span><span class="gl">${esc(t[1])} · ${esc(x[1] || '')} · ${esc(x[2] || '')}</span></button>`; }).join('')}</div>`;
   if (fns.length) h += `<h3>Footnotes</h3>${fns.map((f, j) => `<div class="prose"><b>${esc(f[0])}:</b> <span data-anchor="fn:${id}:${j}">${rich(f[1])}</span></div>`).join('')}`;
   if (xrs.length) h += `<h3>Cross references</h3><ul class="list">${xrs.map(r => `<li><a href="${hashOf(...r.split('.'))}"><b>${esc(anchorLabel(r))}</b><span class="xprev" data-ref="${r}"></span></a></li>`).join('')}</ul>`;
-  if (cms.length) h += cms.map(x => `<h3>Commentary · ${esc(BY[b].name)} ${esc(x.r.replace('-', '–'))} · ${esc(x.src.name)}</h3><div class="prose" data-anchor="${x.anchor}">${rich(x.txt)}</div>`).join('');
+  if (cms.length) h += cms.map(x => `<h3>Commentary · ${esc(label(b, x.r.replace('-', '–')))} · ${esc(x.src.name)}</h3><div class="prose" data-anchor="${x.anchor}">${rich(x.txt)}</div>`).join('');
   if (sts.length) h += sts.map(x => `<h3>Study · ${esc(x.d.title)}</h3><div class="prose"><b>${esc(x.sec.heading)}</b><div data-anchor="${x.anchor}">${rich(x.sec.body)}</div></div><button class="btn" data-study="${x.s.id}">Open the full study</button>`).join('');
   if (nts.length) h += `<h3>My notes</h3>${nts.map(g => `<div class="ib nt" style="margin-left:0"><div data-anchor="nt:${g.g}">${rich(g.n || '')}</div><button class="lnk" data-note="${g.g}">Edit note</button></div>`).join('')}`;
   openSheet(label(b, c, n), h);
