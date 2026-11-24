@@ -236,18 +236,46 @@ const prevOf = (b, c) => c > 1 ? { b, c: c - 1 } : BY[b].i > 0 ? { b: BOOKS[BY[b
 const nextOf = (b, c) => c < BY[b].ch ? { b, c: c + 1 } : BY[b].i < 65 ? { b: BOOKS[BY[b].i + 1].id, c: 1 } : null;
 const go = (b, c, v) => { const h = hashOf(b, c, v); if (location.hash === h) { cur = { b, c: +c, v: v ? +v : null }; render(); } else location.hash = h; };
 
-/* ---------- layer chips ---------- */
-function renderChips() {
-  const L = S.set.layers;
-  $('#layerbar').innerHTML = LAYERS.map(l => `<button data-layer="${l.k}" aria-pressed="${L[l.k] !== 'off'}"><i></i>${l.name}${L[l.k] !== 'off' && l.modes.length > 2 ? ` <small>${l.labels[L[l.k]]}</small>` : ''}</button>`).join('') +
-    `<button data-layer="markup" aria-pressed="${S.set.markup}"><i></i>Markup</button>`;
+/* ---------- feature menu ---------- */
+const menu = $('#menu'), menuBtn = $('#menubtn');
+const MI = {
+  read: '<svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>',
+  search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
+  goto: '<svg viewBox="0 0 24 24"><path d="M5 4.5h9.5a3 3 0 0 1 3 3V20H8a3 3 0 0 1-3-3z"/></svg>',
+  study: '<svg viewBox="0 0 24 24"><path d="M3.5 5.5c3-1 6-1 8.5 1v13c-2.5-2-5.5-2-8.5-1zM20.5 5.5c-3-1-6-1-8.5 1v13c2.5-2 5.5-2 8.5-1z"/></svg>',
+  saved: '<svg viewBox="0 0 24 24"><path d="M7 3.5h10v17l-5-3.6-5 3.6z"/></svg>',
+  set: '<svg viewBox="0 0 24 24"><path d="M12 3.5l8.5 4.5-8.5 4.5L3.5 8z"/><path d="M3.5 12l8.5 4.5 8.5-4.5M3.5 16l8.5 4.5 8.5-4.5"/></svg>',
+};
+function renderMenu() {
+  const L = S.set.layers, n = groups().length;
+  const preset = Object.entries(PRESETS).find(([, p]) => LAYERS.every(l => p[l.k] === L[l.k]))?.[0] || '';
+  const sw = (k, on, name, sub) => `<button class="mi" role="menuitemcheckbox" aria-checked="${on}" data-layer="${k}"><span class="lab">${name}</span>${sub ? `<span class="sub">${sub}</span>` : ''}<span class="sw" aria-hidden="true"></span></button>`;
+  menu.innerHTML = `<h4>Tools</h4>
+    <button class="mi${speech.on ? ' live' : ''}" role="menuitem" id="playbtn">${MI.read}<span class="lab">${speech.on ? 'Stop reading aloud' : 'Read aloud'}</span></button>
+    <button class="mi" role="menuitem" id="searchbtn">${MI.search}<span class="lab">Search</span><kbd>/</kbd></button>
+    <button class="mi" role="menuitem" id="gotobtn">${MI.goto}<span class="lab">Go to book and chapter</span></button>
+    <button class="mi" role="menuitem" id="studybtn">${MI.study}<span class="lab">Bible studies</span></button>
+    <button class="mi" role="menuitem" id="savedbtn">${MI.saved}<span class="lab">Highlights &amp; notes</span>${n ? `<span class="sub">${n}</span>` : ''}</button>
+    <hr><h4>Show</h4>
+    <div class="seg" role="group" aria-label="Presets">${[['reading', 'Reading'], ['study', 'Study'], ['original', 'Original']].map(([k, t]) => `<button data-preset="${k}" aria-pressed="${preset === k}">${t}</button>`).join('')}</div>
+    ${LAYERS.map(l => sw(l.k, L[l.k] !== 'off', l.name, L[l.k] !== 'off' && l.modes.length > 2 ? l.labels[L[l.k]] : '')).join('')}
+    ${sw('markup', S.set.markup, 'Highlights &amp; markup', '')}
+    <hr><button class="mi" role="menuitem" id="setbtn">${MI.set}<span class="lab">Layer modes &amp; reading settings</span></button>`;
 }
-$('#layerbar').addEventListener('click', e => {
-  const btn = e.target.closest('[data-layer]'); if (!btn) return;
-  const k = btn.dataset.layer, L = S.set.layers;
+function openMenu() { renderMenu(); menu.hidden = false; menuBtn.setAttribute('aria-expanded', 'true'); menu.querySelector('.mi').focus(); }
+function closeMenu(focus) { if (menu.hidden) return; menu.hidden = true; menuBtn.setAttribute('aria-expanded', 'false'); if (focus) menuBtn.focus(); }
+function toggleLayer(k) {
+  const L = S.set.layers;
   if (k === 'markup') S.set.markup = !S.set.markup;
   else { const l = LAYERS.find(x => x.k === k); if (L[k] === 'off') L[k] = S.lastOn[k] || l.modes[1]; else { S.lastOn[k] = L[k]; L[k] = 'off'; } }
-  save(); renderChips(); render();
+  save(); render(); renderMenu();
+  const el = menu.querySelector(`[data-layer="${k}"]`); el && el.focus();
+}
+menu.addEventListener('keydown', e => {
+  const items = $$('.mi, .seg button', menu), i = items.indexOf(document.activeElement);
+  if (e.key === 'ArrowDown') { e.preventDefault(); items[(i + 1) % items.length].focus(); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); items[(i - 1 + items.length) % items.length].focus(); }
+  else if (e.key === 'Escape') { e.stopPropagation(); closeMenu(true); }
 });
 
 /* ---------- sheet ---------- */
@@ -475,13 +503,12 @@ function startReading(v) {
   if (!synth) return toast('Read aloud needs a browser with speech synthesis.');
   if (!chap?.verses) return toast('Nothing to read in this chapter yet.');
   synth.cancel(); Object.assign(speech, { on: true, paused: false, v: v || 1 });
-  $('#audiobar').hidden = false; markbar.hidden = true; $('#playbtn').classList.add('on'); setPauseIcon(); $('#arate').value = String(S.set.rate);
+  $('#audiobar').hidden = false; markbar.hidden = true; setPauseIcon(); $('#arate').value = String(S.set.rate);
   speakVerse();
 }
-function stopReading() { speech.on = false; speech.tok++; synth?.cancel(); $('#audiobar').hidden = true; $('#playbtn').classList.remove('on'); $$('.vb.speaking').forEach(e => e.classList.remove('speaking')); }
+function stopReading() { speech.on = false; speech.tok++; synth?.cancel(); $('#audiobar').hidden = true; $$('.vb.speaking').forEach(e => e.classList.remove('speaking')); }
 const setPauseIcon = () => { $('#apause').innerHTML = speech.paused ? ICON.play : ICON.pause; $('#apause').setAttribute('aria-label', speech.paused ? 'Resume' : 'Pause'); };
 function jump(d) { if (!speech.on) return; speech.tok++; synth.cancel(); speech.paused = false; setPauseIcon(); speech.v = Math.max(1, speech.v + d); speakVerse(); }
-$('#playbtn').onclick = () => speech.on ? stopReading() : startReading(cur.v || 1);
 $('#apause').onclick = () => { if (speech.paused) { synth.resume(); speech.paused = false; } else { synth.pause(); speech.paused = true; } setPauseIcon(); };
 $('#astop').onclick = stopReading;
 $('#aprev').onclick = () => jump(-1); $('#anext').onclick = () => jump(1);
@@ -514,13 +541,21 @@ sheet.addEventListener('click', e => {
   if (name === 'preset') Object.assign(S.set.layers, PRESETS[val]);
   else if (name.startsWith('layer:')) S.set.layers[name.slice(6)] = val;
   else S.set[name] = val;
-  save(); renderChips(); render(); openSettings();
+  save(); render(); openSettings();
 });
 
 /* ---------- global clicks ---------- */
 document.addEventListener('click', async e => {
   const t = e.target;
   const q = s => t.closest(s);
+  if (q('#menubtn')) return menu.hidden ? openMenu() : closeMenu(true);
+  if (menu.contains(t)) {
+    if (q('[data-layer]')) return toggleLayer(q('[data-layer]').dataset.layer);
+    if (q('[data-preset]')) { Object.assign(S.set.layers, PRESETS[q('[data-preset]').dataset.preset]); save(); render(); renderMenu(); return; }
+    closeMenu();
+    if (q('#playbtn')) return speech.on ? stopReading() : startReading(cur.v || 1);
+    if (q('#gotobtn')) return openPicker();
+  } else closeMenu();
   if (q('#refbtn')) return openPicker();
   if (q('[data-test]')) return openPicker(q('[data-test]').dataset.test);
   if (q('[data-book]')) return openChapters(q('[data-book]').dataset.book);
@@ -553,7 +588,7 @@ document.addEventListener('click', async e => {
 });
 document.addEventListener('keydown', e => {
   if (e.target.matches('input, textarea, select')) { if (e.key === 'Escape') closeSheet(); return; }
-  if (e.key === 'Escape') { if (!sheet.hidden) closeSheet(); else { markbar.hidden = true; getSelection().removeAllRanges(); } }
+  if (e.key === 'Escape') { if (!menu.hidden) closeMenu(true); else if (!sheet.hidden) closeSheet(); else { markbar.hidden = true; getSelection().removeAllRanges(); } }
   else if (!sheet.hidden) return;
   else if (e.key === 'ArrowLeft') $('#prev').click();
   else if (e.key === 'ArrowRight') $('#next').click();
@@ -573,6 +608,6 @@ window.addEventListener('hashchange', () => {
   studyIdx = (await getJSON('data/studies/index.json')) || [];
   await loadLex();
   if (synth) synth.onvoiceschanged = () => {};
-  renderChips(); await render();
+  await render();
 })();
 }

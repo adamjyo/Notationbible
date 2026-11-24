@@ -19,14 +19,15 @@ Opening `index.html` directly from disk won't work, because browsers block `fetc
 
 | Feature | How it works |
 |---|---|
-| Layers | Chips under the header switch each layer on or off. **Layers & settings** picks a mode per layer (Off / Markers / Inline) plus presets: *Reading*, *Study*, *Original language*. |
+| Menu | One **Menu** button in the header holds every feature: read aloud, search, go to, studies, highlights & notes, a switch per layer, presets (*Reading*, *Study*, *Original*), and settings. |
+| Layers | Each layer's switch turns it on or off. **Layer modes & reading settings** picks a mode per layer (Off / Markers / Inline). |
 | Strong's | *Tap words* opens the lexicon and concordance for any word; *Numbers* prints the number after each word. |
 | Interlinear | English order (reverse interlinear) with the Greek or Hebrew word, transliteration and Strong's number under each English word. |
 | Verse panel | Tap a verse for all its layers at once: word list, footnotes, cross-references with previews, commentary, studies, notes. |
 | Concordance | Every verse using a Strong's number, plus how the BSB translates it. Search `G3056` or `H430` to jump there. |
 | Markup | Select any words in a verse, footnote, commentary, study, lexicon entry or note, then highlight (4 colours), underline, bold, attach a note, or clear. Selections can span several verses. |
 | Notes | Light formatting: `**bold**`, `*italic*`, `==highlight==`. References like `John 3:16` and numbers like `G3056` become links. |
-| Read aloud | The speaker button reads from the current or tapped verse, highlights each verse, follows along and continues into the next chapter. Speed and voice are in settings. |
+| Read aloud | **Read aloud** in the menu reads from the current or tapped verse, highlights each verse, follows along and continues into the next chapter. Speed and voice are in settings. |
 | Voice to text | **Dictate** in the note editor, **Dictate note** in the verse panel, and the mic in search. |
 | Search | Words (all must match), `"exact phrase"`, references (`jn 1:14`, `ps 23`) and Strong's numbers. |
 

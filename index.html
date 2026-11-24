@@ -22,15 +22,11 @@
   </nav>
   <div class="tools">
     <span class="tr" title="Berean Standard Bible">BSB</span>
-    <button class="ico" id="playbtn" aria-label="Read aloud" title="Read aloud"><svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg></button>
-    <button class="ico" id="searchbtn" aria-label="Search" title="Search (/)"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
-    <button class="ico" id="studybtn" aria-label="Bible studies" title="Bible studies"><svg viewBox="0 0 24 24"><path d="M3.5 5.5c3-1 6-1 8.5 1v13c-2.5-2-5.5-2-8.5-1zM20.5 5.5c-3-1-6-1-8.5 1v13c2.5-2 5.5-2 8.5-1z"/></svg></button>
-    <button class="ico" id="savedbtn" aria-label="Highlights and notes" title="Highlights and notes"><svg viewBox="0 0 24 24"><path d="M7 3.5h10v17l-5-3.6-5 3.6z"/></svg></button>
-    <button class="ico" id="setbtn" aria-label="Layers and settings" title="Layers and settings"><svg viewBox="0 0 24 24"><path d="M12 3.5l8.5 4.5-8.5 4.5L3.5 8z"/><path d="M3.5 12l8.5 4.5 8.5-4.5M3.5 16l8.5 4.5 8.5-4.5"/></svg></button>
+    <button class="menubtn" id="menubtn" aria-haspopup="menu" aria-expanded="false" aria-controls="menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span>Menu</span></button>
   </div>
 </header>
 
-<div class="layerbar" id="layerbar" role="group" aria-label="Quick layer toggles"></div>
+<div class="menu" id="menu" role="menu" aria-label="Features" hidden></div>
 
 <main id="page">
   <article class="reader" id="reader"></article>
