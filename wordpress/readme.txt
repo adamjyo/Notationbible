@@ -4,7 +4,7 @@ Tags: bible, scripture, strongs, interlinear, commentary
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -33,6 +33,9 @@ Put the reader in any page or post with the shortcode:
 The plugin updates itself from its GitHub releases (https://github.com/adamjyo/notationbible/releases). WordPress shows new versions on the Plugins and Updates screens like any other plugin, and automatic updates are switched on when the plugin is first activated. Settings → Notation Bible shows the installed and latest versions and has a "Check for updates now" button.
 
 == Changelog ==
+
+= 1.0.1 =
+* Updates still arrive when the site cannot reach WordPress.org.
 
 = 1.0.0 =
 * First WordPress release: full-page reader, shortcode, settings page and automatic updates from GitHub.

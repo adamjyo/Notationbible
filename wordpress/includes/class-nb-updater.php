@@ -30,6 +30,33 @@ class NB_Updater {
 		add_filter( 'upgrader_source_selection', array( __CLASS__, 'fix_folder' ), 10, 4 );
 		add_filter( 'http_request_args', array( __CLASS__, 'auth_download' ), 10, 2 );
 		add_action( 'upgrader_process_complete', array( __CLASS__, 'after_upgrade' ), 10, 2 );
+		add_filter( 'site_transient_update_plugins', array( __CLASS__, 'fallback' ) );
+	}
+
+	/**
+	 * WordPress skips every Update URI check when WordPress.org cannot be reached
+	 * (firewalled hosts, outages). In that case our entry is missing from the list of
+	 * updates, so add it from the GitHub release ourselves.
+	 */
+	public static function fallback( $value ) {
+		$file = self::basename();
+		if ( ! is_object( $value ) || isset( $value->response[ $file ] ) || isset( $value->no_update[ $file ] ) ) {
+			return $value;
+		}
+		$release = self::latest();
+		if ( ! $release ) {
+			return $value;
+		}
+		if ( ! function_exists( 'get_plugin_data' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+		$item = (object) self::check( false, get_plugin_data( NB_FILE, false, false ), $file );
+		if ( version_compare( $release['version'], NB_VERSION, '>' ) ) {
+			$value->response[ $file ] = $item;
+		} else {
+			$value->no_update[ $file ] = $item;
+		}
+		return $value;
 	}
 
 	public static function basename() {
