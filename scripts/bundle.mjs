@@ -20,12 +20,12 @@ async function jsonFiles(dir) {
 
 // The whole Bible is too heavy for a one-file demo, so it carries a few books (override with BUNDLE_BOOKS=a,b,c).
 const KEEP = new Set((process.env.BUNDLE_BOOKS || 'genesis,psalms,proverbs,isaiah,matthew,john,romans,ephesians').split(','));
-const perBook = /^data\/(bsb|il|footnotes|xrefs|commentary\/[^/]+)\/([\w-]+)\.json$/;
+const perBook = /^data\/(bsb|il|footnotes|xrefs|commentary\/[^/]+|tr\/[^/]+|topics\/v|places\/v)\/([\w-]+)\.json$/;
 const data = {};
 for (const f of await jsonFiles('data')) {
   const m = f.match(perBook);
   if (m && !KEEP.has(m[2])) continue;
-  if (/SOURCE_REPORT|IMPORT_REPORT/.test(f)) continue;
+  if (/REPORT|IMPORT/.test(f)) continue;
   data[f] = JSON.parse(await read(f));
 }
 const mf = data['data/manifest.json'];
