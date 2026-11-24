@@ -419,7 +419,7 @@ body.nt-open .dock{z-index:30}
 .notepop{position:absolute;z-index:23;width:min(330px,calc(100vw - 16px));padding:14px 14px 12px;color:#2a2414;background:color-mix(in srgb,var(--nc) 72%,#fff);border-radius:2px 2px 18px 2px;transform:rotate(-1.2deg);box-shadow:0 1px 1px rgb(0 0 0/.12),0 12px 24px -6px rgb(0 0 0/.38);animation:postit .18s ease-out}
 .notepop::after{content:"";position:absolute;right:0;bottom:0;width:26px;height:26px;border-radius:0 0 18px 0;background:linear-gradient(135deg,transparent 48%,color-mix(in srgb,var(--nc) 58%,#000) 50%,color-mix(in srgb,var(--nc) 85%,#fff) 72%);pointer-events:none}
 .notepop>*{position:relative}
-.notepop textarea{display:block;width:100%;box-sizing:border-box;min-height:78px;resize:none;border:0;outline:0;background:repeating-linear-gradient(transparent 0 29px,rgb(0 0 0/.1) 29px 30px);color:#2a2414;font:600 25px/30px Caveat,'Segoe Print','Bradley Hand',cursive;padding:0 28px 0 2px}
+.notepop textarea{display:block;width:100%;box-sizing:border-box;min-height:78px;resize:none;border:0;outline:0;background:repeating-linear-gradient(transparent 0 29px,rgb(0 0 0/.1) 29px 30px);color:#2a2414;font:400 19px/30px 'Architects Daughter','Segoe Print','Bradley Hand',cursive;padding:0 28px 0 2px}
 .notepop textarea::placeholder{color:rgb(42 36 20/.5)}
 .notepop .row{display:flex;align-items:center;gap:8px;margin-top:8px}
 .notepop .row [data-save]{margin-left:auto}
