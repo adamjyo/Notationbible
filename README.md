@@ -15,6 +15,10 @@ python3 -m http.server 8000      # then open http://localhost:8000
 
 Opening `index.html` directly from disk won't work, because browsers block `fetch()` for `file://`.
 
+For a one-file demo you can open anywhere (even from disk), run `node scripts/bundle.mjs`. It writes `dist/notation-bible.html` with the styles, scripts and data inlined.
+
+The app opens in **dark mode** by default. Switch with **Dark mode** in the menu, or pick Dark, Light or Match system under **Layer modes & reading settings → Appearance**.
+
 ## What's in the box
 
 | Feature | How it works |

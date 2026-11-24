@@ -25,7 +25,11 @@ const PRESETS = {
 const KEY = 'notationbible:v1';
 let S = {};
 try { S = JSON.parse(localStorage.getItem(KEY)) || {}; } catch { S = {}; }
-S.set = Object.assign({ size: 19, font: 'serif', layout: 'para', nums: true, markup: true, rate: 1, voice: '', cont: true }, S.set || {});
+S.set = Object.assign({ theme: 'dark', size: 19, font: 'serif', layout: 'para', nums: true, markup: true, rate: 1, voice: '', cont: true }, S.set || {});
+// appearance: dark by default; 'system' follows the device (and the claude.ai viewer's theme when previewed there)
+const applyTheme = () => { document.documentElement.dataset.mode = ['dark', 'light', 'system'].includes(S.set.theme) ? S.set.theme : 'dark'; };
+const isDark = () => S.set.theme === 'dark' || (S.set.theme === 'system' && (document.documentElement.dataset.theme === 'dark' || (document.documentElement.dataset.theme !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches)));
+applyTheme();
 S.set.layers = Object.assign({}, PRESETS.study, S.set.layers || {});
 S.lastOn = S.lastOn || {};
 S.ann = S.ann || [];
@@ -33,7 +37,8 @@ const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch
 
 /* ---------- data ---------- */
 const cache = {};
-const getJSON = p => cache[p] ??= fetch(p).then(r => r.ok ? r.json() : null).catch(() => null);
+// window.__DATA is filled only in the single-file preview build (scripts/bundle.mjs)
+const getJSON = p => cache[p] ??= (window.__DATA && p in window.__DATA ? Promise.resolve(window.__DATA[p]) : fetch(p).then(r => r.ok ? r.json() : null).catch(() => null));
 let M = { books: {}, layers: { footnotes: { books: [] }, xrefs: { books: [] }, commentary: [] } };
 const lay = (name, b) => (M.layers[name]?.books || []).includes(b) ? getJSON(`data/${name}/${b}.json`) : null;
 const lexFile = n => getJSON(n[0] === 'H' ? 'data/lexicon/hebrew.json' : 'data/lexicon/greek.json');
@@ -158,7 +163,7 @@ function annCls(a) {
   }
   const scope = (css, pre) => css.replace(/(^|})\./g, `$1${pre} .`);
   const st = document.createElement('style');
-  st.textContent = light + scope(dark, ':root[data-theme=dark]') + `@media (prefers-color-scheme:dark){${scope(dark, ':root:not([data-theme=light])')}}`;
+  st.textContent = light + scope(dark, ':root[data-mode=dark]') + scope(dark, ':root[data-mode=system][data-theme=dark]') + `@media (prefers-color-scheme:dark){${scope(dark, ':root[data-mode=system]:not([data-theme=light])')}}`;
   document.head.appendChild(st);
 })();
 function anchorText(el) { return textNodes(el).map(n => n.data).join(''); }
@@ -328,6 +333,7 @@ function renderMenu() {
     <div class="seg" role="group" aria-label="Presets">${[['reading', 'Reading'], ['study', 'Study'], ['original', 'Original']].map(([k, t]) => `<button data-preset="${k}" aria-pressed="${preset === k}">${t}</button>`).join('')}</div>
     ${LAYERS.map(l => sw(l.k, L[l.k] !== 'off', l.name, L[l.k] !== 'off' && l.modes.length > 2 ? l.labels[L[l.k]] : '')).join('')}
     ${sw('markup', S.set.markup, 'Highlights &amp; markup', '')}
+    ${sw('darkmode', isDark(), 'Dark mode', S.set.theme === 'system' ? 'System' : '')}
     <hr><button class="mi" role="menuitem" id="setbtn">${MI.set}<span class="lab">Layer modes &amp; reading settings</span></button>`;
 }
 function openMenu() { renderMenu(); menu.hidden = false; menuBtn.setAttribute('aria-expanded', 'true'); menu.querySelector('.mi').focus(); }
@@ -335,6 +341,7 @@ function closeMenu(focus) { if (menu.hidden) return; menu.hidden = true; menuBtn
 function toggleLayer(k) {
   const L = S.set.layers;
   if (k === 'markup') S.set.markup = !S.set.markup;
+  else if (k === 'darkmode') { S.set.theme = isDark() ? 'light' : 'dark'; applyTheme(); }
   else { const l = LAYERS.find(x => x.k === k); if (L[k] === 'off') L[k] = S.lastOn[k] || l.modes[1]; else { S.lastOn[k] = L[k]; L[k] = 'off'; } }
   save(); render(); renderMenu();
   const el = menu.querySelector(`[data-layer="${k}"]`); el && el.focus();
@@ -677,6 +684,7 @@ function openSettings() {
   openSheet('Layers & settings', `<div class="set">
     <div><label>Preset</label>${seg('preset', preset || '', [['reading', 'Reading'], ['study', 'Study'], ['original', 'Original language']])}${preset ? '' : '<p class="hint">Custom mix</p>'}</div>
     ${LAYERS.map(l => `<div class="lrow"><span>${l.name}</span><small>${l.help}</small>${seg('layer:' + l.k, L[l.k], l.modes.map(m => [m, l.labels[m]]))}</div>`).join('')}
+    <div><label>Appearance</label>${seg('theme', S.set.theme, [['dark', 'Dark'], ['light', 'Light'], ['system', 'Match system']])}</div>
     <div><label>Highlights and markup</label>${seg('markup', S.set.markup, [[true, 'Show'], [false, 'Hide']])}</div>
     <div><label for="sz">Text size</label><div class="range"><input id="sz" type="range" min="15" max="26" step="1" value="${S.set.size}"><output id="szo">${S.set.size}px</output></div></div>
     <div><label>Typeface</label>${seg('font', S.set.font, [['serif', 'Serif'], ['sans', 'Sans']])}</div>
@@ -695,6 +703,7 @@ sheet.addEventListener('click', e => {
   if (name === 'preset') Object.assign(S.set.layers, PRESETS[val]);
   else if (name.startsWith('layer:')) S.set.layers[name.slice(6)] = val;
   else S.set[name] = val;
+  if (name === 'theme') applyTheme();
   save(); render(); openSettings();
 });
 
