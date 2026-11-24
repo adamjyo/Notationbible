@@ -1,0 +1,34 @@
+# Builds the extra study resources (parallel translations, commentaries, Easton's dictionary,
+# Nave's/Torrey's topics, Bible places) on GitHub's servers and commits them to data/.
+name: Import study resources
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/initial-reader]
+    paths: ['scripts/build_resources.py', '.github/workflows/import-resources.yml']
+permissions:
+  contents: write
+concurrency: { group: import-resources, cancel-in-progress: true }
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: claude/initial-reader }
+      - name: Download sources
+        run: |
+          mkdir -p raw && cd raw
+          sparse() { git clone -q --depth 1 --filter=blob:none --sparse "https://github.com/$1.git" "$2" && (cd "$2" && git sparse-checkout set --no-cone $3); }
+          sparse scrollmapper/bible_databases scrollmapper '/formats/csv/KJV.csv /formats/csv/ASV.csv /formats/csv/WEB.csv /formats/csv/YLT.csv'
+          sparse thefrenchpressed/pillar-commentary-data pillar '/c/scofield/*'
+          sparse j86schroeder/topical-bible-search topical '/dist/*'
+          sparse openbibleinfo/Bible-Geocoding-Data geo '/data/ancient.jsonl /data/modern.jsonl'
+          git clone -q --depth 1 --filter=blob:none --sparse https://github.com/garydavenport73/eastons-bible-dictionary-json.git easton && (cd easton && git sparse-checkout set --no-cone '/eastons.json') && cp easton/eastons.json .
+          ls -la scrollmapper/formats/csv pillar/c/scofield | head; du -sh *
+      - name: Build resources
+        run: python3 scripts/build_resources.py --raw raw && du -sh data/*
+      - name: Commit data
+        run: |
+          git config user.name "notationbible-bot"; git config user.email "actions@users.noreply.github.com"
+          git add data && git commit -q -m "Import study resources: translations, commentaries, dictionary, topics, places" && git push || echo "no changes"
