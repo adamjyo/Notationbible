@@ -111,12 +111,13 @@ def main():
             orig = r[C['orig']].strip(); orig = HEB_MARKS.sub('', orig) if heb else orig
             fn = clean(r[C['fn']])
             info = '¦'.join(x.replace('¦', '/').replace('~', '-') for x in (orig, r[C['translit']].strip(), r[C['parse']].strip().replace(' | ', '/').replace('|', '/')))
-            if b == 'john' and c == 1 and v <= 2: debug.append(f"john 1:{v} sort={r[C['sort']]} en={en!r} num={num!r} orig={orig!r}")
             if en in ('', '-', 'vvv'):
                 stats['untranslated'] += 1; continue
             if en in ('. . .', '...', '…'):  # continues the previous phrase
                 last = next((k for k in range(len(segs) - 1, -1, -1) if isinstance(segs[k], list)), None)
-                if last is not None and num: segs[last][1] += '+' + num; il[-1] += ' ' + info.split('¦')[0]
+                if last is not None and num:  # add this word to each field of the previous phrase
+                    segs[last][1] += '+' + num
+                    il[-1] = '¦'.join(f'{x} {y}'.strip() for x, y in zip(il[-1].split('¦'), info.split('¦')))
                 continue
             # the tables bracket words the translators supplied ("[was] good", "{as well}"); the printed text doesn't
             idx = -1
@@ -194,7 +195,7 @@ def main():
     rep.append('sample John 1:1: ' + books.get('john', {}).get('1', {}).get(1, '?'))
     rep.append('sample IL John 1:1: ' + ils.get('john', {}).get('1', {}).get(1, '?')[:300])
     rep.append('sample Gen 1:1 heading: ' + str(heads.get(('genesis', 1, 1))))
-    rep.append('John 1:1-2 rows in English order:\n  ' + '\n  '.join(debug))
+    rep.append('sample IL Romans 8:28: ' + ils.get('romans', {}).get('8', {}).get(28, '?')[:400])
     with open(a.report, 'w', encoding='utf-8') as f: f.write('# Import report\n\n' + '\n'.join(rep) + '\n')
     print('\n'.join(rep))
     if stats['verses'] < 31000: sys.exit('too few verses')
