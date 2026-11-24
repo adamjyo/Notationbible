@@ -21,6 +21,7 @@ class NB_Reader {
 		add_filter( 'query_vars', array( __CLASS__, 'query_vars' ) );
 		add_action( 'template_redirect', array( __CLASS__, 'maybe_serve' ), 0 );
 		add_shortcode( 'notation_bible', array( __CLASS__, 'shortcode' ) );
+		add_action( 'init', array( __CLASS__, 'decide_home' ), 5 );
 	}
 
 	/** Saved settings merged with defaults. */
@@ -29,14 +30,47 @@ class NB_Reader {
 		return wp_parse_args(
 			is_array( $saved ) ? $saved : array(),
 			array(
-				'slug'  => 'bible',
-				'start' => 'John 1',
+				'slug'        => 'bible',
+				'start'       => 'John 1',
+				'home'        => 0,
 				'token'       => '',
 				'accounts'    => 1,
 				'signups'     => 1,
 				'delete_data' => 0,
 			)
 		);
+	}
+
+	/** True when the Bible is the site's home page. */
+	public static function is_home_page() {
+		return ! empty( self::settings()['home'] );
+	}
+
+	/**
+	 * Decided once per site: if the home page is still WordPress's empty default
+	 * (latest posts, with no more than the sample post), the Bible becomes the home
+	 * page. A site that already has a home page keeps it until the setting is turned on.
+	 */
+	public static function decide_home() {
+		$saved = get_option( 'nb_settings', array() );
+		$saved = is_array( $saved ) ? $saved : array();
+		if ( array_key_exists( 'home', $saved ) ) {
+			return;
+		}
+		$posts = wp_count_posts( 'post' );
+		$empty = 'posts' === get_option( 'show_on_front' ) && ( isset( $posts->publish ) ? (int) $posts->publish : 0 ) <= 1;
+		$saved['home'] = $empty ? 1 : 0;
+		update_option( 'nb_settings', $saved );
+	}
+
+	/** Is this request for the site's home address (not a search, feed, page 2 and so on)? */
+	private static function is_home_request() {
+		if ( is_admin() || ! ( is_front_page() || is_home() ) || is_search() || is_feed() || is_paged() || is_preview() ) {
+			return false;
+		}
+		$path = wp_parse_url( isset( $_SERVER['REQUEST_URI'] ) ? esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '/', PHP_URL_PATH );
+		$home = wp_parse_url( home_url( '/' ), PHP_URL_PATH );
+		return trailingslashit( (string) $path ) === trailingslashit( (string) ( $home ? $home : '/' ) );
 	}
 
 	public static function slug() {
@@ -46,6 +80,9 @@ class NB_Reader {
 
 	/** Public URL of the full-page reader. */
 	public static function page_url() {
+		if ( self::is_home_page() ) {
+			return home_url( '/' );
+		}
 		if ( get_option( 'permalink_structure' ) ) {
 			return home_url( user_trailingslashit( self::slug() ) );
 		}
@@ -82,7 +119,14 @@ class NB_Reader {
 	}
 
 	public static function maybe_serve() {
-		if ( ! get_query_var( self::QUERY_VAR ) ) {
+		$at_slug = (bool) get_query_var( self::QUERY_VAR );
+		if ( $at_slug && self::is_home_page() ) {
+			// The Bible lives at the home page now; send old /bible/ links there.
+			$args = array_filter( array_diff_key( wp_unslash( $_GET ), array( self::QUERY_VAR => 1 ) ), 'is_scalar' ); // phpcs:ignore WordPress.Security.NonceVerification
+			wp_safe_redirect( add_query_arg( array_map( 'rawurlencode', $args ), home_url( '/' ) ), 302 );
+			exit;
+		}
+		if ( ! $at_slug && ! ( self::is_home_page() && self::is_home_request() ) ) {
 			return;
 		}
 		status_header( 200 );

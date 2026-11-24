@@ -106,6 +106,7 @@ Cross-references, once imported: OpenBible.info, CC BY.
 
 `wordpress/` is the plugin source. `scripts/build_wp.sh` packs it with the app and the whole Bible into `build/notation-bible.zip` (about 18 MB). Download the latest zip from [Releases](https://github.com/adamjyo/Notationbible/releases/latest) and install it with Plugins → Add New → Upload.
 
+- **Home page:** with Notation Bible → Settings → Home page on, the Bible is the site's home page and `/bible/` links forward there. It switches on by itself on sites whose home page is still WordPress's empty default.
 - The reader is at `/bible/` (changeable in Notation Bible → Settings); `[notation_bible ref="John 3:16" height="80vh"]` embeds it in a page.
 - **Reader accounts:** readers can sign in from the Bible's menu to a Notation Bible account, which is separate from WordPress users. Their highlights, notes, NoteTrees, reading plan and settings sync across devices; edits made on two devices are merged. Manage readers in Notation Bible → Readers (add, disable, delete, send password links, sign out everywhere). Switch accounts and open sign-ups on or off in Notation Bible → Settings. Without an account, notes stay in the reader's browser, as in the stand-alone web app.
 - **Updates:** the plugin updates itself from this repository's GitHub releases. WordPress shows new versions like any other plugin update, and automatic updates are switched on at first activation.
