@@ -180,6 +180,7 @@ class NB_Reader {
 		$html = str_replace( '<script src="books.js"></script>', $boot, $html );
 
 		$html = preg_replace( '#<title>(.*?)</title>#', '<title>' . esc_html( self::tab_title() ) . '</title>', $html, 1 );
+		$html = str_replace( 'content="NotationBible.Com"', 'content="' . esc_attr( self::tab_title() ) . '"', $html );
 		return $html;
 	}
 

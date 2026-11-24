@@ -112,6 +112,17 @@ function rich(t) {
 }
 const lord = s => esc(s).replace(/\bLORD\b/g, '<span class="sc">Lord</span>');
 
+// The browser tab's title. Safari can leave a tab "Untitled" after the address's #part changes
+// (each change is a new history entry) when the title text stays the same, because it only
+// picks a title up when it changes. So change it, then put it back.
+const TAB_TITLE = (window.NB_CONFIG && window.NB_CONFIG.title) || 'NotationBible.Com';
+function setTitle() {
+  document.title = TAB_TITLE + '\u200B';
+  requestAnimationFrame(() => { document.title = TAB_TITLE; });
+}
+addEventListener('hashchange', setTitle);
+addEventListener('pageshow', setTitle);
+
 /* ---------- state ---------- */
 // A host page (the WordPress plugin) can pass a starting passage: ?ref=John 3:16 or window.NB_CONFIG.start.
 const startRef = (() => { try { const q = new URLSearchParams(location.search).get('ref'); return q && parseRef(q); } catch { return null; } })();
@@ -277,7 +288,7 @@ const ICON = {
 async function render() {
   const { b, c } = cur, book = BY[b];
   $('#reflabel').textContent = label(b, c);
-  document.title = (window.NB_CONFIG && window.NB_CONFIG.title) || 'NotationBible.Com';
+  setTitle();
   chap = await loadChapter(b, c);
   const L = S.set.layers;
   const pr = prevOf(b, c), nx = nextOf(b, c);
