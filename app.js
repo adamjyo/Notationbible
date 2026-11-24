@@ -403,7 +403,7 @@ function openSheet(title, html, back) {
   $('#sheettitle').textContent = title; $('#sheetbody').innerHTML = html; $('#sheetbody').scrollTop = 0;
   backFn = back || null; $('#sheetback').hidden = !back;
   sheet.hidden = scrim.hidden = false; applyMarks();
-  setTimeout(() => (sheet.querySelector('[autofocus]') || $('#sheetclose')).focus(), 30);
+  setTimeout(() => { if (!sheet.contains(document.activeElement) || document.activeElement === sheet) (sheet.querySelector('[autofocus]') || $('#sheetclose')).focus(); }, 30);
 }
 function closeSheet() { sheet.hidden = scrim.hidden = true; stopDictation(); }
 $('#sheetclose').onclick = closeSheet; scrim.onclick = closeSheet; $('#sheetback').onclick = () => backFn && backFn();
