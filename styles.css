@@ -98,8 +98,8 @@ main{max-width:760px;margin:0 auto;padding:clamp(24px,4vw,56px) max(5vw,20px) 18
 .interlinear .v{line-height:1.4}
 /* markers */
 .fm,.mk{font:600 11px var(--sans);color:var(--accent);background:none;border:0;padding:0 2px;vertical-align:.7em;line-height:0;cursor:pointer;user-select:none}
-.mk{display:inline-grid;place-items:center;min-width:18px;height:18px;margin-left:3px;border:1px solid color-mix(in srgb,var(--accent) 40%,var(--rule));border-radius:5px;vertical-align:.35em;line-height:1}
-.mk svg{width:11px;height:11px;stroke-width:2.2}
+.mk{display:inline;white-space:nowrap;padding:1px 3px;margin-left:3px;border:1px solid color-mix(in srgb,var(--accent) 40%,var(--rule));border-radius:5px;vertical-align:.3em;line-height:1;font-size:11px;font-family:var(--sans);font-variant-emoji:text}
+.mk svg{width:11px;height:11px;stroke-width:2.2;vertical-align:-1px}
 /* inline layer blocks under a verse */
 .ib{font:15px/1.55 var(--sans);color:var(--ink);margin:.35em 0 .9em 1.4em;padding:8px 12px;border-left:2px solid var(--rule)}
 .ib h4{margin:0 0 4px;font-size:12px;font-weight:600;color:var(--soft)}

@@ -200,10 +200,10 @@ async function render() {
     const cmStart = chap.cm.filter(x => x.s === n), cmEnd = chap.cm.filter(x => x.e === n);
     const sts = chap.st.filter(x => x.v === n), nts = notesFor(id);
     let mk = '';
-    if (L.xrefs === 'markers' && xrs.length) mk += `<button class="mk" data-skip data-panel="${n}" title="Cross references"><svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button>`;
-    if (L.commentary === 'markers' && cmStart.length) mk += `<button class="mk" data-skip data-panel="${n}" title="Commentary">C</button>`;
-    if (L.studies === 'markers' && sts.length) mk += `<button class="mk" data-skip data-panel="${n}" title="Study">S</button>`;
-    if (L.notes === 'markers' && nts.length) mk += `<button class="mk" data-skip data-note="${nts[0].g}" title="My note">${ICON.note}</button>`;
+    if (L.xrefs === 'markers' && xrs.length) mk += `<span class="mk" role="button" tabindex="0" data-skip data-panel="${n}" title="Cross references">↗</span>`;
+    if (L.commentary === 'markers' && cmStart.length) mk += `<span class="mk" role="button" tabindex="0" data-skip data-panel="${n}" title="Commentary">C</span>`;
+    if (L.studies === 'markers' && sts.length) mk += `<span class="mk" role="button" tabindex="0" data-skip data-panel="${n}" title="Study">S</span>`;
+    if (L.notes === 'markers' && nts.length) mk += `<span class="mk" role="button" tabindex="0" data-skip data-note="${nts[0].g}" title="My note">✎</span>`;
     let ib = '';
     if (L.footnotes === 'inline' && fns.length) ib += fns.map((f, j) => `<div class="ib fn"><h4>Footnote ${String.fromCharCode(97 + fnLetter + j)} · ${esc(label(b, c, n))}</h4><span data-anchor="fn:${id}:${j}">${rich(f[1])}</span></div>`).join('');
     if (L.footnotes !== 'off') fnLetter += fns.length;
@@ -211,7 +211,7 @@ async function render() {
     if (L.commentary === 'inline') ib += cmEnd.map(x => `<section class="ib cm"><h4>Commentary · ${esc(BY[b].name)} ${esc(x.r.replace('-', '–'))} · ${esc(x.src.name)}</h4><div data-anchor="${x.anchor}">${rich(x.txt)}</div></section>`).join('');
     if (L.studies === 'inline') ib += sts.map(x => `<section class="ib st"><h4>Study · ${esc(x.d.title)} · ${esc(x.sec.heading)}</h4><div data-anchor="${x.anchor}">${rich(x.sec.body)}</div><button class="lnk" data-study="${x.s.id}">Open the full study</button></section>`).join('');
     if (L.notes === 'inline') ib += nts.map(g => `<div class="ib nt"><h4>My note · ${esc(label(b, c, n))}</h4><div data-anchor="nt:${g.g}">${rich(g.n || '')}</div><button class="lnk" data-note="${g.g}">Edit note</button></div>`).join('');
-    return `<div class="vb" id="v${n}" data-v="${n}"><span class="v" data-anchor="${id}" data-v="${n}"><a class="vn" data-skip href="${hashOf(b, c, n)}" data-panel="${n}">${n}</a>${words}</span>${mk}${verseMode ? '' : ' '}</div>${ib}`;
+    return `<div class="vb" id="v${n}" data-v="${n}"><span class="v" data-anchor="${id}" data-v="${n}"><a class="vn" data-skip href="${hashOf(b, c, n)}" data-panel="${n}">${n}</a>${words}</span>${mk ? '&#8288;' + mk : ''}${verseMode ? '' : ' '}</div>${ib}`;
   }).join('');
   reader.innerHTML = head + `<div class="text">${html}</div>`;
   // footnote letters sit right after the phrase they annotate
@@ -221,7 +221,7 @@ async function render() {
       const n = i + 1, fns = chap.fn[`${c}:${n}`] || []; const el = reader.querySelector(`#v${n} .v`);
       fns.forEach(f => {
         const at = plain(toks).indexOf(f[0]);
-        const btn = document.createElement('button'); btn.className = 'fm'; btn.dataset.skip = ''; btn.dataset.panel = n; btn.title = f[1];
+        const btn = document.createElement('span'); btn.className = 'fm'; btn.setAttribute('role', 'button'); btn.tabIndex = 0; btn.dataset.skip = ''; btn.dataset.panel = n; btn.title = f[1];
         btn.textContent = String.fromCharCode(97 + k++);
         insertAt(el, at < 0 ? plainLen(el) : at + f[0].length, btn);
       });
@@ -587,6 +587,7 @@ document.addEventListener('click', async e => {
   if (q('.v')) return versePanel(+q('.v').dataset.v);
 });
 document.addEventListener('keydown', e => {
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('span[role=button]')) { e.preventDefault(); e.target.click(); return; }
   if (e.target.matches('input, textarea, select')) { if (e.key === 'Escape') closeSheet(); return; }
   if (e.key === 'Escape') { if (!menu.hidden) closeMenu(true); else if (!sheet.hidden) closeSheet(); else { markbar.hidden = true; getSelection().removeAllRanges(); } }
   else if (!sheet.hidden) return;
