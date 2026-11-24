@@ -19,7 +19,7 @@ async function jsonFiles(dir) {
 }
 
 // The whole Bible is too heavy for a one-file demo, so it carries a few books (override with BUNDLE_BOOKS=a,b,c).
-const KEEP = new Set((process.env.BUNDLE_BOOKS || 'genesis,psalms,proverbs,isaiah,matthew,john,romans,ephesians').split(','));
+const KEEP = new Set((process.env.BUNDLE_BOOKS || 'genesis,psalms,john,romans').split(','));
 const perBook = /^data\/(bsb|il|footnotes|xrefs|commentary\/[^/]+|tr\/[^/]+|topics\/v|places\/v)\/([\w-]+)\.json$/;
 const data = {};
 for (const f of await jsonFiles('data')) {
@@ -28,6 +28,15 @@ for (const f of await jsonFiles('data')) {
   if (/REPORT|IMPORT/.test(f)) continue;
   data[f] = JSON.parse(await read(f));
 }
+// keep only the lexicon entries and topics that the demo books use
+const usedStrongs = new Set(), usedTopics = new Set();
+for (const [f, d] of Object.entries(data)) {
+  if (f.startsWith('data/bsb/') && d.fmt === 2) for (const vs of Object.values(d.chapters)) for (const v of vs) for (const m of v.matchAll(/¦([\d+]+)⟩/g)) m[1].split('+').forEach(n => usedStrongs.add(d.t + n));
+  if (f.startsWith('data/topics/v/')) for (const ids of Object.values(d)) ids.forEach(id => usedTopics.add(id));
+}
+for (const f of ['data/lexicon/greek.json', 'data/lexicon/hebrew.json']) if (data[f] && usedStrongs.size) for (const k in data[f]) if (!usedStrongs.has(k)) delete data[f][k];
+for (const f of Object.keys(data)) if (f.startsWith('data/topics/t/')) for (const k in data[f]) if (!usedTopics.has(k)) delete data[f][k];
+if (data['data/topics/index.json']) data['data/topics/index.json'] = data['data/topics/index.json'].filter(t => usedTopics.has(t[0]));
 const mf = data['data/manifest.json'];
 if (mf && !mf.sample) {
   mf.books = Object.fromEntries(Object.entries(mf.books).filter(([b]) => KEEP.has(b)));
