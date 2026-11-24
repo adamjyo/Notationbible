@@ -26,13 +26,14 @@ const PRESETS = {
 const KEY = 'notationbible:v1';
 let S = {};
 try { S = JSON.parse(localStorage.getItem(KEY)) || {}; } catch { S = {}; }
-const SET_DEFAULTS = { compareTr: 'kjv', commentaries: ['jfb', 'scofield'], theme: 'dark', size: 19, font: 'serif', layout: 'para', nums: true, markup: true, rate: 1, voice: '', cont: true };
+const SET_DEFAULTS = { compareTr: 'kjv', commentaries: ['jfb', 'scofield'], theme: 'dark', size: 19, font: 'sans', layout: 'para', nums: true, markup: true, rate: 1, voice: '', cont: true };
 S.set = Object.assign({}, SET_DEFAULTS, S.set || {});
 // appearance: dark by default; 'system' follows the device (and the claude.ai viewer's theme when previewed there)
 const applyTheme = () => { document.documentElement.dataset.mode = ['dark', 'light', 'system'].includes(S.set.theme) ? S.set.theme : 'dark'; };
 const isDark = () => S.set.theme === 'dark' || (S.set.theme === 'system' && (document.documentElement.dataset.theme === 'dark' || (document.documentElement.dataset.theme !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches)));
 applyTheme();
 S.set.layers = Object.assign({}, PRESETS.study, S.set.layers || {});
+if (!S.set.fontV) { S.set.font = 'sans'; S.set.fontV = 2; } // the Bible text's font is now Source Sans 3 (Source Serif is still in Typeface)
 S.lastOn = S.lastOn || {};
 S.ann = S.ann || [];
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} queuePush(); };
@@ -307,7 +308,7 @@ async function render() {
   const verseMode = S.set.layout === 'verse';
   reader.className = 'reader' + (verseMode ? ' verse' : '') + (S.set.nums ? '' : ' nonum') + (L.interlinear === 'inline' ? ' interlinear' : '');
   reader.style.setProperty('--size', S.set.size + 'px');
-  reader.style.setProperty('--text', S.set.font === 'sans' ? 'var(--sans)' : 'var(--serif)');
+  document.documentElement.style.setProperty('--text', S.set.font === 'serif' ? 'var(--serif)' : 'var(--textsans)');
   let fnLetter = 0;
   const html = chap.verses.map((toks, i) => {
     const n = i + 1, id = `${b}.${c}.${n}`, key = `${c}:${n}`;
@@ -995,7 +996,7 @@ function openSettings() {
     ${(M.layers.commentary || []).length ? `<div><label>Commentaries</label><div class="chips">${M.layers.commentary.map(cm => `<button class="chip" data-cmsrc="${esc(cm.id)}" aria-pressed="${S.set.commentaries.includes(cm.id)}">${esc(cm.name)}</button>`).join('')}</div></div>` : ''}
     <div><label>Highlights and markup</label>${seg('markup', S.set.markup, [[true, 'Show'], [false, 'Hide']])}</div>
     <div><label for="sz">Text size</label><div class="range"><input id="sz" type="range" min="15" max="26" step="1" value="${S.set.size}"><output id="szo">${S.set.size}px</output></div></div>
-    <div><label>Typeface</label>${seg('font', S.set.font, [['serif', 'Serif'], ['sans', 'Sans']])}</div>
+    <div><label>Typeface</label>${seg('font', S.set.font, [['sans', 'Source Sans'], ['serif', 'Source Serif']])}</div>
     <div><label>Layout</label>${seg('layout', S.set.layout, [['para', 'Paragraph'], ['verse', 'Verse by verse']])}<p class="hint">In paragraph layout, inline notes and layers break the text only where they appear.</p></div>
     <div><label>Verse numbers</label>${seg('nums', S.set.nums, [[true, 'Show'], [false, 'Hide']])}</div>
     <div><label for="voice">Read-aloud voice</label><select id="voice"><option value="">System default</option>${vs.map(v => `<option value="${esc(v.voiceURI)}" ${v.voiceURI === S.set.voice ? 'selected' : ''}>${esc(v.name)} (${esc(v.lang)})</option>`).join('')}</select></div>
