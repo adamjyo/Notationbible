@@ -258,6 +258,9 @@ async function loadChapter(b, c) {
   const tr = S.set.layers.compare === 'inline' ? (await getTr(S.set.compareTr, b))?.[c] : null;
   return { b, c, verses: t?.chapters?.[c] || null, h: t?.h || {}, p: t?.p?.[c] || [], il, tr, fn: fn || {}, xr: xr || {}, cm, st };
 }
+const PENCIL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 4.5l4 4L8.5 19.5 3.8 20.2l.7-4.7z"/><path d="M13.5 6.5l4 4"/></svg>';
+// the note's text with a small pencil at its very end, inline, to edit it
+const noteBody = g => { const h = rich(g.n || ''), pen = `<button class="npen" data-note="${g.g}" aria-label="Edit note" title="Edit note">${PENCIL}</button>`; return h.endsWith('</p>') ? h.slice(0, -4) + pen + '</p>' : h + pen; };
 const notesFor = id => groups().filter(g => g.k === 'note' && g.items.some(a => a.a === id));
 function groups() {
   const m = new Map();
@@ -322,7 +325,7 @@ async function render() {
     if (L.commentary === 'inline') ib += cmEnd.map(x => `<section class="ib cm"><h4>Commentary · ${esc(label(b, x.r.replace('-', '–')))} · ${esc(x.src.name)}</h4><div data-anchor="${x.anchor}">${rich(x.txt)}</div></section>`).join('');
     if (L.studies === 'inline') ib += sts.map(x => `<section class="ib st"><h4>Study · ${esc(x.d.title)} · ${esc(x.sec.heading)}</h4><div data-anchor="${x.anchor}">${rich(x.sec.body)}</div><button class="lnk" data-study="${x.s.id}">Open the full study</button></section>`).join('');
     if (L.compare === 'inline' && chap.tr?.[i]) ib += `<div class="ib trc"><h4>${esc(trName(S.set.compareTr)?.abbr || '')} · ${esc(label(b, c, n))}</h4><span class="trt">${lord(chap.tr[i])}</span></div>`;
-    if (L.notes === 'inline') ib += nts.map(g => `<div class="ib mynote"><h4>My note · ${esc(label(b, c, n))}</h4><div class="tc-${esc(g.c || 'black')}" data-anchor="nt:${g.g}">${rich(g.n || '')}</div><button class="lnk" data-note="${g.g}">Edit note</button></div>`).join('');
+    if (L.notes === 'inline') ib += nts.map(g => `<div class="ib mynote"><h4>My note · ${esc(label(b, c, n))}</h4><div class="tc-${esc(g.c || 'black')}" data-anchor="nt:${g.g}">${noteBody(g)}</div></div>`).join('');
     const hd = chap.h[key], pstart = n > 1 && chap.p.includes(n) && !hd;
     const pre = (hd ? `<h3 class="shd">${esc(hd[0])}${hd[1] ? `<small>${rich(hd[1]).replace(/^<p>|<\/p>$/g, '')}</small>` : ''}</h3>` : '') + (pstart && !verseMode ? '<span class="pbr"></span>' : '');
     return pre + `<div class="vb" id="v${n}" data-v="${n}"><span class="v" data-anchor="${id}" data-v="${n}"><a class="vn" data-skip href="${hashOf(b, c, n)}" data-panel="${n}">${n}</a>${words}</span>${mk ? '&#8288;' + mk : ''}${verseMode ? '' : ' '}</div>${ib}`;
@@ -414,7 +417,11 @@ function openSheet(title, html, back) {
 }
 function closeSheet() { sheet.hidden = scrim.hidden = true; stopDictation(); }
 $('#sheetclose').onclick = closeSheet; scrim.onclick = closeSheet; $('#sheetback').onclick = () => backFn && backFn();
-let toastT; function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2600); }
+let toastT; function toast(msg, action, fn) {
+  const t = $('#toast'); t.textContent = msg; t.classList.toggle('act', !!action);
+  if (action) { const b = document.createElement('button'); b.textContent = action; b.onclick = () => { t.classList.remove('on'); fn(); }; t.append(' ', b); }
+  t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), action ? 6000 : 2600);
+}
 
 /* ---------- picker ---------- */
 function openPicker(test) {
@@ -444,7 +451,7 @@ async function versePanel(n) {
   if (cms.length) h += cms.map(x => `<h3>Commentary · ${esc(label(b, x.r.replace('-', '–')))} · ${esc(x.src.name)}</h3><div class="prose" data-anchor="${x.anchor}">${rich(x.txt)}</div>`).join('');
   if (sts.length) h += sts.map(x => `<h3>Study · ${esc(x.d.title)}</h3><div class="prose"><b>${esc(x.sec.heading)}</b><div data-anchor="${x.anchor}">${rich(x.sec.body)}</div></div><button class="btn" data-study="${x.s.id}">Open the full study</button>`).join('');
   h += `<div id="vpx" data-b="${b}" data-c="${c}" data-v="${n}"></div>`;
-  if (nts.length) h += `<h3>My notes</h3>${nts.map(g => `<div class="ib mynote" style="margin-left:0"><div class="tc-${esc(g.c || 'black')}" data-anchor="nt:${g.g}">${rich(g.n || '')}</div><button class="lnk" data-note="${g.g}">Edit note</button></div>`).join('')}`;
+  if (nts.length) h += `<h3>My notes</h3>${nts.map(g => `<div class="ib mynote" style="margin-left:0"><div class="tc-${esc(g.c || 'black')}" data-anchor="nt:${g.g}">${noteBody(g)}</div></div>`).join('')}`;
   openSheet(label(b, c, n), h);
   versePanelExtras(b, c, n, plain(toks));
   // fill cross-reference previews when that text is available
@@ -583,17 +590,33 @@ function selTargets() {
   return out;
 }
 function addInk(kind, tg, color) { const g = uid(); for (const t of tg) S.ann.push({ id: uid(), g, a: t.a, s: t.s, e: t.e, k: kind, c: color, q: tg.q, t: Date.now() }); }
-function eraseRange(tg) { // erases only the rubbed-over part; notes are left alone
-  const out = [];
+// Erases only the rubbed-over part. With an eraser colour set, only marks of that colour go.
+// With no colour set (all colours), rubbing over a note's words or its sticky deletes the note, with Undo.
+function eraseRange(tg, only = '') {
+  const before = S.ann.slice(), gone = new Set(), out = [];
+  const hits = (a, t) => t.a === a.a && (a.s < t.e && a.e > t.s || (a.s === a.e && a.s >= t.s && a.s <= t.e));
   for (const a of S.ann) {
-    const t = isInk(a) && tg.find(t => t.a === a.a && a.s < t.e && a.e > t.s);
+    const t = tg.find(t => hits(a, t));
     if (!t) { out.push(a); continue; }
+    if (kindOf(a) === 'note') { if (!only) gone.add(a.g); out.push(a); continue; }
+    if (!isInk(a) || (only && a.c !== only)) { out.push(a); continue; }
     if (a.s < t.s) out.push({ ...a, id: uid(), e: t.s });
     if (a.e > t.e) out.push({ ...a, id: uid(), s: t.e });
   }
-  S.ann = out;
+  S.ann = out.filter(a => !gone.has(a.g));
+  if (gone.size) {
+    render();
+    toast(gone.size > 1 ? `${gone.size} notes deleted` : 'Note deleted', 'Undo', () => { S.ann = before; save(); render(); toast('Note restored'); });
+  }
 }
-const commit = () => { save(); getSelection().removeAllRanges(); markbar.hidden = true; targets = []; applyMarks(); bumpIdle(); };
+const commit = () => { save(); getSelection().removeAllRanges(); markbar.hidden = true; targets = []; applyMarks(); bumpIdle(); nudgeSignIn(); };
+// On a site with reader accounts, the first mark made while signed out gets a one-time reminder:
+// without an account, notes live only in this browser.
+function nudgeSignIn() {
+  if (!ACCT.api || ACCT.reader || localStorage.getItem('notationbible:nudged')) return;
+  try { localStorage.setItem('notationbible:nudged', '1'); } catch {}
+  setTimeout(() => toast('Sign in to save your notes to your account, so they stay safe on every device.', 'Sign in', openSignIn), 900);
+}
 document.addEventListener('selectionchange', () => { clearTimeout(selT); selT = setTimeout(readSelection, 140); });
 function readSelection() {
   targets = selTargets();
@@ -606,7 +629,7 @@ function toolOnSelection() {
   clearTimeout(toolT);
   if (!INK.includes(tool)) return;
   const tg = selTargets(); if (!tg.length) return;
-  if (tool === 'eraser') eraseRange(tg); else addInk(tool, tg, S.set.color);
+  if (tool === 'eraser') eraseRange(tg, S.set.eraseColor || ''); else addInk(tool, tg, S.set.color);
   commit();
 }
 document.addEventListener('pointerdown', e => { if (e.target.closest('[data-anchor]')) ptrDown = true; });
@@ -630,9 +653,13 @@ markbar.addEventListener('click', e => {
 const HINTS = { hl: 'Select words, or tap a word, to highlight', pen: 'Select words, or tap a word, to underline', eraser: 'Rub over marks, or tap a word, to erase', sticky: 'Tap the spot where the note goes' };
 function renderToolbar() {
   $$('[data-tool]', toolbar).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tool === tool)));
-  document.documentElement.style.setProperty('--tc', `var(--sw-${S.set.color})`);
-  $$('[data-c]', palette).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.c === S.set.color)));
-  $('#toolhint').textContent = HINTS[tool] || ''; $('#toolhint').hidden = !tool || !palette.hidden || toolbar.classList.contains('collapsed');
+  const erasing = tool === 'eraser', ec = S.set.eraseColor || '';
+  document.documentElement.style.setProperty('--tc', erasing ? (ec ? `var(--sw-${ec})` : 'var(--soft)') : `var(--sw-${S.set.color})`);
+  toolbar.classList.toggle('eraseall', erasing && !ec);
+  $$('[data-c]', palette).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.c === (erasing ? ec : S.set.color))));
+  palette.classList.toggle('erasing', erasing);
+  palette.setAttribute('aria-label', erasing ? 'Colour the eraser removes' : 'Colour for highlighter and pen');
+  $('#toolhint').textContent = erasing ? (ec ? `Rub over marks, or tap a word, to erase ${CNAME[ec].toLowerCase()} only` : HINTS.eraser + ' (all colours, and notes)') : HINTS[tool] || ''; $('#toolhint').hidden = !tool || !palette.hidden || toolbar.classList.contains('collapsed');
   document.body.dataset.activeTool = tool || '';
 }
 function setTool(t) { tool = tool === t ? null : t; palette.hidden = true; $('#colorbtn').setAttribute('aria-expanded', 'false'); renderToolbar(); }
@@ -662,8 +689,12 @@ toolbar.addEventListener('click', e => {
 palette.addEventListener('click', e => {
   const b = e.target.closest('[data-c]'); if (!b) return;
   bumpIdle();
-  S.set.color = b.dataset.c; save();
-  if (tool !== 'pen') tool = 'hl'; // picking a colour picks up the highlighter unless the pen is in hand
+  if (tool === 'eraser') { S.set.eraseColor = b.dataset.c; save(); } // the eraser's colour: erase only that colour ('' = all)
+  else {
+    if (!b.dataset.c) return;
+    S.set.color = b.dataset.c; save();
+    if (tool !== 'pen') tool = 'hl'; // picking a colour picks up the highlighter unless the pen is in hand
+  }
   palette.hidden = true; $('#colorbtn').setAttribute('aria-expanded', 'false'); renderToolbar();
 });
 function caretAt(x, y) {
@@ -691,7 +722,7 @@ function toolTap(e, t) {
     setTool(null); return noteEditor({ targets: tg });
   }
   const tg = Object.assign([{ a: w.a, s: w.s, e: w.e }], { q: text.slice(w.s, w.e) });
-  if (tool === 'eraser') eraseRange(tg); else addInk(tool, tg, S.set.color);
+  if (tool === 'eraser') eraseRange(tg, S.set.eraseColor || ''); else addInk(tool, tg, S.set.color);
   commit();
 }
 
@@ -720,7 +751,7 @@ function noteEditor({ targets: t, g, verse, listen }) {
     const n = ta.value.trim(); if (!n) return toast('Write something first');
     if (existing) S.ann.forEach(a => { if (a.g === g) { a.n = n; a.c = nc; } });
     else { const gg = uid(); for (const x of t) S.ann.push({ id: uid(), g: gg, a: x.a, s: x.s, e: x.e, k: 'note', n, c: nc, q: t.q, t: Date.now() }); }
-    save(); closeSheet(); render(); toast('Note saved');
+    save(); closeSheet(); render(); toast('Note saved'); nudgeSignIn();
   };
   if (existing) $('#ndel').onclick = () => { S.ann = S.ann.filter(a => a.g !== g); save(); closeSheet(); render(); toast('Note deleted'); };
   if (listen) $('#nmic').click();
@@ -1279,9 +1310,11 @@ function applyDoc(d) {
 }
 async function api(path, method = 'GET', body, params) {
   let url = ACCT.api + path;
+  // a unique stamp on every read so no page cache (host, plugin or CDN) can hand back an old answer
+  if (method === 'GET') params = Object.assign({}, params, { _: Date.now().toString(36) + Math.random().toString(36).slice(2, 6) });
   if (params) url += (url.includes('?') ? '&' : '?') + new URLSearchParams(params);
   try {
-    const r = await fetch(url, { method, credentials: 'same-origin', keepalive: method === 'PUT' && body && JSON.stringify(body).length < 60000, headers: { 'Content-Type': 'application/json', 'X-NB-Request': '1' }, body: body ? JSON.stringify(body) : undefined });
+    const r = await fetch(url, { method, credentials: 'same-origin', cache: 'no-store', keepalive: method === 'PUT' && body && JSON.stringify(body).length < 60000, headers: { 'Content-Type': 'application/json', 'X-NB-Request': '1' }, body: body ? JSON.stringify(body) : undefined });
     let data = null; try { data = await r.json(); } catch {}
     return { ok: r.ok, status: r.status, data: data || {} };
   } catch { return { ok: false, status: 0, data: {} }; }
@@ -1296,6 +1329,10 @@ async function pull() {
   if (r.status === 401) return signedOutElsewhere();
   if (!r.ok) { ACCT.status = 'offline'; return; }
   const base = loadBase(), B = base && base.rid === ACCT.reader.id ? base.doc : {};
+  if (base && base.rid === ACCT.reader.id && (r.data.rev || 0) < base.rev) {
+    // an out-of-date copy (served from a cache): never let it remove anything; just send ours
+    ACCT.rev = base.rev; return push();
+  }
   const merged = merge3(B, docOf(), r.data.doc || {});
   applyDoc(merged);
   ACCT.rev = r.data.rev || 0;
@@ -1337,10 +1374,16 @@ function clearAccountData() {
   S.ann = []; S.trees = {}; S.plan = null; save(); render();
 }
 function signedOutElsewhere() {
-  clearAccountData();
-  toast('You were signed out. Sign in again to keep syncing.');
+  // Keep this device's notes (some may not be saved to the account yet); syncing resumes, merged, after signing in again.
+  ACCT.reader = null; ACCT.rev = 0; ACCT.status = ''; clearTimeout(ACCT.timer);
+  toast('Sign in again to keep your notes syncing. Your notes on this device are kept.');
 }
 async function signedIn(reader, msg) {
+  const prev = loadBase();
+  if (prev && prev.rid !== reader.id) { // notes left here by a different account belong to that account, not this one
+    try { localStorage.removeItem(SYNC_KEY); } catch {}
+    S.ann = []; S.trees = {}; S.plan = null; ACCT.applying = true; save(); ACCT.applying = false;
+  }
   const had = S.ann.length + Object.keys(S.trees || {}).length;
   ACCT.reader = reader; closeSheet();
   await pull();
@@ -1355,7 +1398,7 @@ async function accountStart() {
   const st = await api('state');
   if (st.ok) { ACCT.signups = !!st.data.signups; if (!st.data.accounts) { ACCT.api = ''; return; } }
   if (st.ok && st.data.reader) { ACCT.reader = st.data.reader; await pull(); }
-  else if (st.ok && loadBase()) clearAccountData(); // session ended while away: don't leave account notes on this device
+  else if (st.ok && loadBase() && (S.ann.length || Object.keys(S.trees || {}).length)) toast('Sign in to keep your notes syncing. Your notes on this device are kept.');
   if (token) openReset(token);
 }
 

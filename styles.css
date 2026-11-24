@@ -385,3 +385,16 @@ body.nt-open .dock{z-index:30}
 .nbhl>b{position:relative;color:#fff;font-style:italic;font-weight:500}
 .nblogo .com{color:var(--soft);font-weight:400}
 .acct>.hint{margin-bottom:14px}
+/* pencil at the end of a note, to edit it */
+.npen{display:inline-flex;vertical-align:-.15em;width:1.35em;height:1.35em;margin-left:.3em;padding:0;border:0;border-radius:6px;background:none;color:var(--soft);cursor:pointer;align-items:center;justify-content:center}
+.npen svg{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round}
+.npen:hover,.npen:focus-visible{color:var(--accent);background:var(--chip)}
+/* eraser colour */
+.palette .eraseonly{display:none}
+.palette.erasing .eraseonly{display:flex}
+.palette .eraseonly small{font:12px var(--sans);color:var(--soft);align-self:center}
+.palette button.all{background:conic-gradient(var(--sw-yellow),var(--sw-green),var(--sw-blue),var(--sw-purple),var(--sw-pink),var(--sw-orange),var(--sw-yellow))}
+.toolbar.eraseall .cdot{background:conic-gradient(var(--sw-yellow),var(--sw-green),var(--sw-blue),var(--sw-purple),var(--sw-pink),var(--sw-orange),var(--sw-yellow))}
+/* a toast with an Undo button */
+.toast.act{pointer-events:auto;display:flex;align-items:center;gap:12px}
+.toast button{font:600 14px var(--sans);color:var(--bg);background:none;border:0;text-decoration:underline;cursor:pointer;padding:4px 2px}

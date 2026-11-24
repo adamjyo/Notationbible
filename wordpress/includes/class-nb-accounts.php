@@ -34,6 +34,28 @@ class NB_Accounts {
 		add_action( 'plugins_loaded', array( __CLASS__, 'maybe_install' ) );
 		add_action( 'rest_api_init', array( __CLASS__, 'routes' ) );
 		add_action( 'nb_cleanup_sessions', array( __CLASS__, 'cleanup' ) );
+		add_filter( 'rest_post_dispatch', array( __CLASS__, 'no_cache' ), 10, 3 );
+	}
+
+	/**
+	 * Answers about a reader must never come from a page cache (host caching such as
+	 * SiteGround's, caching plugins, CDNs): a cached "signed out" or an old copy of
+	 * someone's notes would hide or undo their changes.
+	 */
+	public static function no_cache( $result, $server, $request ) {
+		if ( 0 !== strpos( (string) $request->get_route(), '/' . self::NS . '/' ) ) {
+			return $result;
+		}
+		if ( ! defined( 'DONOTCACHEPAGE' ) ) {
+			define( 'DONOTCACHEPAGE', true ); // WP Rocket, W3 Total Cache, WP Super Cache, SiteGround Optimizer and others
+		}
+		if ( $result instanceof WP_REST_Response ) {
+			$result->header( 'Cache-Control', 'no-store, no-cache, must-revalidate, private, max-age=0' );
+			$result->header( 'Pragma', 'no-cache' );
+			$result->header( 'Expires', '0' );
+			$result->header( 'Vary', 'Cookie' );
+		}
+		return $result;
 	}
 
 	/* ---------- tables ---------- */

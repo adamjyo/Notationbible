@@ -4,7 +4,7 @@ Tags: bible, scripture, strongs, interlinear, commentary
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.4.5
+Stable tag: 1.5.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -33,6 +33,12 @@ Put the reader in any page or post with the shortcode:
 The plugin updates itself from its GitHub releases (https://github.com/adamjyo/notationbible/releases). WordPress shows new versions on the Plugins and Updates screens like any other plugin, and automatic updates are switched on when the plugin is first activated. Notation Bible → Settings shows the installed and latest versions and has a "Check for updates now" button.
 
 == Changelog ==
+
+= 1.5.0 =
+* Notes and markup are kept reliably: reader-account answers are never cached by the host or a caching plugin, an old cached copy can never remove notes, reopening the app never clears notes from the device, and the reader always opens at the site's own address (www and non-www keep notes separately).
+* Readers who aren't signed in get a one-time reminder to sign in so their notes are saved in the site's database.
+* A small pencil at the end of a note edits it.
+* The eraser can be set to one colour, to erase only that colour; set to All colours, rubbing over a note deletes it (with Undo).
 
 = 1.4.5 =
 * Fix: a note shown under its verse no longer covers the whole page with a gold tint; it sits in its own row beneath the verse it belongs to.

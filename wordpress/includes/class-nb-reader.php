@@ -136,7 +136,20 @@ class NB_Reader {
 		if ( ! $at_slug && ! ( self::is_home_page() && self::is_home_request() ) ) {
 			return;
 		}
+		// Notes made without an account are kept by the browser per address, and
+		// www.example.com and example.com count as two different addresses. Always show
+		// the reader at the site's own address so notes never seem to vanish.
+		$home   = wp_parse_url( home_url( '/' ) );
+		$want   = strtolower( ( $home['host'] ?? '' ) . ( isset( $home['port'] ) ? ':' . $home['port'] : '' ) );
+		$asked  = strtolower( sanitize_text_field( wp_unslash( $_SERVER['HTTP_HOST'] ?? '' ) ) );
+		if ( $want && $asked && $want !== $asked ) {
+			wp_redirect( ( $home['scheme'] ?? 'https' ) . '://' . $want . esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ?? '/' ) ), 301 ); // phpcs:ignore WordPress.Security.SafeRedirect -- same site, its own address
+			exit;
+		}
 		status_header( 200 );
+		if ( ! defined( 'DONOTCACHEPAGE' ) ) {
+			define( 'DONOTCACHEPAGE', true );
+		}
 		nocache_headers();
 		header( 'Content-Type: text/html; charset=utf-8' );
 		echo self::page_html(); // phpcs:ignore WordPress.Security.EscapeOutput -- full document built from the bundled app.
