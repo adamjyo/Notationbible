@@ -3,7 +3,7 @@ VOICE   quiet and scholarly: the text first, the apparatus one tap away
 IDEA    a reference Bible's printed page: margin letters, a red ribbon, notes set in smaller type beneath
 PICTURE the text column, opened by a large rubricated chapter numeral; layers appear as small marks or indented notes
 COLOUR  paper white, ink near-black, ribbon crimson; four soft highlighter tints; night is dark paper with warm-white ink
-TYPE    Source Serif 4 for Scripture, Inter for chrome, Gentium for Greek, Noto Serif Hebrew for Hebrew
+TYPE    Source Sans 3 for Scripture (Source Serif 4 optional), IBM Plex Sans for chrome, Architects Daughter for notes, Gentium for Greek, Noto Serif Hebrew for Hebrew
 */
 :root{
   color-scheme:light dark;
@@ -22,10 +22,10 @@ TYPE    Source Serif 4 for Scripture, Inter for chrome, Gentium for Greek, Noto 
   --tc:var(--sw-yellow);
   --size:19px;
   --serif:"Source Serif 4",Georgia,serif;
-  --sans:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --greek:"Gentium Book Plus","Source Serif 4",serif;
   --hebrew:"Noto Serif Hebrew","SBL Hebrew",serif;
-  --textsans:"Source Sans 3",Inter,system-ui,sans-serif;
+  --textsans:"Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif;
   --text:var(--textsans);
 }
 :root[data-theme=light]{color-scheme:light}
