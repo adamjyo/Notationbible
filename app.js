@@ -235,7 +235,7 @@ function applyMarks() {
       }
       if (kindOf(a) === 'note' && showNotes && lastOfGroup[a.g] === a.id) {
         const st = document.createElement('span');
-        st.className = 'sticky'; st.dataset.skip = ''; st.dataset.note = a.g; st.setAttribute('role', 'button'); st.tabIndex = 0;
+        st.className = 'sticky'; st.dataset.skip = ''; st.dataset.note = a.g; if (HILITES.includes(a.c)) st.style.setProperty('--nc', `var(--sw-${a.c})`); st.setAttribute('role', 'button'); st.tabIndex = 0;
         st.title = 'Note: ' + (a.n || '').slice(0, 80); st.setAttribute('aria-label', st.title);
         insertAt(el, a.e, st);
       }
@@ -336,7 +336,7 @@ async function render() {
     if (L.commentary === 'inline') ib += cmEnd.map(x => `<section class="ib cm"><h4>Commentary · ${esc(label(b, x.r.replace('-', '–')))} · ${esc(x.src.name)}</h4><div data-anchor="${x.anchor}">${rich(x.txt)}</div></section>`).join('');
     if (L.studies === 'inline') ib += sts.map(x => `<section class="ib st"><h4>Study · ${esc(x.d.title)} · ${esc(x.sec.heading)}</h4><div data-anchor="${x.anchor}">${rich(x.sec.body)}</div><button class="lnk" data-study="${x.s.id}">Open the full study</button></section>`).join('');
     if (L.compare === 'inline' && chap.tr?.[i]) ib += `<div class="ib trc"><h4>${esc(trName(S.set.compareTr)?.abbr || '')} · ${esc(label(b, c, n))}</h4><span class="trt">${lord(chap.tr[i])}</span></div>`;
-    if (L.notes === 'inline') ib += nts.map(g => `<div class="ib mynote"><h4>My note · ${esc(label(b, c, n))}</h4><div class="tc-${esc(g.c || 'black')}" data-anchor="nt:${g.g}">${noteBody(g)}</div></div>`).join('');
+    if (L.notes === 'inline') ib += nts.map(g => `<div class="ib mynote" style="--nc:var(--sw-${esc(g.c || 'yellow')})"><div data-anchor="nt:${g.g}">${noteBody(g)}</div></div>`).join('');
     const hd = chap.h[key], pstart = n > 1 && chap.p.includes(n) && !hd;
     const pre = (hd ? `<h3 class="shd">${esc(hd[0])}${hd[1] ? `<small>${rich(hd[1]).replace(/^<p>|<\/p>$/g, '')}</small>` : ''}</h3>` : '') + (pstart && !verseMode ? '<span class="pbr"></span>' : '');
     return pre + `<div class="vb" id="v${n}" data-v="${n}"><span class="v" data-anchor="${id}" data-v="${n}"><a class="vn" data-skip href="${hashOf(b, c, n)}" data-panel="${n}">${n}</a>${words}</span>${mk ? '&#8288;' + mk : ''}${verseMode ? '' : ' '}</div>${ib}`;
@@ -462,7 +462,7 @@ async function versePanel(n) {
   if (cms.length) h += cms.map(x => `<h3>Commentary · ${esc(label(b, x.r.replace('-', '–')))} · ${esc(x.src.name)}</h3><div class="prose" data-anchor="${x.anchor}">${rich(x.txt)}</div>`).join('');
   if (sts.length) h += sts.map(x => `<h3>Study · ${esc(x.d.title)}</h3><div class="prose"><b>${esc(x.sec.heading)}</b><div data-anchor="${x.anchor}">${rich(x.sec.body)}</div></div><button class="btn" data-study="${x.s.id}">Open the full study</button>`).join('');
   h += `<div id="vpx" data-b="${b}" data-c="${c}" data-v="${n}"></div>`;
-  if (nts.length) h += `<h3>My notes</h3>${nts.map(g => `<div class="ib mynote" style="margin-left:0"><div class="tc-${esc(g.c || 'black')}" data-anchor="nt:${g.g}">${noteBody(g)}</div></div>`).join('')}`;
+  if (nts.length) h += `<h3>My notes</h3>${nts.map(g => `<div class="ib mynote" style="margin-left:0;--nc:var(--sw-${esc(g.c || 'yellow')})"><div data-anchor="nt:${g.g}">${noteBody(g)}</div></div>`).join('')}`;
   openSheet(label(b, c, n), h);
   versePanelExtras(b, c, n, plain(toks));
   // fill cross-reference previews when that text is available
@@ -586,7 +586,8 @@ function openAnchor(a) {
 let targets = [], selT, toolT, tool = null, ptrDown = false;
 S.set.color = COLORS.includes(S.set.color) ? S.set.color : 'yellow';
 // each tool keeps its own colour; S.set.color follows the tool last picked (the NoteTree uses it too)
-S.set.toolColor = Object.assign({ hl: HILITES.includes(S.set.color) ? S.set.color : 'yellow', pen: 'black' }, S.set.toolColor || {});
+S.set.toolColor = Object.assign({ hl: HILITES.includes(S.set.color) ? S.set.color : 'yellow', pen: 'black', note: 'yellow' }, S.set.toolColor || {});
+if (!HILITES.includes(S.set.toolColor.note)) S.set.toolColor.note = 'yellow';
 S.set.lastTool = ['hl', 'pen', 'eraser'].includes(S.set.lastTool) ? S.set.lastTool : 'hl';
 const markbar = $('#markbar'), toolbar = $('#toolbar'), tbpane = $('#tbpane');
 const INK = ['hl', 'pen', 'eraser'];
@@ -675,17 +676,18 @@ const TOOL_ICON = {
   sticky: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 4.5h15v9.8l-5.2 5.2H4.5z"/><path d="M14.3 19.5v-5.2h5.2"/><path d="M8 9h8M8 12.5h4"/></svg>',
 };
 let pane = 'main';
-const toolColorOf = t => t === 'eraser' ? (S.set.eraseColor || '') : S.set.toolColor[t === 'pen' ? 'pen' : 'hl'];
+const toolColorOf = t => t === 'eraser' ? (S.set.eraseColor || '') : S.set.toolColor[t === 'pen' || t === 'note' ? t : 'hl'];
 function syncColor() { if (S.set.lastTool !== 'eraser') S.set.color = S.set.toolColor[S.set.lastTool]; }
 function renderToolbar() {
-  const t = S.set.lastTool, c = toolColorOf(t), cname = c ? CNAME[c] : 'All colours';
+  // the Colour button belongs to whatever is in hand: the Note has its own colour, apart from the pen and highlighter
+  const t = S.set.lastTool, ct = tool === 'sticky' ? 'note' : t, c = toolColorOf(ct), cname = c ? CNAME[c] : 'All colours';
   document.documentElement.style.setProperty('--tc', c ? `var(--sw-${c})` : 'var(--soft)');
   toolbar.classList.toggle('allc', !c);
   let h;
   if (pane === 'tools') h = ['pen', 'hl', 'eraser'].map(k => `<button data-pick="${k}" aria-pressed="${tool === k}">${TOOL_ICON[k]}<span>${TOOLNAME[k]}</span></button>`).join('');
   else if (pane === 'colors') {
-    const list = (t === 'eraser' ? [''] : []).concat(INKS, HILITES);
-    h = `<div class="swrow" role="group" aria-label="${t === 'eraser' ? 'Colour the eraser removes' : 'Colour for the ' + TOOLNAME[t].toLowerCase()}">` +
+    const list = ct === 'note' ? HILITES : (t === 'eraser' ? [''] : []).concat(INKS, HILITES);
+    h = `<div class="swrow" role="group" aria-label="${ct === 'note' ? 'Colour for notes' : t === 'eraser' ? 'Colour the eraser removes' : 'Colour for the ' + TOOLNAME[t].toLowerCase()}">` +
       list.map(k => `<button class="swc${k ? '' : ' all'}" data-c="${k}" style="--s:var(--sw-${k || 'yellow'})" aria-pressed="${k === c}" aria-label="${k ? CNAME[k] : 'All colours, and notes'}" title="${k ? CNAME[k] : 'All colours, and notes'}"></button>`).join('') + '</div>';
   } else h = `<button id="tbtool" aria-pressed="${tool === t}" aria-label="Tool: ${TOOLNAME[t]}${tool === t ? ', in hand' : ''}. Choose a tool">${TOOL_ICON[t]}<span>${TOOLNAME[t]}</span></button>`
     + `<button id="tbcolor" aria-label="Colour: ${cname}. Choose a colour"><span class="cdot${c ? '' : ' all'}"></span><span>${t === 'eraser' && !c ? 'All' : cname}</span></button>`
@@ -726,6 +728,7 @@ toolbar.addEventListener('click', e => {
   else if (b.id === 'tbcolor') pane = 'colors';
   else if (b.id === 'tbnote') return setTool('sticky');
   else if (b.dataset.pick) { const k = b.dataset.pick; tool = tool === k ? null : k; S.set.lastTool = k; syncColor(); save(); pane = 'main'; } // picking the tool in hand puts it down
+  else if ('c' in b.dataset && tool === 'sticky') { S.set.toolColor.note = b.dataset.c; save(); pane = 'main'; } // the note's own colour; the note stays in hand
   else if ('c' in b.dataset) { if (t === 'eraser') S.set.eraseColor = b.dataset.c; else S.set.toolColor[t] = b.dataset.c; syncColor(); tool = t; save(); pane = 'main'; } // a colour picks the tool up
   renderToolbar();
   if (e.detail === 0) tbpane.querySelector('[aria-pressed=true], button')?.focus({ preventScroll: true });
@@ -768,18 +771,18 @@ function noteEditor({ targets: t, g, verse, listen }) {
   const quote = existing ? existing.q : t?.q;
   openSheet(existing ? 'Edit note' : 'New note', `<p class="quote">${esc(quote || '')}</p>
     <textarea id="ntext" autofocus placeholder="Write a note. **bold**, *italic*, ==highlight==, and references like John 3:16 or G3056 become links.">${esc(existing?.n || '')}</textarea>
-    <div class="ncolors" role="group" aria-label="Note text colour">${COLORS.map(c => `<button data-nc="${c}" style="--s:var(--sw-${c})" aria-label="${CNAME[c]} text" title="${CNAME[c]}"></button>`).join('')}</div>
+    <div class="ncolors" role="group" aria-label="Note colour">${HILITES.map(c => `<button data-nc="${c}" style="--s:var(--sw-${c})" aria-label="${CNAME[c]} note" title="${CNAME[c]}"></button>`).join('')}</div>
     <div class="row" style="margin-top:10px"><button class="btn rec" id="nmic">${ICON.mic}<span>Dictate</span></button><span class="hint" id="nmicstate" style="margin:0"></span></div>
     <div class="preview prose" id="nprev"></div>
     <div class="row end">${existing ? '<button class="btn" id="ndel">Delete</button>' : ''}<button class="btn primary" id="nsave">Save note</button></div>`);
   const ta = $('#ntext'), pv = $('#nprev');
-  let nc = existing?.c || S.set.noteColor || 'black';
+  let nc = existing?.c || S.set.toolColor.note;
   const upd = () => {
-    pv.className = 'preview prose tc-' + nc; ta.className = 'tc-' + nc;
+    pv.className = 'preview prose notebg'; pv.style.setProperty('--nc', `var(--sw-${nc})`);
     pv.innerHTML = ta.value.trim() ? rich(ta.value) : '<span class="hint">Preview</span>';
     $$('[data-nc]', sheet).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.nc === nc)));
   };
-  $$('[data-nc]', sheet).forEach(b => b.onclick = () => { nc = b.dataset.nc; S.set.noteColor = nc; save(); upd(); });
+  $$('[data-nc]', sheet).forEach(b => b.onclick = () => { nc = b.dataset.nc; S.set.toolColor.note = nc; save(); upd(); renderToolbar(); });
   ta.addEventListener('input', upd); upd();
   $('#nmic').onclick = () => dictate(txt => { ta.value = (ta.value ? ta.value.replace(/\s*$/, ' ') : '') + txt; upd(); }, $('#nmic'), $('#nmicstate'));
   $('#nsave').onclick = () => {

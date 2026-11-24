@@ -136,7 +136,7 @@ main{max-width:760px;margin:0 auto;padding:clamp(24px,4vw,56px) max(5vw,20px) 22
 .ib p{margin:0 0 .5em}.ib p:last-child{margin:0}
 .ib.cm{border-left-color:color-mix(in srgb,var(--accent) 55%,var(--rule))}
 .ib.st{border-left-color:#3b6fb6;background:color-mix(in srgb,var(--sky) 35%,transparent);border-radius:0 8px 8px 0}
-.ib.mynote{border-left-color:#b8901c;background:color-mix(in srgb,var(--gold) 35%,transparent);border-radius:0 8px 8px 0}
+.ib.mynote{padding-top:10px;--nc:var(--sw-yellow);border-left-color:color-mix(in srgb,var(--nc) 75%,var(--ink));background:color-mix(in srgb,var(--nc) 24%,transparent);border-radius:0 8px 8px 0}
 .ib.xr a,.xlist a{display:inline-block;margin-right:12px;text-decoration:none;white-space:nowrap}
 .ib .lnk{font-size:13px;color:var(--accent);padding:6px 0 0;min-height:32px}
 /* annotations */
@@ -145,7 +145,7 @@ mark{color:inherit;background:none}
 .hl.hs{padding-left:.09em;margin-left:-.09em}.hl.he{padding-right:.11em;margin-right:-.11em}
 .pen{background-repeat:no-repeat;background-size:100% 100%;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 .sticky{display:inline-block;width:.9em;height:.9em;margin:0 .14em 0 .1em;vertical-align:-.06em;border-radius:2px;cursor:pointer;transform:rotate(-5deg);
-  background:linear-gradient(225deg,transparent 0 24%,#d9a800 24% 32%,#ffdf5c 32%);box-shadow:0 1px 2px rgb(0 0 0/.3);user-select:none}
+  background:linear-gradient(225deg,transparent 0 24%,color-mix(in srgb,var(--nc,#ffdf5c) 72%,#000) 24% 32%,var(--nc,#ffdf5c) 32%);box-shadow:0 1px 2px rgb(0 0 0/.3);user-select:none}
 .sticky:hover{transform:rotate(0) scale(1.15)}
 .nomarkup .sticky{display:none}
 body[data-active-tool=hl] .reader,body[data-active-tool=pen] .reader,body[data-active-tool=eraser] .reader{cursor:text}
@@ -414,3 +414,4 @@ body.nt-open .dock{z-index:30}
 @keyframes tbswap{from{opacity:.2;transform:translateY(3px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){#tbpane{animation:none}}
 .toolbar .cdot.all,.toolbar .swrow .swc.all{background:conic-gradient(var(--sw-yellow),var(--sw-green),var(--sw-blue),var(--sw-purple),var(--sw-pink),var(--sw-orange),var(--sw-yellow))}
+.preview.notebg{background:color-mix(in srgb,var(--nc) 24%,transparent);border-radius:8px;padding:8px 12px}

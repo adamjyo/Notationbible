@@ -4,7 +4,7 @@ Tags: bible, scripture, strongs, interlinear, commentary
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.6.0
+Stable tag: 1.6.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -33,6 +33,10 @@ Put the reader in any page or post with the shortcode:
 The plugin updates itself from its GitHub releases (https://github.com/adamjyo/notationbible/releases). WordPress shows new versions on the Plugins and Updates screens like any other plugin, and automatic updates are switched on when the plugin is first activated. Notation Bible → Settings shows the installed and latest versions and has a "Check for updates now" button.
 
 == Changelog ==
+
+= 1.6.1 =
+* Notes have their own colour (the highlighter colours), separate from the pen: with Note in hand, the Colour button sets the note's colour. The note's box and sticky marker are tinted with it.
+* Notes under a verse show only what you wrote (no "My note" label).
 
 = 1.6.0 =
 * New markup toolbar with three buttons: the current tool, its colour, and Note. Tool swaps the bar for Pen, Highlighter and Eraser; Colour swaps it for that tool's colours; picking one brings the three buttons back. The bar stays the same size, and each tool keeps its own colour. Tucked away, it shows the current tool over a line in its colour.
