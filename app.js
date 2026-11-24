@@ -655,6 +655,48 @@ function toolOnSelection() {
 }
 document.addEventListener('pointerdown', e => { if (e.target.closest('[data-anchor]')) ptrDown = true; });
 document.addEventListener('pointerup', () => { if (ptrDown) { ptrDown = false; setTimeout(toolOnSelection, 0); } });
+/* Touch screens: drag a finger sideways across the text to select it (in place of press-and-hold).
+   Up-and-down drags still scroll. The selection snaps to whole words, and then works like any
+   other selection: the tool in hand marks it, or the selection bar or Copy button appears. */
+let dragSel = false;
+(function touchDragSelect() {
+  const W = /[\p{L}\p{N}’'-]/u;
+  const snap = (c, back) => { // to the start (back) or end of the word the point is in
+    if (c.node.nodeType !== 3) return c; const tx = c.node.data; let o = c.off;
+    if (back) while (o > 0 && W.test(tx[o - 1])) o--; else while (o < tx.length && W.test(tx[o])) o++;
+    return { node: c.node, off: o };
+  };
+  const inText = c => c && c.node.nodeType === 3 && c.node.parentElement.closest('#reader [data-anchor]') && !c.node.parentElement.closest('[data-skip]');
+  let st = null;
+  reader.addEventListener('touchstart', e => {
+    st = null; if (e.touches.length !== 1) return;
+    const t = e.touches[0], c = caretAt(t.clientX, t.clientY);
+    if (inText(c)) st = { x: t.clientX, y: t.clientY, c, on: false };
+  }, { passive: true });
+  reader.addEventListener('touchmove', e => {
+    if (!st) return;
+    const t = e.touches[0], dx = t.clientX - st.x, dy = t.clientY - st.y;
+    if (!st.on) {
+      if (Math.abs(dy) > 8 && Math.abs(dy) >= Math.abs(dx)) { st = null; return; } // that's a scroll
+      if (Math.abs(dx) < 10) return;
+      st.on = dragSel = true; ptrDown = true; closeNotePop();
+    }
+    e.preventDefault(); // we're selecting, not scrolling
+    const c = caretAt(t.clientX, t.clientY); if (!inText(c)) return;
+    const fwd = st.c.node === c.node ? st.c.off <= c.off : !!(st.c.node.compareDocumentPosition(c.node) & Node.DOCUMENT_POSITION_FOLLOWING);
+    const a = snap(fwd ? st.c : c, true), b = snap(fwd ? c : st.c, false);
+    const r = document.createRange();
+    try { r.setStart(a.node, a.off); r.setEnd(b.node, b.off); } catch { return; }
+    const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+  }, { passive: false });
+  const end = () => { if (st?.on) { dragSel = false; if (ptrDown) { ptrDown = false; setTimeout(toolOnSelection, 0); } } st = null; };
+  reader.addEventListener('touchend', end); reader.addEventListener('touchcancel', end);
+  // the drag replaces press-and-hold, so a long press doesn't start a selection on touch screens
+  document.addEventListener('selectstart', e => {
+    const el = e.target.nodeType === 3 ? e.target.parentElement : e.target;
+    if (!dragSel && matchMedia('(pointer: coarse)').matches && el?.closest?.('#reader')) e.preventDefault();
+  });
+})();
 markbar.addEventListener('pointerdown', e => e.preventDefault()); // keep the text selection alive
 markbar.addEventListener('click', e => {
   const b = e.target.closest('[data-k]'); if (!b || !targets.length) return;

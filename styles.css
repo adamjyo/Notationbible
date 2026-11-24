@@ -445,3 +445,5 @@ body.nt-open .dock{z-index:30}
 .copypop{position:absolute;z-index:24;display:flex;align-items:center;gap:6px;min-height:40px;padding:0 14px 0 11px;border-radius:12px;border:0;background:var(--ink);color:var(--bg);font:600 14px var(--sans);box-shadow:0 8px 22px rgb(0 0 0/.3);cursor:pointer;animation:tbswap .14s ease-out}
 .copypop svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round}
 .copypop[hidden]{display:none}
+/* touch screens: sideways drags select text (see touchDragSelect), up-and-down drags scroll */
+@media (pointer:coarse){#reader{touch-action:pan-y;-webkit-touch-callout:none}}
