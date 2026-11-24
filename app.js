@@ -637,8 +637,9 @@ function nudgeSignIn() {
 document.addEventListener('selectionchange', () => { clearTimeout(selT); selT = setTimeout(readSelection, 140); });
 function readSelection() {
   targets = selTargets();
+  if (tool !== 'select' || !targets.length) hideCopy();
   if (!targets.length) { if (!markbar.contains(document.activeElement)) markbar.hidden = true; return; }
-  if (tool === 'select') { markbar.hidden = true; return; } // plain selection, for copying
+  if (tool === 'select') { markbar.hidden = true; return showCopy(); } // plain selection, with a Copy button
   if (tool === 'tree') { markbar.hidden = true; if (!ptrDown) { clearTimeout(toolT); toolT = setTimeout(() => { const tg = selTargets(); if (tg.length) { getSelection().removeAllRanges(); treeFrom(tg); } }, 500); } return; }
   if (INK.includes(tool)) { markbar.hidden = true; if (!ptrDown) { clearTimeout(toolT); toolT = setTimeout(toolOnSelection, 700); } return; } // touch handles: apply once they settle
   $('#marklabel').textContent = targets.length > 1 ? `${where(targets[0].a)} +${targets.length - 1}` : where(targets[0].a);
@@ -723,7 +724,7 @@ function renderToolbar() {
   document.body.dataset.activeTool = tool || '';
 }
 function setTool(t) {
-  tool = tool === t ? null : t;
+  tool = tool === t ? null : t; hideCopy();
   if (t && t !== 'sticky' && t !== 'tree') { S.set.lastTool = t; syncColor(); save(); }
   pane = 'main'; renderToolbar();
 }
@@ -750,7 +751,7 @@ toolbar.addEventListener('click', e => {
   if (b.id === 'tbtool') pane = 'tools';
   else if (b.id === 'tbcolor') pane = 'colors';
   else if (b.id === 'tbtree') return treeButton();
-  else if (b.dataset.pick) { const k = b.dataset.pick; tool = tool === k ? null : k; S.set.lastTool = k; syncColor(); save(); pane = 'main'; } // picking the tool in hand puts it down
+  else if (b.dataset.pick) { const k = b.dataset.pick; tool = tool === k ? null : k; hideCopy(); S.set.lastTool = k; syncColor(); save(); pane = 'main'; } // picking the tool in hand puts it down
   else if ('c' in b.dataset) { if (t === 'eraser') S.set.eraseColor = b.dataset.c; else S.set.toolColor[t] = b.dataset.c; syncColor(); tool = t; save(); pane = 'main'; } // a colour picks the tool up
   renderToolbar();
   if (e.detail === 0) tbpane.querySelector('[aria-pressed=true], button')?.focus({ preventScroll: true });
@@ -786,6 +787,41 @@ function toolTap(e, t) {
   const tg = Object.assign([{ a: w.a, s: w.s, e: w.e }], { q: text.slice(w.s, w.e) });
   if (tool === 'eraser') eraseRange(tg, S.set.eraseColor || ''); else addInk(tool, tg, S.set.toolColor[tool]);
   commit();
+}
+
+/* Select tool: a Copy button pops up by the selection. It copies the Bible text only (no verse
+   numbers, note markers or interlinear rows) followed by the reference. */
+let copyBtn = null;
+function hideCopy() { if (copyBtn) copyBtn.hidden = true; }
+function copyText(tg) {
+  const parts = tg.map(t => { const el = document.querySelector(`#reader [data-anchor="${CSS.escape(t.a)}"]`); return el ? anchorText(el).slice(t.s, t.e) : ''; });
+  const text = parts.join(' ').replace(/\s+/g, ' ').trim();
+  const vs = tg.map(t => t.a.split('.')).filter(p => p.length === 3).map(p => +p[2]);
+  const p0 = tg[0].a.split('.');
+  const ref = p0.length === 3 && vs.length ? `${label(p0[0], +p0[1])}:${Math.min(...vs)}${Math.max(...vs) > Math.min(...vs) ? '–' + Math.max(...vs) : ''}` : where(tg[0].a);
+  return text ? `“${text}”\n— ${ref} (BSB)` : '';
+}
+async function doCopy(txt) {
+  try { await navigator.clipboard.writeText(txt); return true; } catch {}
+  const ta = Object.assign(document.createElement('textarea'), { value: txt }); ta.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(ta); ta.select();
+  let ok = false; try { ok = document.execCommand('copy'); } catch {} ta.remove(); return ok;
+}
+function showCopy() {
+  const sel = getSelection(); if (!sel.rangeCount || sel.isCollapsed) return hideCopy();
+  if (!copyBtn) {
+    copyBtn = document.createElement('button'); copyBtn.className = 'copypop'; copyBtn.hidden = true;
+    copyBtn.setAttribute('aria-label', 'Copy the selected text');
+    copyBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8.5" y="8.5" width="11" height="12" rx="2"/><path d="M15.5 8.5V5.5a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h2"/></svg><span>Copy</span>';
+    copyBtn.addEventListener('pointerdown', e => e.preventDefault()); // keep the selection
+    copyBtn.onclick = async () => { const tg = selTargets(); const txt = tg.length ? copyText(tg) : getSelection().toString(); if (txt && await doCopy(txt)) { toast('Copied'); hideCopy(); getSelection().removeAllRanges(); } else toast('Could not copy. Use your device’s Copy instead.'); };
+    document.body.appendChild(copyBtn);
+  }
+  const rects = [...sel.getRangeAt(0).getClientRects()].filter(r => r.width || r.height); if (!rects.length) return hideCopy();
+  const first = rects[0];
+  copyBtn.hidden = false;
+  const w = copyBtn.offsetWidth, h = copyBtn.offsetHeight, above = first.top - h - 10 > 64;
+  copyBtn.style.left = Math.round(Math.max(8, Math.min(first.left, innerWidth - w - 8)) + scrollX) + 'px';
+  copyBtn.style.top = Math.round((above ? first.top - h - 10 : rects[rects.length - 1].bottom + 10) + scrollY) + 'px';
 }
 
 /* ---------- notes (with dictation) ---------- */
