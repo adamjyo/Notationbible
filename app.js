@@ -273,7 +273,7 @@ async function render() {
     const fns = chap.fn[key] || [], xrs = chap.xr[key] || [];
     const cmStart = chap.cm.filter(x => x.s === n), cmEnd = chap.cm.filter(x => x.e === n);
     const sts = chap.st.filter(x => x.v === n), nts = notesFor(id).filter(g => g.items[g.items.length - 1].a === id); // a note shows once, after the last verse it covers
-    let mk = '';
+    let mk = Object.entries(S.trees || {}).filter(([k, x]) => k.startsWith(`${b}.${c}.`) && x.from === n).map(([k]) => `<span class="mk" role="button" tabindex="0" data-skip data-tree="${esc(k)}" title="NoteTree ${esc(treeLabel(k))}">NT</span>`).join('');
     if (L.xrefs === 'markers' && xrs.length) mk += `<span class="mk" role="button" tabindex="0" data-skip data-panel="${n}" title="Cross references">↗</span>`;
     if (L.commentary === 'markers' && cmStart.length) mk += `<span class="mk" role="button" tabindex="0" data-skip data-panel="${n}" title="Commentary">C</span>`;
     if (L.studies === 'markers' && sts.length) mk += `<span class="mk" role="button" tabindex="0" data-skip data-panel="${n}" title="Study">S</span>`;
@@ -317,6 +317,7 @@ const MI = {
   goto: '<svg viewBox="0 0 24 24"><path d="M5 4.5h9.5a3 3 0 0 1 3 3V20H8a3 3 0 0 1-3-3z"/></svg>',
   study: '<svg viewBox="0 0 24 24"><path d="M3.5 5.5c3-1 6-1 8.5 1v13c-2.5-2-5.5-2-8.5-1zM20.5 5.5c-3-1-6-1-8.5 1v13c2.5-2 5.5-2 8.5-1z"/></svg>',
   saved: '<svg viewBox="0 0 24 24"><path d="M7 3.5h10v17l-5-3.6-5 3.6z"/></svg>',
+  tree: '<svg viewBox="0 0 24 24"><rect x="7.5" y="4" width="9" height="12" rx="1"/><path d="M3 8c2 0 3 1 4.5 2M21 8c-2 0-3 1-4.5 2M3 15c1.5 0 3-.5 4.5-1.5M21 15c-1.5 0-3-.5-4.5-1.5"/></svg>',
   set: '<svg viewBox="0 0 24 24"><path d="M12 3.5l8.5 4.5-8.5 4.5L3.5 8z"/><path d="M3.5 12l8.5 4.5 8.5-4.5M3.5 16l8.5 4.5 8.5-4.5"/></svg>',
 };
 function renderMenu() {
@@ -334,6 +335,7 @@ function renderMenu() {
     ${LAYERS.map(l => sw(l.k, L[l.k] !== 'off', l.name, L[l.k] !== 'off' && l.modes.length > 2 ? l.labels[L[l.k]] : '')).join('')}
     ${sw('markup', S.set.markup, 'Highlights &amp; markup', '')}
     ${sw('darkmode', isDark(), 'Dark mode', S.set.theme === 'system' ? 'System' : '')}
+    <button class="mi" role="menuitem" id="treesbtn">${MI.tree}<span class="lab">NoteTrees</span>${Object.keys(S.trees || {}).length ? `<span class="sub">${Object.keys(S.trees).length}</span>` : ''}</button>
     <hr><button class="mi" role="menuitem" id="setbtn">${MI.set}<span class="lab">Layer modes &amp; reading settings</span></button>`;
 }
 function openMenu() { renderMenu(); menu.hidden = false; menuBtn.setAttribute('aria-expanded', 'true'); menu.querySelector('.mi').focus(); }
@@ -384,7 +386,7 @@ function versePanel(n) {
   const tagged = toks.filter(t => typeof t !== 'string');
   const fns = chap.fn[key] || [], xrs = chap.xr[key] || [];
   const cms = chap.cm.filter(x => x.s <= n && x.e >= n), sts = chap.st.filter(x => x.v === n), nts = notesFor(id);
-  let h = `<div class="row"><button class="btn" data-read="${n}">${ICON.play}Read from here</button><button class="btn" data-copy="${n}">Copy</button><button class="btn" data-newnote="${n}">${ICON.note}Note</button><button class="btn rec" data-voicenote="${n}">${ICON.mic}Dictate note</button></div>
+  let h = `<div class="row"><button class="btn" data-read="${n}">${ICON.play}Read from here</button><button class="btn" data-copy="${n}">Copy</button><button class="btn" data-newnote="${n}">${ICON.note}Note</button><button class="btn rec" data-voicenote="${n}">${ICON.mic}Dictate note</button>${canEditTrees() ? `<button class="btn" data-ntopen="${n}">${MI.tree}NoteTree</button>` : ''}${treeHas(b, c, n).map(([k]) => `<button class="btn" data-tree="${esc(k)}">${MI.tree}${canEditTrees() ? 'Open' : 'View'} NoteTree ${esc(treeLabel(k).split(' ').pop())}</button>`).join('')}</div>
   <p class="quote" style="margin-top:16px">${lord(plain(toks))}</p>`;
   if (tagged.length) h += `<h3>Words · Strong's concordance</h3><div class="words">${tagged.map(t => { const x = LEX[nums(t)[0]] || []; return `<button data-s="${esc(t[1])}"><span class="en">${lord(t[0])}</span><span class="og ${t[1][0] === 'H' ? 'he' : 'gr'}">${esc(t[2] || x[0] || '')}</span><span class="gl">${esc(t[1])} · ${esc(x[1] || '')} · ${esc(x[2] || '')}</span></button>`; }).join('')}</div>`;
   if (fns.length) h += `<h3>Footnotes</h3>${fns.map((f, j) => `<div class="prose"><b>${esc(f[0])}:</b> <span data-anchor="fn:${id}:${j}">${rich(f[1])}</span></div>`).join('')}`;
@@ -534,6 +536,11 @@ markbar.addEventListener('click', e => {
   const b = e.target.closest('[data-k]'); if (!b || !targets.length) return;
   const k = b.dataset.k;
   if (k === 'note') { const t = targets; getSelection().removeAllRanges(); markbar.hidden = true; return noteEditor({ targets: t }); }
+  if (k === 'tree') { // the verses touched by the selection
+    const vs = targets.map(t => t.a.split('.')).filter(p => p.length === 3 && p[0] === chap?.b && +p[1] === chap?.c).map(p => +p[2]);
+    getSelection().removeAllRanges(); markbar.hidden = true;
+    return vs.length ? openNoteTree(Math.min(...vs), Math.max(...vs)) : toast('Select verses to put them in a NoteTree');
+  }
   if (k === 'erase') eraseRange(targets);
   else { if (b.dataset.c) { S.set.color = b.dataset.c; renderToolbar(); } addInk(k, targets, S.set.color); }
   commit();
@@ -726,10 +733,186 @@ sheet.addEventListener('click', e => {
   save(); render(); openSettings();
 });
 
+/* ---------- NoteTree: a passage centred on a letter page with free canvas around it ---------- */
+// Canvas units are CSS px at 96/in: 3 in margin + 8.5 x 11 in page + 3 in margin.
+const NTW = 3 * 96 * 2 + 816, NTH = 1056, PAGE_X = 288, PAGE_W = 816;
+const ntEl = $('#nt'), ntCanvas = $('#ntcanvas'), ntInk = $('#ntink'), ntBoxes = $('#ntboxes');
+const canEditTrees = () => matchMedia('(min-width: 700px)').matches; // desktops and tablets; phones view only
+let nt = null, ntTool = 'pen', ntScale = 1, ntHist = [], ntFut = [], ntSaveT;
+S.trees = S.trees || {};
+const treeKey = (b, c, f, t) => `${b}.${c}.${f}-${t}`;
+const treeLabel = k => { const [b, c, r] = k.split('.'); const [f, t] = r.split('-'); return `${label(b, c)}:${f}${t !== f ? '–' + t : ''}`; };
+const treeHas = (b, c, v) => Object.entries(S.trees).filter(([k, x]) => k.startsWith(`${b}.${c}.`) && v >= x.from && v <= x.to && (x.strokes.length || x.boxes.length));
+function openNoteTree(from, to) {
+  if (!chap?.verses) return toast('Open a chapter with text first');
+  const n = chap.verses.length; from = Math.max(1, Math.min(from, n)); to = Math.max(from, Math.min(to, n));
+  const key = treeKey(chap.b, chap.c, from, to);
+  nt = S.trees[key] ? JSON.parse(JSON.stringify(S.trees[key])) : { b: chap.b, c: chap.c, from, to, strokes: [], boxes: [] };
+  nt.key = key; ntHist = []; ntFut = [];
+  closeSheet(); closeMenu(); markbar.hidden = true; if (tool) setTool(tool);
+  const edit = canEditTrees();
+  ntEl.classList.toggle('readonly', !edit); ntEl.hidden = false; document.body.classList.add('nt-open');
+  $('#ntref').textContent = treeLabel(key) + (edit ? '' : ' · view only on phones');
+  const opts = Array.from({ length: n }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join('');
+  $('#ntfrom').innerHTML = opts; $('#ntto').innerHTML = opts; $('#ntfrom').value = from; $('#ntto').value = to;
+  $('#ntfrom').disabled = $('#ntto').disabled = !edit;
+  $$('[data-ntc]', ntEl).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.ntc === S.set.color)));
+  ntSetTool(edit ? ntTool : 'view'); ntRenderText(); ntRender(); ntFit();
+}
+function closeNoteTree() { ntFlush(); ntEl.hidden = true; document.body.classList.remove('nt-open'); nt = null; render(); }
+function ntRenderText() {
+  const vs = chap.verses.slice(nt.from - 1, nt.to);
+  $('#nttext').innerHTML = `<p class="ntcap">${esc(treeLabel(nt.key))} · Berean Standard Bible</p>` + vs.map((toks, i) => {
+    const n = nt.from + i, id = `${chap.b}.${chap.c}.${n}`;
+    return `<span class="v" data-anchor="${id}"><sup class="vn" data-skip>${n}</sup>${toks.map(t => typeof t === 'string' ? esc(t) : lord(t[0])).join('')}</span> `;
+  }).join('');
+  applyMarks();
+  // shrink the type until the passage fits inside the page's 1-inch margins
+  const box = $('#nttext'); let size = 24; box.style.fontSize = size + 'px';
+  while (box.scrollHeight > NTH - 192 && size > 11) box.style.fontSize = --size + 'px';
+}
+const ntPath = p => { // smooth a point list into a quadratic curve
+  if (p.length < 3) return `M${p[0][0]} ${p[0][1]}L${(p[1] || p[0])[0] + .1} ${(p[1] || p[0])[1]}`;
+  let d = `M${p[0][0]} ${p[0][1]}`;
+  for (let i = 1; i < p.length - 1; i++) d += `Q${p[i][0]} ${p[i][1]} ${(p[i][0] + p[i + 1][0]) / 2} ${(p[i][1] + p[i + 1][1]) / 2}`;
+  return d + `L${p[p.length - 1][0]} ${p[p.length - 1][1]}`;
+};
+const strokeSVG = s => s.tool === 'hl'
+  ? `<path data-id="${s.id}" class="nths ${s.c === 'black' ? 'tc-black' : ''}" d="${ntPath(s.p)}" style="stroke:${s.c === 'black' ? 'currentColor' : `var(--sw-${s.c})`}"/>`
+  : `<path data-id="${s.id}" class="ntps tc-${s.c}" d="${ntPath(s.p)}"/>`;
+function ntRender() {
+  ntInk.innerHTML = nt.strokes.map(strokeSVG).join('');
+  ntBoxes.innerHTML = nt.boxes.map(x => `<div class="ntbox" data-id="${x.id}" style="left:${x.x}px;top:${x.y}px;width:${x.w}px">
+    <div class="ntgrip" title="Drag to move" aria-hidden="true"></div><button class="ntdel" data-boxdel="${x.id}" aria-label="Delete text box">×</button>
+    <div class="ntbody tc-${x.c}" ${ntEl.classList.contains('readonly') ? '' : 'contenteditable="true"'} spellcheck="true" aria-label="Text box">${esc(x.text).replace(/\n/g, '<br>')}</div></div>`).join('');
+}
+function ntSave() { if (!nt) return; const { key, ...rest } = nt; if (rest.strokes.length || rest.boxes.length) S.trees[key] = rest; else delete S.trees[key]; save(); }
+function ntFlush() { clearTimeout(ntSaveT); if (nt) ntSave(); }
+const ntSnap = () => JSON.stringify({ strokes: nt.strokes, boxes: nt.boxes });
+function ntPush() { ntHist.push(ntSnap()); if (ntHist.length > 60) ntHist.shift(); ntFut = []; }
+function ntRestore(s) { const o = JSON.parse(s); nt.strokes = o.strokes; nt.boxes = o.boxes; ntRender(); ntSave(); }
+function ntSetTool(t) {
+  ntTool = t; ntEl.dataset.tool = t;
+  $$('[data-nt]', ntEl).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.nt === t)));
+}
+function ntSetScale(s) {
+  ntScale = Math.max(.25, Math.min(3, s));
+  ntCanvas.style.transform = `scale(${ntScale})`;
+  $('#ntsize').style.width = NTW * ntScale + 'px'; $('#ntsize').style.height = NTH * ntScale + 'px';
+  $('#ntzoom').textContent = Math.round(ntScale * 100) + '%';
+}
+function ntFit() { const r = $('#ntscroll').getBoundingClientRect(); ntSetScale(Math.min((r.width - 32) / NTW, (r.height - 32) / NTH)); }
+const ntPoint = e => { const r = ntCanvas.getBoundingClientRect(); return [Math.round((e.clientX - r.left) / ntScale * 10) / 10, Math.round((e.clientY - r.top) / ntScale * 10) / 10]; };
+// eraser: removes any stroke that comes within a few points of the path the eraser travels
+function segDist(p, a, b) {
+  const dx = b[0] - a[0], dy = b[1] - a[1], L = dx * dx + dy * dy;
+  const t = L ? Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L)) : 0;
+  return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy);
+}
+function ntEraseAt(e) {
+  const p = ntPoint(e), prev = ntDraw?.last || p; if (ntDraw) ntDraw.last = p;
+  const n = Math.max(1, Math.ceil(Math.hypot(p[0] - prev[0], p[1] - prev[1]) / 4));
+  const samples = Array.from({ length: n + 1 }, (_, i) => [prev[0] + (p[0] - prev[0]) * i / n, prev[1] + (p[1] - prev[1]) * i / n]);
+  const hits = nt.strokes.filter(s => {
+    const r = s.tool === 'hl' ? 14 : 8;
+    return samples.some(q => s.p.length === 1 ? Math.hypot(q[0] - s.p[0][0], q[1] - s.p[0][1]) < r : s.p.some((a, i) => i && segDist(q, s.p[i - 1], a) < r));
+  });
+  if (!hits.length) return;
+  if (!ntDraw?.pushed) { ntPush(); if (ntDraw) ntDraw.pushed = true; }
+  nt.strokes = nt.strokes.filter(s => !hits.includes(s)); ntRender(); ntSave();
+}
+let ntDraw = null;
+ntInk.addEventListener('pointerdown', e => {
+  if (!nt || ntEl.classList.contains('readonly')) return;
+  if (ntTool === 'text') {
+    e.preventDefault();
+    if (document.activeElement?.matches('.ntbody')) { document.activeElement.blur(); return; } // first click just finishes the box being typed in
+    ntPush();
+    const [x, y] = ntPoint(e), id = uid();
+    nt.boxes.push({ id, x: Math.min(x, NTW - 240), y: Math.min(y - 14, NTH - 60), w: 240, text: '', c: S.set.color });
+    ntRender(); ntBoxes.querySelector(`[data-id="${id}"] .ntbody`).focus(); return;
+  }
+  if (ntTool === 'eraser') { ntInk.setPointerCapture(e.pointerId); ntDraw = { erase: true }; ntEraseAt(e); return; } // one undo step per eraser drag
+  if (ntTool !== 'pen' && ntTool !== 'hl') return;
+  e.preventDefault(); ntInk.setPointerCapture(e.pointerId); ntPush();
+  const s = { id: uid(), tool: ntTool, c: S.set.color, p: [ntPoint(e)] };
+  nt.strokes.push(s); ntInk.insertAdjacentHTML('beforeend', strokeSVG(s));
+  ntDraw = { s, el: ntInk.lastElementChild };
+});
+ntInk.addEventListener('pointermove', e => {
+  if (!ntDraw) return;
+  if (ntDraw.erase) return ntEraseAt(e);
+  const p = ntPoint(e), last = ntDraw.s.p[ntDraw.s.p.length - 1];
+  if (Math.hypot(p[0] - last[0], p[1] - last[1]) < 1.5) return;
+  ntDraw.s.p.push(p); ntDraw.el.setAttribute('d', ntPath(ntDraw.s.p));
+});
+const ntEnd = () => { if (ntDraw) { ntDraw = null; ntSave(); } };
+ntInk.addEventListener('pointerup', ntEnd); ntInk.addEventListener('pointercancel', ntEnd);
+// text boxes: type, drag by the grip, resize from the corner, delete
+ntBoxes.addEventListener('focusin', e => { if (e.target.matches('.ntbody')) { ntPush(); e.target.closest('.ntbox').classList.add('editing'); } });
+ntBoxes.addEventListener('focusout', e => {
+  if (!e.target.matches('.ntbody')) return;
+  const box = e.target.closest('.ntbox'), x = nt?.boxes.find(b => b.id === box.dataset.id); box.classList.remove('editing');
+  if (box.contains(getSelection().anchorNode)) getSelection().removeAllRanges(); // don't leave the typed text selected
+  if (x) { x.text = e.target.innerText.replace(/\n$/, ''); x.w = Math.round(box.offsetWidth); if (!x.text.trim()) { nt.boxes = nt.boxes.filter(b => b !== x); ntRender(); } ntSave(); }
+});
+ntBoxes.addEventListener('input', e => { const box = e.target.closest('.ntbox'), x = nt?.boxes.find(b => b.id === box.dataset.id); if (x) { x.text = e.target.innerText; clearTimeout(ntSaveT); ntSaveT = setTimeout(ntSave, 400); } });
+ntBoxes.addEventListener('pointerdown', e => {
+  if (!nt || ntEl.classList.contains('readonly')) return;
+  const box = e.target.closest('.ntbox'); if (!box) return;
+  const x = nt.boxes.find(b => b.id === box.dataset.id);
+  if (ntTool === 'eraser') { e.preventDefault(); ntPush(); nt.boxes = nt.boxes.filter(b => b !== x); ntRender(); ntSave(); return; }
+  if (!e.target.matches('.ntgrip')) return;
+  e.preventDefault(); ntPush(); e.target.setPointerCapture(e.pointerId);
+  const start = ntPoint(e), ox = x.x, oy = x.y;
+  const mv = ev => { const p = ntPoint(ev); x.x = Math.max(0, Math.min(NTW - 60, ox + p[0] - start[0])); x.y = Math.max(0, Math.min(NTH - 30, oy + p[1] - start[1])); box.style.left = x.x + 'px'; box.style.top = x.y + 'px'; };
+  const up = () => { e.target.removeEventListener('pointermove', mv); e.target.removeEventListener('pointerup', up); ntSave(); };
+  e.target.addEventListener('pointermove', mv); e.target.addEventListener('pointerup', up);
+});
+const boxRO = new ResizeObserver(es => { for (const en of es) { const x = nt?.boxes.find(b => b.id === en.target.dataset.id); const w = en.target.offsetWidth; if (x && w && Math.abs(x.w - w) > 2) { x.w = Math.round(w); clearTimeout(ntSaveT); ntSaveT = setTimeout(ntSave, 400); } } });
+new MutationObserver(() => ntBoxes.querySelectorAll('.ntbox').forEach(b => boxRO.observe(b))).observe(ntBoxes, { childList: true });
+ntEl.addEventListener('click', e => {
+  const t = e.target, q = s => t.closest(s);
+  if (q('#ntclose')) return closeNoteTree();
+  if (q('[data-nt]')) return ntSetTool(q('[data-nt]').dataset.nt);
+  if (q('[data-ntc]')) { S.set.color = q('[data-ntc]').dataset.ntc; save(); renderToolbar(); $$('[data-ntc]', ntEl).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.ntc === S.set.color))); if (ntTool === 'select' || ntTool === 'eraser') ntSetTool('pen'); return; }
+  if (q('#ntundo')) { if (ntHist.length) { ntFut.push(ntSnap()); ntRestore(ntHist.pop()); } return; }
+  if (q('#ntredo')) { if (ntFut.length) { ntHist.push(ntSnap()); ntRestore(ntFut.pop()); } return; }
+  if (q('#ntzoomin')) return ntSetScale(ntScale * 1.2);
+  if (q('#ntzoomout')) return ntSetScale(ntScale / 1.2);
+  if (q('#ntfit')) return ntFit();
+  if (q('#ntclear')) { if (!nt.strokes.length && !nt.boxes.length) return; ntPush(); nt.strokes = []; nt.boxes = []; ntRender(); ntSave(); toast('Cleared. Undo brings it back.'); return; }
+  if (q('[data-boxdel]')) { ntPush(); nt.boxes = nt.boxes.filter(b => b.id !== q('[data-boxdel]').dataset.boxdel); ntRender(); ntSave(); return; }
+  if (q('[data-note]')) return noteEditor({ g: q('[data-note]').dataset.note });
+});
+$('#ntfrom').onchange = $('#ntto').onchange = () => { ntFlush(); const f = +$('#ntfrom').value, t = +$('#ntto').value; openNoteTree(Math.min(f, t), Math.max(f, t)); };
+$('#ntscroll').addEventListener('wheel', e => { if (!e.ctrlKey && !e.metaKey) return; e.preventDefault(); ntSetScale(ntScale * (e.deltaY < 0 ? 1.1 : 1 / 1.1)); }, { passive: false });
+addEventListener('resize', () => { if (nt) ntFit(); });
+document.addEventListener('keydown', e => {
+  if (!nt || e.target.closest('input, textarea, select, [contenteditable]') || !sheet.hidden) return;
+  if (e.key === 'Escape') { e.stopImmediatePropagation(); return closeNoteTree(); }
+  if (ntEl.classList.contains('readonly')) return;
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); e.stopImmediatePropagation(); return $(e.shiftKey ? '#ntredo' : '#ntundo').click(); }
+  const k = { v: 'select', p: 'pen', h: 'hl', t: 'text', e: 'eraser' }[e.key.toLowerCase()];
+  if (k && !e.ctrlKey && !e.metaKey) { e.stopImmediatePropagation(); ntSetTool(k); }
+}, true);
+function openTreesList() {
+  const list = Object.entries(S.trees);
+  openSheet('NoteTrees', (canEditTrees() ? '' : '<p class="hint" style="margin-top:0">On a phone NoteTrees open to view. Edit them on a tablet or computer.</p>') +
+    (list.length ? `<ul class="list">${list.map(([k, x]) => `<li><button data-tree="${esc(k)}"><b>${esc(treeLabel(k))}</b><span class="meta">${x.strokes.length} stroke${x.strokes.length === 1 ? '' : 's'} · ${x.boxes.length} text box${x.boxes.length === 1 ? '' : 'es'}</span></button></li>`).join('')}</ul>`
+      : `<p class="empty"><b>No NoteTrees yet</b>${canEditTrees() ? 'Tap a verse and choose NoteTree, or select verses and press NoteTree.' : 'Make one on a tablet or computer.'}</p>`));
+}
+async function openTree(k) {
+  const [b, c, r] = k.split('.'), [f, t] = r.split('-').map(Number);
+  if (chap?.b !== b || chap?.c !== +c) { go(b, c); await new Promise(res => { const w = () => chap?.b === b && chap?.c === +c ? res() : setTimeout(w, 50); w(); }); }
+  openNoteTree(f, t);
+}
+
 /* ---------- global clicks ---------- */
 document.addEventListener('click', async e => {
   const t = e.target;
   const q = s => t.closest(s);
+  if (q('#nt')) return; // NoteTree handles its own clicks
   if (q('#menubtn')) return menu.hidden ? openMenu() : closeMenu(true);
   if (menu.contains(t)) {
     if (q('[data-layer]')) return toggleLayer(q('[data-layer]').dataset.layer);
@@ -737,6 +920,7 @@ document.addEventListener('click', async e => {
     closeMenu();
     if (q('#playbtn')) return speech.on ? stopReading() : startReading(cur.v || 1);
     if (q('#gotobtn')) return openPicker();
+    if (q('#treesbtn')) return openTreesList();
   } else closeMenu();
   if (q('#refbtn')) return openPicker();
   if (q('[data-test]')) return openPicker(q('[data-test]').dataset.test);
@@ -750,6 +934,8 @@ document.addEventListener('click', async e => {
   if (q('#setbtn')) return openSettings();
   if (q('#home')) { e.preventDefault(); return go(cur.b, cur.c); }
   if (q('[data-saved]')) return openSaved(q('[data-saved]').dataset.saved);
+  if (q('[data-tree]')) { e.preventDefault(); return openTree(q('[data-tree]').dataset.tree); }
+  if (q('[data-ntopen]')) { const v = +q('[data-ntopen]').dataset.ntopen; return openNoteTree(v, v); }
   if (q('[data-open]')) return openAnchor(q('[data-open]').dataset.open);
   if (q('[data-study]')) return openStudy(q('[data-study]').dataset.study);
   if (q('[data-note]')) { e.preventDefault(); return noteEditor({ g: q('[data-note]').dataset.note }); }
