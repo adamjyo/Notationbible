@@ -181,10 +181,10 @@ body[data-active-tool]:not([data-active-tool=""]) .tag:hover{color:inherit}
 /* after a few idle seconds the toolbar tucks into a round highlighter button, bottom centre */
 .toolbar{transition:left .28s ease,transform .28s ease,border-radius .28s ease,padding .2s ease}
 .toolbar .tbfab{display:none}
-.toolbar.collapsed{left:50%;transform:translateX(-50%);padding:0;border-radius:50%}
-.toolbar.collapsed>button:not(.tbfab){display:none}
-.toolbar.collapsed .tbfab{display:grid;place-items:center;width:58px;height:58px;min-height:0;border-radius:50%;animation:tbpop .24s ease-out}
-.toolbar.collapsed .tbfab svg{width:28px;height:28px}
+.toolbar.collapsed{left:50%;transform:translateX(-50%);padding:0;border-radius:50%;width:auto}
+.toolbar.collapsed #tbpane{display:none}
+.toolbar.collapsed .tbfab{display:grid;place-items:center;position:relative;width:58px;height:58px;min-height:0;border-radius:50%;animation:tbpop .24s ease-out}
+.toolbar.collapsed .tbfab svg{width:26px;height:26px;margin-top:-7px}
 .toolbar.collapsed.holding .tbfab{box-shadow:inset 0 0 0 3px var(--tc)}
 @keyframes tbpop{from{transform:scale(.55);opacity:0}to{transform:none;opacity:1}}
 .cdot{width:23px;height:23px;border-radius:50%;background:var(--tc);box-shadow:inset 0 0 0 2px var(--bg),0 0 0 1px var(--rule)}
@@ -398,3 +398,19 @@ body.nt-open .dock{z-index:30}
 /* a toast with an Undo button */
 .toast.act{pointer-events:auto;display:flex;align-items:center;gap:12px}
 .toast button{font:600 14px var(--sans);color:var(--bg);background:none;border:0;text-decoration:underline;cursor:pointer;padding:4px 2px}
+/* three-button toolbar: the same size whichever set of buttons it shows */
+.toolbar{width:min(320px,calc(100vw - 16px));box-sizing:border-box}
+#tbpane{display:flex;flex:1;gap:2px;min-width:0;animation:tbswap .16s ease-out}
+#tbpane>button{flex:1 1 0;width:auto;min-width:0}
+.toolbar svg{fill:none;stroke:var(--ink);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.toolbar .tip{fill:var(--tc);stroke:var(--ink)}
+.toolbar .cdot{width:23px;height:23px}
+.swrow{display:flex;flex:1;align-items:center;justify-content:space-between;gap:3px;padding:0 6px;min-height:54px}
+.toolbar .swrow .swc{flex:none;width:26px;height:26px;min-height:0;padding:0;border-radius:50%;background:var(--s);box-shadow:0 0 0 1px var(--rule)}
+.toolbar .swrow .swc:hover{transform:scale(1.12)}
+.toolbar .swrow .swc[aria-pressed=true]{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--ink)}
+.tbfab .fabline{position:absolute;left:17px;right:17px;bottom:13px;height:4px;border-radius:2px;background:var(--tc)}
+.toolbar.allc .tbfab .fabline{background:conic-gradient(var(--sw-yellow),var(--sw-green),var(--sw-blue),var(--sw-purple),var(--sw-pink),var(--sw-orange),var(--sw-yellow))}
+@keyframes tbswap{from{opacity:.2;transform:translateY(3px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){#tbpane{animation:none}}
+.toolbar .cdot.all,.toolbar .swrow .swc.all{background:conic-gradient(var(--sw-yellow),var(--sw-green),var(--sw-blue),var(--sw-purple),var(--sw-pink),var(--sw-orange),var(--sw-yellow))}
