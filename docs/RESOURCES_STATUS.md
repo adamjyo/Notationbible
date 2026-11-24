@@ -22,4 +22,4 @@ Note: after any import, `scripts/pack_data.py` merges small per-book folders int
 4. **Reports**: `data/RESOURCES_REPORT.md` (what each candidate repo contains) and `data/RESOURCES_IMPORT.md` (counts from the last import).
 
 ## Also pending (not a resource import)
-- Package Notation Bible as a **WordPress plugin** with the complete Bible inside (decided 2026-11-24, not yet started).
+- WordPress plugin: **done** (`wordpress/`, updates itself from GitHub releases; see README → WordPress plugin).
