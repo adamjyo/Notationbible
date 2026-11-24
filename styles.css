@@ -415,16 +415,25 @@ body.nt-open .dock{z-index:30}
 @media (prefers-reduced-motion:reduce){#tbpane{animation:none}}
 .toolbar .cdot.all,.toolbar .swrow .swc.all{background:conic-gradient(var(--sw-yellow),var(--sw-green),var(--sw-blue),var(--sw-purple),var(--sw-pink),var(--sw-orange),var(--sw-yellow))}
 .preview.notebg{background:color-mix(in srgb,var(--nc) 24%,transparent);border-radius:8px;padding:8px 12px}
-/* note card that pops up under a new highlight */
-.notepop{position:absolute;z-index:23;width:min(400px,calc(100vw - 16px));padding:12px 12px 10px;border-radius:14px;background:var(--bg);border:1px solid color-mix(in srgb,var(--nc) 60%,var(--rule));box-shadow:0 10px 30px rgb(0 0 0/.22);animation:tbswap .16s ease-out}
-.notepop::before{content:"";position:absolute;inset:0;border-radius:inherit;background:color-mix(in srgb,var(--nc) 16%,transparent);pointer-events:none}
+/* the note that pops up under a new highlight: a Post-it in the highlight's colour */
+.notepop{position:absolute;z-index:23;width:min(330px,calc(100vw - 16px));padding:14px 14px 12px;color:#2a2414;background:color-mix(in srgb,var(--nc) 72%,#fff);border-radius:2px 2px 18px 2px;transform:rotate(-1.2deg);box-shadow:0 1px 1px rgb(0 0 0/.12),0 12px 24px -6px rgb(0 0 0/.38);animation:postit .18s ease-out}
+.notepop::after{content:"";position:absolute;right:0;bottom:0;width:26px;height:26px;border-radius:0 0 18px 0;background:linear-gradient(135deg,transparent 48%,color-mix(in srgb,var(--nc) 58%,#000) 50%,color-mix(in srgb,var(--nc) 85%,#fff) 72%);pointer-events:none}
 .notepop>*{position:relative}
-.notepop textarea{display:block;width:100%;box-sizing:border-box;min-height:56px;resize:vertical;border:0;outline:0;background:none;color:var(--ink);font:16px/1.45 var(--sans);padding:2px 30px 6px 2px}
-.notepop .row{display:flex;align-items:center;gap:8px;margin-top:6px}
+.notepop textarea{display:block;width:100%;box-sizing:border-box;min-height:78px;resize:none;border:0;outline:0;background:repeating-linear-gradient(transparent 0 29px,rgb(0 0 0/.1) 29px 30px);color:#2a2414;font:600 25px/30px Caveat,'Segoe Print','Bradley Hand',cursive;padding:0 28px 0 2px}
+.notepop textarea::placeholder{color:rgb(42 36 20/.5)}
+.notepop .row{display:flex;align-items:center;gap:8px;margin-top:8px}
 .notepop .row [data-save]{margin-left:auto}
-.notepop .npx{position:absolute;top:6px;right:6px;width:30px;height:30px;display:grid;place-items:center;border:0;border-radius:8px;background:none;color:var(--soft);cursor:pointer;z-index:1}
-.notepop .npx:hover{background:var(--chip);color:var(--ink)}
-.notepop .npx svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.notepop .btn{min-height:38px;border-color:rgb(42 36 20/.3);color:#2a2414;background:transparent}
+.notepop .btn svg{stroke:#2a2414}
+.notepop .btn:hover{background:rgb(42 36 20/.08)}
+.notepop .btn.primary{background:#2a2414;border-color:#2a2414;color:color-mix(in srgb,var(--nc) 40%,#fff)}
+.notepop .btn.rec.live{background:#2a2414;color:#fff}
+.notepop .hint{color:rgb(42 36 20/.7)}
+.notepop .npx{position:absolute;top:4px;right:4px;width:30px;height:30px;display:grid;place-items:center;border:0;border-radius:8px;background:none;color:#5a5141;cursor:pointer;z-index:1}
+.notepop .npx:hover{background:rgb(42 36 20/.1);color:#2a2414}
+.notepop .npx svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+@keyframes postit{from{opacity:0;transform:rotate(-4deg) translateY(-6px) scale(.96)}to{opacity:1;transform:rotate(-1.2deg)}}
+@media (prefers-reduced-motion:reduce){.notepop{animation:none}}
 /* toolbar: NoteTree icon's sticky notes, the select tool's empty colour */
 .toolbar .stk{stroke:var(--ink);stroke-width:1.1}
 .toolbar .stk.s1{fill:var(--sw-yellow)}.toolbar .stk.s2{fill:var(--sw-pink)}.toolbar .stk.s3{fill:var(--sw-green)}
