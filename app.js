@@ -273,7 +273,7 @@ async function render() {
   if (!chap.verses) {
     const have = Object.entries(M.books).flatMap(([bk, chs]) => Object.keys(chs).map(ch => `<a href="${hashOf(bk, ch)}">${label(bk, ch)}</a>`));
     reader.className = 'reader';
-    reader.innerHTML = head + `<div class="missing"><h3>${esc(label(b, c))} isn't in this data set yet</h3><p>Run the import in <code>scripts/</code> to add the full Berean Standard Bible. Chapters available now: ${have.join(' · ')}</p></div>`;
+    reader.innerHTML = head + `<div class="missing"><h3>${esc(label(b, c))} isn't in this data set yet</h3><p>${M.demoNote ? esc(M.demoNote) + ' Books here: ' : 'Run the import in <code>scripts/</code> to add the full Berean Standard Bible. Chapters available now: '}${M.demoNote ? Object.keys(M.books).map(bk => `<a href="${hashOf(bk, 1)}">${esc(BY[bk].name)}</a>`).join(' · ') : have.join(' · ')}</p></div>`;
     return;
   }
   // Paragraph layout keeps flowing; an inline note or other layer block breaks the text only where it sits.
