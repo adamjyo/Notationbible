@@ -361,3 +361,14 @@ body.nt-open .dock{z-index:30}
   .palette button{width:32px;height:32px}.prow{gap:7px}.prow span{width:auto;min-width:0;flex:none;writing-mode:horizontal-tb}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* reader accounts */
+.acct .afl{display:block;font:13px var(--sans);color:var(--soft);margin:0 0 4px}
+.acct .afl .field{margin-top:4px}
+.acct .who{margin:0 0 6px;font:16px var(--sans)}
+.acct .row{margin:14px 0 0}
+.acct>.btn.primary{width:100%;justify-content:center;margin-top:4px}
+.aerr{color:#e5484d;font:14px var(--sans);margin:0 0 10px}
+.alinks{font:14px var(--sans);color:var(--soft);margin:14px 0 0;text-align:center}
+.linkbtn{color:var(--accent);font:inherit;background:none;border:0;padding:0;cursor:pointer}
+.linkbtn:hover{text-decoration:underline}
+.acct .who .meta{display:block;margin-top:2px}

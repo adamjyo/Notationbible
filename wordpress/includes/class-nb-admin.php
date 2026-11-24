@@ -17,13 +17,14 @@ class NB_Admin {
 	}
 
 	public static function menu() {
-		add_options_page( 'Notation Bible', 'Notation Bible', 'manage_options', 'notation-bible', array( __CLASS__, 'page' ) );
+		add_menu_page( 'Notation Bible', 'Notation Bible', 'manage_options', 'notation-bible', array( __CLASS__, 'page' ), 'dashicons-book-alt', 58 );
+		add_submenu_page( 'notation-bible', 'Notation Bible settings', 'Settings', 'manage_options', 'notation-bible', array( __CLASS__, 'page' ) );
 	}
 
 	public static function action_links( $links ) {
 		array_unshift(
 			$links,
-			'<a href="' . esc_url( admin_url( 'options-general.php?page=notation-bible' ) ) . '">' . esc_html__( 'Settings', 'notation-bible' ) . '</a>',
+			'<a href="' . esc_url( admin_url( 'admin.php?page=notation-bible' ) ) . '">' . esc_html__( 'Settings', 'notation-bible' ) . '</a>',
 			'<a href="' . esc_url( NB_Reader::page_url() ) . '" target="_blank" rel="noopener">' . esc_html__( 'Open Bible', 'notation-bible' ) . '</a>'
 		);
 		return $links;
@@ -43,8 +44,12 @@ class NB_Admin {
 	public static function sanitize( $in ) {
 		$old = NB_Reader::settings();
 		$in  = is_array( $in ) ? $in : array();
-		$out = array(
-			'slug'  => sanitize_title( $in['slug'] ?? $old['slug'] ),
+		$form = ! empty( $in['_form'] );
+		$out  = array(
+			'accounts'    => $form ? (int) ! empty( $in['accounts'] ) : (int) ( $in['accounts'] ?? $old['accounts'] ),
+			'signups'     => $form ? (int) ! empty( $in['signups'] ) : (int) ( $in['signups'] ?? $old['signups'] ),
+			'delete_data' => $form ? (int) ! empty( $in['delete_data'] ) : (int) ( $in['delete_data'] ?? $old['delete_data'] ),
+			'slug'        => sanitize_title( $in['slug'] ?? $old['slug'] ),
 			'start' => sanitize_text_field( $in['start'] ?? $old['start'] ),
 			// Leaving the token box empty keeps the saved token; tick "remove" to clear it.
 			'token' => ! empty( $in['token_clear'] ) ? '' : ( '' !== trim( (string) ( $in['token'] ?? '' ) ) ? sanitize_text_field( $in['token'] ) : $old['token'] ),
@@ -59,7 +64,7 @@ class NB_Admin {
 			delete_site_transient( NB_Updater::CACHE_KEY );
 		}
 		// WordPress can run this callback twice on the first save; only the real form post carries _form.
-		if ( ! empty( $in['_form'] ) ) {
+		if ( $form ) {
 			NB_Updater::set_auto_update( ! empty( $in['auto_update'] ) );
 		}
 		return $out;
@@ -71,7 +76,7 @@ class NB_Admin {
 		}
 		check_admin_referer( 'nb_check_updates' );
 		NB_Updater::check_now();
-		wp_safe_redirect( admin_url( 'options-general.php?page=notation-bible&nb_checked=1' ) );
+		wp_safe_redirect( admin_url( 'admin.php?page=notation-bible&nb_checked=1' ) );
 		exit;
 	}
 
@@ -137,6 +142,14 @@ class NB_Admin {
 						<td><input id="nb-start" name="nb_settings[start]" type="text" class="regular-text" value="<?php echo esc_attr( $s['start'] ); ?>"><p class="description">For example John 1 or Psalm 23. Returning readers open where they left off.</p></td>
 					</tr>
 					<tr>
+						<th scope="row">Reader accounts</th>
+						<td>
+							<label><input name="nb_settings[accounts]" type="checkbox" value="1" <?php checked( ! empty( $s['accounts'] ) ); ?>> Readers can sign in to save their highlights, notes and NoteTrees across devices</label><br>
+							<label><input name="nb_settings[signups]" type="checkbox" value="1" <?php checked( ! empty( $s['signups'] ) ); ?>> Anyone can create an account (when off, only readers you add on the <a href="<?php echo esc_url( admin_url( 'admin.php?page=notation-bible-readers' ) ); ?>">Readers</a> page can sign in)</label>
+							<p class="description">Reader accounts are separate from WordPress users: readers never get a WordPress login. Without an account, notes stay in the reader's own browser.</p>
+						</td>
+					</tr>
+					<tr>
 						<th scope="row">Automatic updates</th>
 						<td><label><input name="nb_settings[auto_update]" type="checkbox" value="1" <?php checked( NB_Updater::auto_update_enabled() ); ?>> Install new versions automatically</label><p class="description">WordPress checks twice a day. This is the same switch as “Enable auto-updates” on the Plugins screen.</p></td>
 					</tr>
@@ -145,6 +158,10 @@ class NB_Admin {
 						<td><input id="nb-token" name="nb_settings[token]" type="password" class="regular-text" autocomplete="off" placeholder="<?php echo $s['token'] ? esc_attr__( 'Saved — leave empty to keep', 'notation-bible' ) : ''; ?>">
 						<?php if ( $s['token'] ) : ?><label><input name="nb_settings[token_clear]" type="checkbox" value="1"> Remove</label><?php endif; ?>
 						<p class="description">Only needed if the GitHub repository is made private. Leave empty for the public repository.</p></td>
+					</tr>
+					<tr>
+						<th scope="row">When the plugin is deleted</th>
+						<td><label><input name="nb_settings[delete_data]" type="checkbox" value="1" <?php checked( ! empty( $s['delete_data'] ) ); ?>> Also delete all reader accounts and their notes</label><p class="description">Left off, reader accounts survive deleting and reinstalling the plugin.</p></td>
 					</tr>
 				</table>
 				<?php submit_button(); ?>

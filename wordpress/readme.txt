@@ -4,7 +4,7 @@ Tags: bible, scripture, strongs, interlinear, commentary
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.0.1
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -22,7 +22,7 @@ Notation Bible adds a full Bible reader to your site at /bible/ (you can change 
 * Highlighters, pens, sticky notes and NoteTrees (with Apple Pencil support)
 * Read aloud and dictation
 
-Readers' highlights and notes are saved in their own browser.
+Readers can sign in to a Notation Bible account (separate from WordPress users) so their highlights, notes, NoteTrees and settings follow them to every device. Without an account, notes are saved in the reader's own browser. Manage reader accounts under Notation Bible → Readers.
 
 Put the reader in any page or post with the shortcode:
 
@@ -30,9 +30,13 @@ Put the reader in any page or post with the shortcode:
 
 = Updates =
 
-The plugin updates itself from its GitHub releases (https://github.com/adamjyo/notationbible/releases). WordPress shows new versions on the Plugins and Updates screens like any other plugin, and automatic updates are switched on when the plugin is first activated. Settings → Notation Bible shows the installed and latest versions and has a "Check for updates now" button.
+The plugin updates itself from its GitHub releases (https://github.com/adamjyo/notationbible/releases). WordPress shows new versions on the Plugins and Updates screens like any other plugin, and automatic updates are switched on when the plugin is first activated. Notation Bible → Settings shows the installed and latest versions and has a "Check for updates now" button.
 
 == Changelog ==
+
+= 1.1.0 =
+* Reader accounts, separate from WordPress users: readers sign in from the Bible's menu and their highlights, notes, NoteTrees and settings sync across devices.
+* New Notation Bible admin menu with a Readers page (add, disable, delete, send password links, sign out everywhere) and switches for accounts and sign-ups.
 
 = 1.0.1 =
 * Updates still arrive when the site cannot reach WordPress.org.

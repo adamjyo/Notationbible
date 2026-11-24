@@ -3,6 +3,15 @@
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	exit;
 }
+$nb_settings = get_option( 'nb_settings', array() );
+if ( is_array( $nb_settings ) && ! empty( $nb_settings['delete_data'] ) ) {
+	global $wpdb;
+	foreach ( array( 'readers', 'sessions', 'reader_data' ) as $nb_t ) {
+		$wpdb->query( 'DROP TABLE IF EXISTS ' . $wpdb->prefix . 'nb_' . $nb_t ); // phpcs:ignore WordPress.DB
+	}
+	delete_option( 'nb_db_version' );
+}
+wp_clear_scheduled_hook( 'nb_cleanup_sessions' );
 delete_option( 'nb_settings' );
 delete_option( 'nb_last_check' );
 delete_option( 'nb_flush_rewrite' );

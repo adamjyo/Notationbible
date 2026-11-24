@@ -31,7 +31,10 @@ class NB_Reader {
 			array(
 				'slug'  => 'bible',
 				'start' => 'John 1',
-				'token' => '',
+				'token'       => '',
+				'accounts'    => 1,
+				'signups'     => 1,
+				'delete_data' => 0,
 			)
 		);
 	}
@@ -65,6 +68,7 @@ class NB_Reader {
 	public static function activate() {
 		self::add_rewrite();
 		flush_rewrite_rules( false );
+		NB_Accounts::maybe_install();
 		// Turn on automatic updates the first time the plugin is activated.
 		if ( ! get_option( 'nb_auto_update_set' ) ) {
 			NB_Updater::set_auto_update( true );
@@ -74,6 +78,7 @@ class NB_Reader {
 
 	public static function deactivate() {
 		flush_rewrite_rules( false );
+		wp_clear_scheduled_hook( 'nb_cleanup_sessions' );
 	}
 
 	public static function maybe_serve() {
@@ -95,7 +100,12 @@ class NB_Reader {
 		}
 		$base = NB_URL . 'app/';
 		$ver  = rawurlencode( NB_VERSION );
-		$cfg  = array( 'start' => self::settings()['start'] );
+		$cfg  = array(
+			'start'    => self::settings()['start'],
+			'site'     => get_bloginfo( 'name' ),
+			'api'      => NB_Accounts::enabled() ? esc_url_raw( rest_url( NB_Accounts::NS . '/' ) ) : '',
+			'signups'  => NB_Accounts::signups_open(),
+		);
 
 		$html = str_replace( 'href="styles.css"', 'href="' . esc_url( $base . 'styles.css?ver=' . $ver ) . '"', $html );
 		$html = str_replace( 'src="app.js"', 'src="' . esc_url( $base . 'app.js?ver=' . $ver ) . '"', $html );

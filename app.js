@@ -26,7 +26,8 @@ const PRESETS = {
 const KEY = 'notationbible:v1';
 let S = {};
 try { S = JSON.parse(localStorage.getItem(KEY)) || {}; } catch { S = {}; }
-S.set = Object.assign({ compareTr: 'kjv', commentaries: ['jfb', 'scofield'], theme: 'dark', size: 19, font: 'serif', layout: 'para', nums: true, markup: true, rate: 1, voice: '', cont: true }, S.set || {});
+const SET_DEFAULTS = { compareTr: 'kjv', commentaries: ['jfb', 'scofield'], theme: 'dark', size: 19, font: 'serif', layout: 'para', nums: true, markup: true, rate: 1, voice: '', cont: true };
+S.set = Object.assign({}, SET_DEFAULTS, S.set || {});
 // appearance: dark by default; 'system' follows the device (and the claude.ai viewer's theme when previewed there)
 const applyTheme = () => { document.documentElement.dataset.mode = ['dark', 'light', 'system'].includes(S.set.theme) ? S.set.theme : 'dark'; };
 const isDark = () => S.set.theme === 'dark' || (S.set.theme === 'system' && (document.documentElement.dataset.theme === 'dark' || (document.documentElement.dataset.theme !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches)));
@@ -34,7 +35,7 @@ applyTheme();
 S.set.layers = Object.assign({}, PRESETS.study, S.set.layers || {});
 S.lastOn = S.lastOn || {};
 S.ann = S.ann || [];
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} queuePush(); };
 
 /* ---------- data ---------- */
 const cache = {};
@@ -350,6 +351,7 @@ const go = (b, c, v) => { const h = hashOf(b, c, v); if (location.hash === h) { 
 /* ---------- feature menu ---------- */
 const menu = $('#menu'), menuBtn = $('#menubtn');
 const MI = {
+  user: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c.8-3.8 3.8-6 7.5-6s6.7 2.2 7.5 6"/></svg>',
   read: '<svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>',
   search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
   goto: '<svg viewBox="0 0 24 24"><path d="M5 4.5h9.5a3 3 0 0 1 3 3V20H8a3 3 0 0 1-3-3z"/></svg>',
@@ -363,7 +365,7 @@ function renderMenu() {
   const L = S.set.layers, n = groups().length;
   const preset = Object.entries(PRESETS).find(([, p]) => LAYERS.every(l => p[l.k] === L[l.k]))?.[0] || '';
   const sw = (k, on, name, sub) => `<button class="mi" role="menuitemcheckbox" aria-checked="${on}" data-layer="${k}"><span class="lab">${name}</span>${sub ? `<span class="sub">${sub}</span>` : ''}<span class="sw" aria-hidden="true"></span></button>`;
-  menu.innerHTML = `<h4>Tools</h4>
+  menu.innerHTML = `${ACCT.api ? `<button class="mi" role="menuitem" id="acctbtn">${MI.user}<span class="lab">${ACCT.reader ? esc(ACCT.reader.name) : 'Sign in'}</span><span class="sub">${ACCT.reader ? syncLabel() : 'save notes to an account'}</span></button><hr>` : ''}<h4>Tools</h4>
     <button class="mi${speech.on ? ' live' : ''}" role="menuitem" id="playbtn">${MI.read}<span class="lab">${speech.on ? 'Stop reading aloud' : 'Read aloud'}</span></button>
     <button class="mi" role="menuitem" id="searchbtn">${MI.search}<span class="lab">Search</span><kbd>/</kbd></button>
     <button class="mi" role="menuitem" id="gotobtn">${MI.goto}<span class="lab">Go to book and chapter</span></button>
@@ -1168,6 +1170,7 @@ document.addEventListener('click', async e => {
     if (q('#gotobtn')) return openPicker();
     if (q('#treesbtn')) return openTreesList();
     if (q('#plansbtn')) return openPlans();
+    if (q('#acctbtn')) return openAccount();
   } else closeMenu();
   if (q('#refbtn')) return openPicker();
   if (q('[data-test]')) return openPicker(q('[data-test]').dataset.test);
@@ -1223,6 +1226,207 @@ window.addEventListener('hashchange', () => {
   render().then(() => { if (speech.wait) { speech.wait = false; speakVerse(); } });
 });
 
+/* ---------- reader accounts (only when served by the WordPress plugin) ----------
+   Readers sign in to a Notation Bible account (separate from WordPress users). Their
+   settings, highlights, notes, NoteTrees, reading plan and place are saved to it and merged
+   across devices with a three-way merge against the last copy both sides agreed on:
+   whichever side changed an item wins, and an item deleted on either side stays deleted. */
+var ACCT = { api: (window.NB_CONFIG && window.NB_CONFIG.api) || '', signups: !!(window.NB_CONFIG && window.NB_CONFIG.signups), reader: null, rev: 0, timer: 0, busy: false, again: false, applying: false, status: '', synced: 0 };
+const SYNC_KEY = 'notationbible:sync';
+const jeq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+const docOf = () => ({ set: S.set, ann: S.ann, trees: S.trees || {}, plan: S.plan || null, last: S.last || '' });
+const byId = a => Object.fromEntries((Array.isArray(a) ? a : []).filter(x => x && x.id).map(x => [x.id, x]));
+function mergeKeyed(B, L, R) {
+  const out = {};
+  for (const k of new Set([...Object.keys(L), ...Object.keys(R)])) {
+    const inB = k in B, inL = k in L, inR = k in R;
+    if (inB && (!inL || !inR)) continue; // deleted on one side
+    out[k] = !inB ? (inL ? L[k] : R[k]) : jeq(L[k], B[k]) ? R[k] : L[k];
+  }
+  return out;
+}
+function merge3(B, L, R) {
+  B = B || {}; R = R || {};
+  const fresh = !Object.keys(B).length; // first sync on this device: the account's settings win
+  const pick = (b, l, r) => r === undefined ? l : fresh ? r : jeq(l, b) ? r : l;
+  const set = {}, bs = B.set || {}, ls = L.set || {}, rs = R.set || {};
+  for (const k of new Set([...Object.keys(ls), ...Object.keys(rs)])) set[k] = pick(bs[k], ls[k], rs[k]);
+  return {
+    set, plan: pick(B.plan, L.plan, R.plan), last: pick(B.last, L.last, R.last),
+    ann: Object.values(mergeKeyed(byId(B.ann), byId(L.ann), byId(R.ann))),
+    trees: mergeKeyed(B.trees || {}, L.trees || {}, R.trees || {}),
+  };
+}
+const loadBase = () => { try { return JSON.parse(localStorage.getItem(SYNC_KEY)); } catch { return null; } };
+const setBase = (rev, doc) => { ACCT.rev = rev; ACCT.synced = Date.now(); ACCT.status = 'ok'; try { localStorage.setItem(SYNC_KEY, JSON.stringify({ rid: ACCT.reader.id, rev, doc })); } catch {} };
+function applyDoc(d) {
+  if (jeq(d, docOf())) return;
+  ACCT.applying = true;
+  const before = JSON.stringify({ c: S.set, a: S.ann, t: S.trees });
+  S.set = Object.assign({}, SET_DEFAULTS, d.set || {});
+  S.set.layers = Object.assign({}, PRESETS.study, S.set.layers || {});
+  S.ann = d.ann || []; S.trees = d.trees || {}; S.plan = d.plan || null; S.last = d.last || S.last;
+  save(); ACCT.applying = false;
+  applyTheme();
+  if (before !== JSON.stringify({ c: S.set, a: S.ann, t: S.trees })) render();
+}
+async function api(path, method = 'GET', body, params) {
+  let url = ACCT.api + path;
+  if (params) url += (url.includes('?') ? '&' : '?') + new URLSearchParams(params);
+  try {
+    const r = await fetch(url, { method, credentials: 'same-origin', keepalive: method === 'PUT' && body && JSON.stringify(body).length < 60000, headers: { 'Content-Type': 'application/json', 'X-NB-Request': '1' }, body: body ? JSON.stringify(body) : undefined });
+    let data = null; try { data = await r.json(); } catch {}
+    return { ok: r.ok, status: r.status, data: data || {} };
+  } catch { return { ok: false, status: 0, data: {} }; }
+}
+function queuePush() {
+  if (!ACCT || !ACCT.reader || ACCT.applying) return;
+  clearTimeout(ACCT.timer); ACCT.timer = setTimeout(push, 2000);
+}
+async function pull() {
+  if (!ACCT.reader) return;
+  const r = await api('data');
+  if (r.status === 401) return signedOutElsewhere();
+  if (!r.ok) { ACCT.status = 'offline'; return; }
+  const base = loadBase(), B = base && base.rid === ACCT.reader.id ? base.doc : {};
+  const merged = merge3(B, docOf(), r.data.doc || {});
+  applyDoc(merged);
+  ACCT.rev = r.data.rev || 0;
+  if (!r.data.doc || !jeq(merged, r.data.doc)) await push(); else setBase(ACCT.rev, merged);
+}
+async function push() {
+  clearTimeout(ACCT.timer);
+  if (!ACCT.reader) return;
+  if (ACCT.busy) { ACCT.again = true; return; }
+  ACCT.busy = true;
+  try {
+    for (let tries = 0; tries < 4; tries++) {
+      const doc = docOf();
+      const r = await api('data', 'PUT', { rev: ACCT.rev, doc });
+      if (r.ok) { setBase(r.data.rev, JSON.parse(JSON.stringify(doc))); break; }
+      if (r.status === 409) { // changed on another device since: merge and try again
+        const base = loadBase();
+        applyDoc(merge3(base && base.rid === ACCT.reader.id ? base.doc : {}, docOf(), r.data.doc || {}));
+        ACCT.rev = r.data.rev || 0; continue;
+      }
+      if (r.status === 401) { signedOutElsewhere(); break; }
+      ACCT.status = r.status === 413 ? 'toobig' : 'offline';
+      if (r.status === 413) toast('Your notes are too large to save to your account.');
+      break;
+    }
+  } finally {
+    ACCT.busy = false;
+    if (ACCT.again) { ACCT.again = false; queuePush(); }
+  }
+}
+function syncLabel() {
+  if (ACCT.status === 'offline') return 'offline, will sync';
+  if (ACCT.status === 'toobig') return 'not synced';
+  return ACCT.synced ? 'synced' : 'syncing…';
+}
+function clearAccountData() {
+  try { localStorage.removeItem(SYNC_KEY); } catch {}
+  ACCT.reader = null; ACCT.rev = 0; ACCT.synced = 0; ACCT.status = '';
+  S.ann = []; S.trees = {}; S.plan = null; save(); render();
+}
+function signedOutElsewhere() {
+  clearAccountData();
+  toast('You were signed out. Sign in again to keep syncing.');
+}
+async function signedIn(reader, msg) {
+  const had = S.ann.length + Object.keys(S.trees || {}).length;
+  ACCT.reader = reader; closeSheet();
+  await pull();
+  toast(msg || (had ? `Signed in. Notes from this device were added to your account.` : `Signed in as ${reader.name}.`));
+}
+async function accountStart() {
+  if (!ACCT.api) return;
+  addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') pull(); else if (ACCT.timer) push(); });
+  addEventListener('online', () => ACCT.reader && push());
+  addEventListener('pagehide', () => { if (ACCT.timer) push(); });
+  const token = new URLSearchParams(location.search).get('nbreset');
+  const st = await api('state');
+  if (st.ok) { ACCT.signups = !!st.data.signups; if (!st.data.accounts) { ACCT.api = ''; return; } }
+  if (st.ok && st.data.reader) { ACCT.reader = st.data.reader; await pull(); }
+  else if (st.ok && loadBase()) clearAccountData(); // session ended while away: don't leave account notes on this device
+  if (token) openReset(token);
+}
+
+/* account screens */
+const aerr = (m) => { const e = $('#aerr'); if (e) { e.textContent = m || ''; e.hidden = !m; } };
+const field = (name, type, label, ac, extra = '') => `<label class="afl">${label}<span class="field"><input name="${name}" type="${type}" autocomplete="${ac}" required ${extra}></span></label>`;
+function form(title, inner, submit, onSubmit, back) {
+  openSheet(title, `<form class="acct" novalidate>${inner}<p id="aerr" class="aerr" role="alert" hidden></p><button class="btn primary" type="submit">${submit}</button></form>`, back);
+  const f = $('#sheetbody form');
+  f.onsubmit = async e => {
+    e.preventDefault(); aerr('');
+    const bad = [...f.elements].find(x => x.required && !x.value.trim()); if (bad) { bad.focus(); return aerr('Fill in every box.'); }
+    const btn = f.querySelector('[type=submit]'); btn.disabled = true;
+    try { await onSubmit(Object.fromEntries(new FormData(f))); } finally { btn.disabled = false; }
+  };
+  return f;
+}
+function openAccount() {
+  if (!ACCT.reader) return openSignIn();
+  const r = ACCT.reader, when = ACCT.synced ? new Date(ACCT.synced).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
+  const status = ACCT.status === 'offline' ? 'Offline. Your changes are kept here and will sync when you\'re back online.' : ACCT.status === 'toobig' ? 'Your notes are too large to save to your account.' : when ? `Your highlights, notes, NoteTrees and settings are saved to your account. Last synced at ${when}.` : 'Syncing…';
+  openSheet('Account', `<div class="acct">
+    <p class="who"><strong>${esc(r.name)}</strong><span class="meta">${esc(r.email)}</span></p>
+    <p class="hint">${status}</p>
+    <div class="row"><button class="btn" id="async">Sync now</button><button class="btn" id="aname">Change name</button><button class="btn" id="apass">Change password</button></div>
+    <div class="row"><button class="btn primary" id="aout">Sign out</button><button class="btn" id="adel">Delete account</button></div>
+    <p class="hint">Signing out removes your account's notes from this device; they stay safe in your account.</p></div>`);
+  $('#async').onclick = async () => { await pull(); await push(); openAccount(); };
+  $('#aout').onclick = async () => { await push(); await api('logout', 'POST'); clearAccountData(); closeSheet(); toast('Signed out. Your notes are saved in your account.'); };
+  $('#aname').onclick = () => { const f = form('Change name', field('name', 'text', 'Name', 'name', `value="${esc(r.name)}" maxlength="100" autofocus`), 'Save', async v => {
+    const res = await api('account', 'POST', { name: v.name }); if (!res.ok) return aerr(res.data.message || 'Could not save.');
+    ACCT.reader = res.data.reader; openAccount(); toast('Name saved'); }, openAccount); };
+  $('#apass').onclick = () => form('Change password', field('current', 'password', 'Current password', 'current-password', 'autofocus') + field('password', 'password', 'New password (8 or more characters)', 'new-password', 'minlength="8"'), 'Change password', async v => {
+    const res = await api('password', 'POST', v); if (!res.ok) return aerr(res.data.message || 'Could not change the password.');
+    openAccount(); toast('Password changed. Other devices were signed out.'); }, openAccount);
+  $('#adel').onclick = () => form('Delete account', `<p class="hint">This deletes your account and every highlight, note and NoteTree saved to it, on every device. It can't be undone.</p>` + field('password', 'password', 'Your password', 'current-password', 'autofocus'), 'Delete my account', async v => {
+    const res = await api('delete', 'POST', v); if (!res.ok) return aerr(res.data.message || 'Could not delete the account.');
+    clearAccountData(); closeSheet(); toast('Your account was deleted.'); }, openAccount);
+}
+function openSignIn() {
+  const site = window.NB_CONFIG && window.NB_CONFIG.site ? ` on ${esc(window.NB_CONFIG.site)}` : '';
+  form('Sign in', `<p class="hint">Sign in to your Notation Bible account${site} to keep your highlights, notes and NoteTrees on every device.</p>`
+    + field('email', 'email', 'Email', 'email', 'autofocus') + field('password', 'password', 'Password', 'current-password'), 'Sign in', async v => {
+    const res = await api('login', 'POST', v); if (!res.ok) return aerr(res.data.message || 'Could not sign in. Check your connection.');
+    await signedIn(res.data.reader);
+  });
+  $('#sheetbody form').insertAdjacentHTML('beforeend', `<p class="alinks"><button type="button" class="linkbtn" id="aforgot">Forgot password?</button>${ACCT.signups ? ' · <button type="button" class="linkbtn" id="anew">Create an account</button>' : ''}</p>`);
+  $('#aforgot').onclick = openForgot;
+  if ($('#anew')) $('#anew').onclick = openRegister;
+}
+function openRegister() {
+  form('Create an account', `<p class="hint">Your account belongs to this Bible only; it isn't a login for the rest of the site.</p>`
+    + field('name', 'text', 'Name', 'name', 'autofocus maxlength="100"') + field('email', 'email', 'Email', 'email') + field('password', 'password', 'Password (8 or more characters)', 'new-password', 'minlength="8"'), 'Create account', async v => {
+    if (v.password.length < 8) return aerr('Use at least 8 characters for the password.');
+    const res = await api('register', 'POST', v); if (!res.ok) return aerr(res.data.message || 'Could not create the account. Check your connection.');
+    await signedIn(res.data.reader, S.ann.length ? 'Account created. Your notes from this device are saved to it.' : 'Account created. Your notes will now save to it.');
+  }, openSignIn);
+}
+function openForgot() {
+  form('Reset password', `<p class="hint">Enter your account's email and we'll send a link to choose a new password.</p>` + field('email', 'email', 'Email', 'email', 'autofocus'), 'Send link', async v => {
+    const res = await api('forgot', 'POST', v); if (!res.ok) return aerr(res.data.message || 'Could not send. Check your connection.');
+    openSheet('Check your email', `<p class="hint">If there's an account for ${esc(v.email)}, a link to choose a new password is on its way. It works for 2 hours.</p>`, openSignIn);
+  }, openSignIn);
+}
+async function openReset(token) {
+  try { const u = new URL(location.href); u.searchParams.delete('nbreset'); history.replaceState(null, '', u); } catch {}
+  const chk = await api('reset', 'GET', null, { token });
+  if (!chk.ok) return openSheet('Link expired', `<p class="hint">${esc(chk.data.message || 'This link has expired or was already used.')}</p><button class="btn primary" id="aagain">Send a new link</button>`), ($('#aagain').onclick = openForgot);
+  form('Choose a password', `<p class="hint">For ${esc(chk.data.email)}</p>` + field('password', 'password', 'New password (8 or more characters)', 'new-password', 'minlength="8" autofocus'), 'Save and sign in', async v => {
+    if (v.password.length < 8) return aerr('Use at least 8 characters for the password.');
+    const res = await api('reset', 'POST', { token, password: v.password }); if (!res.ok) return aerr(res.data.message || 'Could not save the password.');
+    await signedIn(res.data.reader, 'Password saved. You\'re signed in.');
+  });
+}
+
+// A small handle for support and automated tests.
+window.NotationBible = { get state() { return S; }, get account() { return ACCT; }, save, push, pull, uid, version: 1 };
+
 /* ---------- start ---------- */
 (async () => {
   M = (await getJSON('data/manifest.json')) || M;
@@ -1230,5 +1434,6 @@ window.addEventListener('hashchange', () => {
   await loadLex();
   if (synth) synth.onvoiceschanged = () => {};
   renderToolbar(); bumpIdle(); await render();
+  accountStart();
 })();
 }

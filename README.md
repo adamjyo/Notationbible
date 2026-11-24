@@ -106,13 +106,14 @@ Cross-references, once imported: OpenBible.info, CC BY.
 
 `wordpress/` is the plugin source. `scripts/build_wp.sh` packs it with the app and the whole Bible into `build/notation-bible.zip` (about 18 MB). Download the latest zip from [Releases](https://github.com/adamjyo/Notationbible/releases/latest) and install it with Plugins → Add New → Upload.
 
-- The reader is at `/bible/` (changeable in Settings → Notation Bible); `[notation_bible ref="John 3:16" height="80vh"]` embeds it in a page.
+- The reader is at `/bible/` (changeable in Notation Bible → Settings); `[notation_bible ref="John 3:16" height="80vh"]` embeds it in a page.
+- **Reader accounts:** readers can sign in from the Bible's menu to a Notation Bible account, which is separate from WordPress users. Their highlights, notes, NoteTrees, reading plan and settings sync across devices; edits made on two devices are merged. Manage readers in Notation Bible → Readers (add, disable, delete, send password links, sign out everywhere). Switch accounts and open sign-ups on or off in Notation Bible → Settings. Without an account, notes stay in the reader's browser, as in the stand-alone web app.
 - **Updates:** the plugin updates itself from this repository's GitHub releases. WordPress shows new versions like any other plugin update, and automatic updates are switched on at first activation.
 
 ### Shipping an update
 
 1. Raise the version in `wordpress/notation-bible.php` (the `Version:` header and `NB_VERSION`) and `Stable tag:` in `wordpress/readme.txt`, and add a changelog entry there.
 2. Push. The **Release WordPress plugin** workflow builds the zip and publishes release `v<version>` with it; its notes come from the changelog entry.
-3. Sites pick it up within about 12 hours (WordPress checks twice a day), or straight away with **Check for updates now** in Settings → Notation Bible.
+3. Sites pick it up within about 12 hours (WordPress checks twice a day), or straight away with **Check for updates now** in Notation Bible → Settings.
 
 Changes to the app or Bible data reach WordPress sites only when the plugin version is raised.
