@@ -248,6 +248,7 @@ function applyMarks() {
     }
   }
   document.body.classList.toggle('nomarkup', !S.set.markup);
+  drawInk();
 }
 
 /* ---------- render chapter ---------- */
@@ -276,7 +277,7 @@ const noteBody = g => { const h = rich(g.n || ''), pen = `<button class="npen" d
 const notesFor = id => groups().filter(g => g.k === 'note' && g.items.some(a => a.a === id));
 function groups() {
   const m = new Map();
-  for (const a of S.ann) { if (!m.has(a.g)) m.set(a.g, { g: a.g, k: a.k, n: a.n, c: a.c, t: a.t, q: a.q, items: [] }); const g = m.get(a.g); g.items.push(a); if (a.n) g.n = a.n; }
+  for (const a of S.ann) { if (a.k === 'ink') continue; if (!m.has(a.g)) m.set(a.g, { g: a.g, k: a.k, n: a.n, c: a.c, t: a.t, q: a.q, items: [] }); const g = m.get(a.g); g.items.push(a); if (a.n) g.n = a.n; }
   return [...m.values()];
 }
 const ICON = {
@@ -643,6 +644,7 @@ function readSelection() {
   if (!targets.length) { if (selLabel) { selLabel = ''; renderToolbar(); } return; }
   if (tool === 'select') { markbar.hidden = true; return showCopy(); } // plain selection, with a Copy button
   if (tool === 'tree') { markbar.hidden = true; if (!ptrDown) { clearTimeout(toolT); toolT = setTimeout(() => { const tg = selTargets(); if (tg.length) { getSelection().removeAllRanges(); treeFrom(tg); } }, 500); } return; }
+  if (tool === 'pen') return; // the pen draws (see page ink)
   if (INK.includes(tool)) { markbar.hidden = true; if (!ptrDown) { clearTimeout(toolT); toolT = setTimeout(toolOnSelection, 700); } return; } // touch handles: apply once they settle
   // No tool in hand: the toolbar acts on the selection. Bring it out and say what's selected.
   selLabel = targets.length > 1 ? `${where(targets[0].a)} +${targets.length - 1}` : where(targets[0].a);
@@ -652,6 +654,7 @@ function readSelection() {
 let selLabel = '';
 function toolOnSelection() {
   clearTimeout(toolT);
+  if (tool === 'pen') return;
   if (tool === 'tree') { const tg = selTargets(); if (tg.length) { getSelection().removeAllRanges(); treeFrom(tg); } return; }
   if (!INK.includes(tool)) return;
   const tg = selTargets(); if (!tg.length) return;
@@ -674,7 +677,7 @@ let dragSel = false;
   const inText = c => c && c.node.nodeType === 3 && c.node.parentElement.closest('#reader [data-anchor]') && !c.node.parentElement.closest('[data-skip]');
   let st = null;
   reader.addEventListener('touchstart', e => {
-    st = null; if (e.touches.length !== 1) return;
+    st = null; if (e.touches.length !== 1 || tool === 'pen') return;
     const t = e.touches[0], c = caretAt(t.clientX, t.clientY);
     if (inText(c)) st = { x: t.clientX, y: t.clientY, c, on: false };
   }, { passive: true });
@@ -721,7 +724,7 @@ markbar.addEventListener('click', e => {
    [current tool] [current colour] [note]. Tool swaps the bar for pen / highlighter / eraser,
    Colour swaps it for that tool's colours; picking one brings the three buttons back.
    After a few idle seconds it tucks into a round button: the current tool over a line of its colour. */
-const HINTS = { hl: 'Select words, or tap a word, to highlight', pen: 'Select words, or tap a word, to underline', eraser: 'Rub over marks, or tap a word, to erase', sticky: 'Tap the word where the note goes', select: 'Select text to copy it', tree: 'Select the verses for your NoteTree, or tap a verse' };
+const HINTS = { hl: 'Select words, or tap a word, to highlight', pen: 'Draw on the page: circle, underline, scribble. Two fingers scroll', eraser: 'Rub over marks, or tap a word, to erase', sticky: 'Tap the word where the note goes', select: 'Select text to copy it', tree: 'Select the verses for your NoteTree, or tap a verse' };
 const TOOL_ICON = {
   hl: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 3.8l5.7 5.7-8.4 8.4H6.1v-5.7z"/><path class="tip" d="M6.1 12.2v5.7h5.7z"/></svg>',
   pen: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 3.5l4.5 4.5L9 19.5l-5.5 1 1-5.5z"/><path d="M13.5 6l4.5 4.5"/></svg>',
@@ -816,6 +819,7 @@ async function actOnSelection(k, color) {
   if (!tg.length) { selLabel = ''; return renderToolbar(); }
   if (color !== null) { if (k === 'eraser') S.set.eraseColor = color; else S.set.toolColor[k === 'pen' ? 'pen' : 'hl'] = color; }
   if (k === 'select') { const txt = copyText(tg); if (txt && await doCopy(txt)) toast('Copied'); getSelection().removeAllRanges(); selLabel = ''; return renderToolbar(); }
+  if (k === 'pen') { getSelection().removeAllRanges(); selLabel = ''; tool = 'pen'; S.set.lastTool = 'pen'; syncColor(); save(); renderToolbar(); return toast('Pen in hand: draw on the page'); }
   S.set.lastTool = k; syncColor();
   if (k === 'eraser') eraseRange(tg, S.set.eraseColor || ''); else addInk(k, tg, S.set.toolColor[k]);
   selLabel = ''; commit(); renderToolbar();
@@ -839,7 +843,7 @@ function wordAt(e, t) { // the word (or tagged phrase) under a tap, as an anchor
   return { a: anchor.dataset.anchor, s: offsetIn(anchor, c.node, i), e: offsetIn(anchor, c.node, j), el: anchor };
 }
 function toolTap(e, t) {
-  if (tool === 'select') return; // selecting text: taps do nothing
+  if (tool === 'select' || tool === 'pen') return; // selecting text, or drawing: taps don't mark words
   const w = wordAt(e, t); if (!w) return;
   if (tool === 'tree') return treeFrom([{ a: w.a }]);
   const text = anchorText(w.el);
@@ -887,6 +891,114 @@ function showCopy() {
   copyBtn.style.left = Math.round(Math.max(8, Math.min(first.left, innerWidth - w - 8)) + scrollX) + 'px';
   copyBtn.style.top = Math.round((above ? first.top - h - 10 : rects[rects.length - 1].bottom + 10) + scrollY) + 'px';
 }
+
+/* ---------- pen: free drawing on the page ----------
+   With the pen in hand, a finger, Apple Pencil or mouse draws straight onto the page: circle words,
+   underline, scribble in the margin. Each stroke is saved as an annotation of kind 'ink', tied to the
+   word nearest its middle (a = verse anchor, s = the word's first character) with its points in em from
+   that word's top-left, so a circle stays around its word when the text reflows. Two fingers scroll.
+   The eraser rubs strokes out (only its colour, when it has one). */
+const SVGNS = 'http://www.w3.org/2000/svg';
+const inkLayer = document.createElementNS(SVGNS, 'svg'); inkLayer.id = 'pageink'; inkLayer.setAttribute('aria-hidden', 'true');
+const inkGeom = new Map(); // stroke id -> points on the page (reader px), for the eraser
+const readerEm = () => parseFloat(getComputedStyle(reader).fontSize) || 19;
+function refPoint(a, s) { // top-left of the character at offset s of an anchor, in reader px
+  const el = reader.querySelector(`[data-anchor="${CSS.escape(a)}"]`); if (!el) return null;
+  let pos = 0, hit = null;
+  for (const n of textNodes(el)) { if (s < pos + n.length) { hit = [n, s - pos]; break; } pos += n.length; }
+  const R = reader.getBoundingClientRect(); let r;
+  if (hit) { const rg = document.createRange(); rg.setStart(hit[0], hit[1]); rg.setEnd(hit[0], Math.min(hit[1] + 1, hit[0].length)); r = rg.getClientRects()[0] || rg.getBoundingClientRect(); }
+  else r = el.getBoundingClientRect();
+  return r ? { x: r.left - R.left, y: r.top - R.top } : null;
+}
+function drawInk() {
+  if (inkLayer.parentNode !== reader) reader.appendChild(inkLayer);
+  inkLayer.setAttribute('width', reader.scrollWidth); inkLayer.setAttribute('height', reader.scrollHeight);
+  const em = readerEm(); inkGeom.clear(); let h = '';
+  for (const a of S.ann) {
+    if (a.k !== 'ink') continue;
+    const ref = refPoint(a.a, a.s); if (!ref) continue;
+    const pts = a.p.map(([x, y, pr]) => [ref.x + x * em, ref.y + y * em, pr]);
+    inkGeom.set(a.id, pts);
+    h += `<path data-id="${a.id}" class="tc-${a.c}" d="${inkOutline(pts, (a.w || .17) * em)}"/>`;
+  }
+  inkLayer.innerHTML = h + (inkLive ? inkLive.outerHTML : '');
+}
+let inkLive = null, inkCur = null, inkScroll = null, inkErasing = false, inkErased = false;
+const inkTouches = new Map();
+const readerPt = e => { const R = reader.getBoundingClientRect(); return [e.clientX - R.left, e.clientY - R.top, e.pointerType === 'mouse' ? .5 : (e.pressure || .5)]; };
+function inkAnchor(cx, cy) { // the word under the stroke's middle, or the nearest verse
+  const c = caretAt(cx, cy);
+  if (c && c.node.nodeType === 3 && !c.node.parentElement.closest('[data-skip]')) {
+    const el = c.node.parentElement.closest('#reader [data-anchor]');
+    if (el) { const tx = c.node.data, W = /[\p{L}\p{N}’'-]/u; let i = c.off; while (i > 0 && W.test(tx[i - 1])) i--; return { a: el.dataset.anchor, s: offsetIn(el, c.node, i) }; }
+  }
+  let best = null, bd = Infinity;
+  for (const el of reader.querySelectorAll('[data-anchor]')) {
+    if (el.closest('[data-skip]') || !/^[\w-]+\.\d+\.\d+$/.test(el.dataset.anchor)) continue;
+    const r = el.getBoundingClientRect(), d = cy < r.top ? r.top - cy : cy > r.bottom ? cy - r.bottom : 0;
+    if (d < bd) { bd = d; best = el; }
+  }
+  return best ? { a: best.dataset.anchor, s: 0 } : null;
+}
+function finishStroke() {
+  const cur = inkCur; inkCur = null; inkLive = null;
+  if (!cur || !cur.pts.length) return drawInk();
+  const R = reader.getBoundingClientRect(), xs = cur.pts.map(p => p[0]), ys = cur.pts.map(p => p[1]);
+  const cx = (Math.min(...xs) + Math.max(...xs)) / 2 + R.left, cy = (Math.min(...ys) + Math.max(...ys)) / 2 + R.top;
+  const anc = inkAnchor(cx, cy); if (!anc) return drawInk();
+  const ref = refPoint(anc.a, anc.s); if (!ref) return drawInk();
+  const em = readerEm(), r3 = v => Math.round(v * 1000) / 1000;
+  S.ann.push({ id: cur.id, g: cur.id, k: 'ink', a: anc.a, s: anc.s, c: cur.c, w: r3(PEN_W / em), p: cur.pts.map(([x, y, pr]) => [r3((x - ref.x) / em), r3((y - ref.y) / em), Math.round(pr * 100) / 100]), t: Date.now() });
+  save(); drawInk(); bumpIdle(); nudgeSignIn();
+}
+function eraseInkAt(pt) {
+  const em = readerEm(), reach = .55 * em, only = S.set.eraseColor || '';
+  const gone = [];
+  for (const [id, pts] of inkGeom) {
+    const a = S.ann.find(x => x.id === id); if (!a || (only && a.c !== only)) continue;
+    for (let i = 0; i < pts.length; i++) if (segDist(pt, pts[i], pts[Math.min(i + 1, pts.length - 1)]) < reach) { gone.push(id); break; }
+  }
+  if (gone.length) { S.ann = S.ann.filter(a => !gone.includes(a.id)); inkErased = true; drawInk(); }
+}
+reader.addEventListener('pointerdown', e => {
+  if (tool === 'eraser' && e.button === 0) { inkErasing = true; inkErased = false; eraseInkAt(readerPt(e)); return; }
+  if (tool !== 'pen' || (e.pointerType === 'mouse' && e.button !== 0)) return;
+  inkTouches.set(e.pointerId, [e.clientX, e.clientY]);
+  if (inkTouches.size > 1) { // a second finger: scroll instead of drawing
+    inkCur = null; inkLive = null; drawInk();
+    inkScroll = [...inkTouches.values()].reduce((s, p) => s + p[1], 0) / inkTouches.size; return;
+  }
+  e.preventDefault(); closeNotePop();
+  try { reader.setPointerCapture(e.pointerId); } catch {}
+  inkCur = { id: uid(), c: S.set.toolColor.pen, pts: [readerPt(e)] };
+  inkLive = document.createElementNS(SVGNS, 'path'); inkLive.setAttribute('class', 'tc-' + inkCur.c);
+  inkLive.setAttribute('d', inkOutline(inkCur.pts)); inkLayer.appendChild(inkLive);
+});
+reader.addEventListener('pointermove', e => {
+  if (inkErasing && tool === 'eraser') return eraseInkAt(readerPt(e));
+  if (tool !== 'pen') return;
+  if (inkTouches.has(e.pointerId)) inkTouches.set(e.pointerId, [e.clientX, e.clientY]);
+  if (inkTouches.size > 1 && inkScroll != null) {
+    const y = [...inkTouches.values()].reduce((s, p) => s + p[1], 0) / inkTouches.size;
+    scrollBy(0, inkScroll - y); inkScroll = y; return;
+  }
+  if (!inkCur) return;
+  const evs = e.getCoalescedEvents?.() || []; for (const ev of (evs.length ? evs : [e])) {
+    const p = readerPt(ev), l = inkCur.pts[inkCur.pts.length - 1];
+    if (Math.hypot(p[0] - l[0], p[1] - l[1]) >= 1.2) inkCur.pts.push(p);
+  }
+  inkLive.setAttribute('d', inkOutline(inkCur.pts));
+});
+const inkUp = e => {
+  if (inkErasing) { inkErasing = false; if (inkErased) { save(); inkErased = false; } }
+  inkTouches.delete(e.pointerId);
+  if (inkTouches.size < 2) inkScroll = null;
+  if (inkCur && tool === 'pen') finishStroke();
+};
+reader.addEventListener('pointerup', inkUp); reader.addEventListener('pointercancel', inkUp);
+let inkResizeT; addEventListener('resize', () => { clearTimeout(inkResizeT); inkResizeT = setTimeout(drawInk, 120); });
+document.fonts?.ready.then(() => drawInk());
 
 /* ---------- notes (with dictation) ---------- */
 // After something is highlighted, a small note card pops up under it. Writing in it adds a note
@@ -1087,11 +1199,11 @@ const ntPath = p => { // smooth a point list into a quadratic curve
 // Pen strokes are drawn as filled outlines so their width follows Apple Pencil pressure
 // (points are [x, y, pressure]; mouse and finger strokes have no pressure and draw at an even width).
 const PEN_W = 3.2;
-function inkOutline(pts) {
+function inkOutline(pts, W = PEN_W) {
   const n = pts.length, pr = i => { // pressure, smoothed over neighbours so the edge doesn't wobble
     let t = 0, c = 0; for (let k = Math.max(0, i - 2); k <= Math.min(n - 1, i + 2); k++) { t += pts[k][2] ?? .5; c++; } return t / c;
   };
-  const half = i => PEN_W * (.3 + 1.4 * pr(i)) / 2;
+  const half = i => W * (.3 + 1.4 * pr(i)) / 2;
   if (n < 2) { const [x, y] = pts[0], r = half(0); return `M${x - r} ${y}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0Z`; }
   const L = [], R = [];
   for (let i = 0; i < n; i++) {
@@ -1422,6 +1534,7 @@ document.addEventListener('click', async e => {
   if (q('[data-open]')) return openAnchor(q('[data-open]').dataset.open);
   if (q('[data-study]')) return openStudy(q('[data-study]').dataset.study);
   if (q('[data-note]')) { e.preventDefault(); return noteEditor({ g: q('[data-note]').dataset.note }); }
+  if (tool === 'pen' && q('#reader') && !q('.mynote .npen')) return; // drawing: taps on the page don't open panels
   if (tool && q('[data-anchor]') && getSelection().isCollapsed && !q('a, button, [role=button], .vn')) return toolTap(e, t);
   if (q('mark.mk-note')) { const a = S.ann.find(x => x.id === q('mark.mk-note').dataset.aid); if (a && getSelection().isCollapsed) return noteEditor({ g: a.g }); }
   if (q('[data-read]')) { const v = +q('[data-read]').dataset.read; closeSheet(); return startReading(v); }

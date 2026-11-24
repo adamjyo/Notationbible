@@ -451,3 +451,9 @@ body.nt-open .dock{z-index:30}
 /* notes under verses are handwritten */
 .ib.mynote>div,.preview.notebg{font:400 17px/1.5 'Architects Daughter','Segoe Print','Bradley Hand',cursive;letter-spacing:.01em}
 .ib.mynote>div p{margin:0 0 .35em}.ib.mynote>div p:last-child{margin-bottom:0}
+/* pen: free drawing on the page */
+.reader{position:relative}
+#pageink{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;z-index:2}
+#pageink path{fill:currentColor;stroke:none}
+.nomarkup #pageink{display:none}
+body[data-active-tool=pen] #reader{-webkit-user-select:none;user-select:none;touch-action:none;cursor:crosshair;-webkit-touch-callout:none}
