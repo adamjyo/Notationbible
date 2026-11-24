@@ -6,7 +6,7 @@ The Bible text is stored once, as tokens. Every study aid is a separate **layer*
 
 - **Off**: not rendered.
 - **Markers**: a small mark in the text. Tapping it opens the verse panel.
-- **Inline**: expanded under the verse. Any inline layer switches the page to verse-by-verse layout.
+- **Inline**: expanded under the verse. In paragraph layout the text keeps flowing and breaks only where an inline block sits.
 
 Strong's has its own modes: *Tap words* (dotted words open the lexicon) and *Numbers* (superscript numbers). The interlinear is on or off. Presets just set all modes at once.
 

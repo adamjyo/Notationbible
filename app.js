@@ -177,8 +177,8 @@ async function render() {
     reader.innerHTML = head + `<div class="missing"><h3>${esc(label(b, c))} isn't in this data set yet</h3><p>Run the import in <code>scripts/</code> to add the full Berean Standard Bible. Chapters available now: ${have.join(' · ')}</p></div>`;
     return;
   }
-  const inlineAny = L.interlinear === 'inline' || ['footnotes', 'xrefs', 'commentary', 'studies', 'notes'].some(k => L[k] === 'inline');
-  const verseMode = inlineAny || S.set.layout === 'verse';
+  // Paragraph layout keeps flowing; an inline note or other layer block breaks the text only where it sits.
+  const verseMode = S.set.layout === 'verse';
   reader.className = 'reader' + (verseMode ? ' verse' : '') + (S.set.nums ? '' : ' nonum') + (L.interlinear === 'inline' ? ' interlinear' : '');
   reader.style.setProperty('--size', S.set.size + 'px');
   reader.style.setProperty('--text', S.set.font === 'sans' ? 'var(--sans)' : 'var(--serif)');
@@ -526,7 +526,7 @@ function openSettings() {
     <div><label>Highlights and markup</label>${seg('markup', S.set.markup, [[true, 'Show'], [false, 'Hide']])}</div>
     <div><label for="sz">Text size</label><div class="range"><input id="sz" type="range" min="15" max="26" step="1" value="${S.set.size}"><output id="szo">${S.set.size}px</output></div></div>
     <div><label>Typeface</label>${seg('font', S.set.font, [['serif', 'Serif'], ['sans', 'Sans']])}</div>
-    <div><label>Layout</label>${seg('layout', S.set.layout, [['para', 'Paragraph'], ['verse', 'Verse by verse']])}<p class="hint">Inline layers always use verse by verse.</p></div>
+    <div><label>Layout</label>${seg('layout', S.set.layout, [['para', 'Paragraph'], ['verse', 'Verse by verse']])}<p class="hint">In paragraph layout, inline notes and layers break the text only where they appear.</p></div>
     <div><label>Verse numbers</label>${seg('nums', S.set.nums, [[true, 'Show'], [false, 'Hide']])}</div>
     <div><label for="voice">Read-aloud voice</label><select id="voice"><option value="">System default</option>${vs.map(v => `<option value="${esc(v.voiceURI)}" ${v.voiceURI === S.set.voice ? 'selected' : ''}>${esc(v.name)} (${esc(v.lang)})</option>`).join('')}</select></div>
     <div><label>When a chapter ends</label>${seg('cont', S.set.cont, [[true, 'Keep reading'], [false, 'Stop']])}</div>
