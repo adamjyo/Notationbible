@@ -405,15 +405,12 @@ const MI = {
 };
 function renderMenu() {
   const L = S.set.layers, n = groups().length;
-  const preset = Object.entries(PRESETS).find(([, p]) => LAYERS.every(l => p[l.k] === L[l.k]))?.[0] || '';
   const sw = (k, on, name, sub) => `<button class="mi" role="menuitemcheckbox" aria-checked="${on}" data-layer="${k}"><span class="lab">${name}</span>${sub ? `<span class="sub">${sub}</span>` : ''}<span class="sw" aria-hidden="true"></span></button>`;
   menu.innerHTML = `${ACCT.api ? `<button class="mi" role="menuitem" id="acctbtn">${MI.user}<span class="lab">${ACCT.reader ? esc(ACCT.reader.name) : 'Sign in'}</span><span class="sub">${ACCT.reader ? syncLabel() : 'save notes to an account'}</span></button><hr>` : ''}<h4>Tools</h4>
     <button class="mi${speech.on ? ' live' : ''}" role="menuitem" id="playbtn">${MI.read}<span class="lab">${speech.on ? 'Stop reading aloud' : 'Read aloud'}</span></button>
-    <button class="mi" role="menuitem" id="gotobtn">${MI.goto}<span class="lab">Go to book and chapter</span></button>
     <button class="mi" role="menuitem" id="studybtn">${MI.study}<span class="lab">Bible studies</span></button>
     <button class="mi" role="menuitem" id="savedbtn">${MI.saved}<span class="lab">Highlights &amp; notes</span>${n ? `<span class="sub">${n}</span>` : ''}</button>
     <hr><h4>Show</h4>
-    <div class="seg" role="group" aria-label="Presets">${[['reading', 'Reading'], ['study', 'Study'], ['original', 'Original']].map(([k, t]) => `<button data-preset="${k}" aria-pressed="${preset === k}">${t}</button>`).join('')}</div>
     ${LAYERS.map(l => sw(l.k, L[l.k] !== 'off', l.name, L[l.k] !== 'off' && l.modes.length > 2 ? l.labels[L[l.k]] : '')).join('')}
     ${sw('markup', S.set.markup, 'Highlights &amp; markup', '')}
     ${sw('darkmode', isDark(), 'Dark mode', S.set.theme === 'system' ? 'System' : '')}
@@ -1616,10 +1613,8 @@ document.addEventListener('click', async e => {
   if (q('#menubtn')) return menu.hidden ? openMenu() : closeMenu(true);
   if (menu.contains(t)) {
     if (q('[data-layer]')) return toggleLayer(q('[data-layer]').dataset.layer);
-    if (q('[data-preset]')) { Object.assign(S.set.layers, PRESETS[q('[data-preset]').dataset.preset]); save(); render(); renderMenu(); return; }
     closeMenu();
     if (q('#playbtn')) return speech.on ? stopReading() : startReading(cur.v || 1);
-    if (q('#gotobtn')) return openPicker();
     if (q('#treesbtn')) return openTreesList();
     if (q('#plansbtn')) return openPlans();
     if (q('#acctbtn')) return openAccount();
