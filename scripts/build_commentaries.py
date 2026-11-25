@@ -34,29 +34,29 @@ OSIS_NAME = dict(zip(OSIS, NAMES))
 PD = 'Public domain'
 
 SOURCES = [
-    dict(id='matthew-henry', name='Matthew Henry', short='Henry', kind='helloao', src='matthew-henry',
+    dict(id='matthew-henry', span='passage', name='Matthew Henry', short='Henry', kind='helloao', src='matthew-henry',
          about='Commentary on the Whole Bible (1706–21). Warm, devotional and practical.', license=PD),
     dict(id='tyndale', name='Tyndale Open Study Notes', short='Tyndale', kind='helloao', src='tyndale',
          about='Modern study-Bible notes.', license='CC BY-SA 4.0',
          credit='Tyndale Open Study Notes © 2022 Tyndale House Publishers, licensed CC BY-SA 4.0 '
                 '(creativecommons.org/licenses/by-sa/4.0). Free at tyndaleopenresources.com.'),
-    dict(id='calvin', name='John Calvin', short='Calvin', kind='helloao', src='john-calvin',
+    dict(id='calvin', span='passage', name='John Calvin', short='Calvin', kind='helloao', src='john-calvin',
          about="Calvin's Commentaries (1540s–1560s), on the books he wrote about.", license=PD),
     dict(id='barnes', name="Barnes' Notes", short='Barnes', kind='helloao', src='barnes',
          about="Albert Barnes, Notes on the New Testament (1832–51). Plain and clear.", license=PD),
     dict(id='geneva', name='Geneva Bible Notes (1599)', short='Geneva', kind='helloao', src='geneva',
          about='The marginal notes of the 1599 Geneva Bible.', license=PD),
-    dict(id='meyer', name='F. B. Meyer', short='Meyer', kind='pillar', src='fbmeyer',
+    dict(id='meyer', span='passage', name='F. B. Meyer', short='Meyer', kind='pillar', src='fbmeyer',
          about='Through the Bible Day by Day (1914–18). Short devotional readings.', license=PD),
     dict(id='treasury-of-david', name="Spurgeon's Treasury of David", short='Spurgeon', kind='tdavid', src='TDavid.zip',
          about="C. H. Spurgeon's exposition of the Psalms (1869–85).", license=PD),
     dict(id='poole', name='Matthew Poole', short='Poole', kind='sword', src='sipoole.zip',
          about="Annotations upon the Holy Bible (1683–85).", license=PD),
-    dict(id='pulpit', name='Pulpit Commentary', short='Pulpit', kind='sword', src='sipulpit.zip',
+    dict(id='pulpit', span='passage', name='Pulpit Commentary', short='Pulpit', kind='sword', src='sipulpit.zip',
          about='The Pulpit Commentary (1880–1919), exposition.', license=PD),
     dict(id='ellicott', name="Ellicott's Commentary", short='Ellicott', kind='sword', src='siellicott.zip',
          about='Commentary for English Readers (1878–84).', license=PD),
-    dict(id='maclaren', name="MacLaren's Expositions", short='MacLaren', kind='sword', src='simaclaren.zip',
+    dict(id='maclaren', span='passage', name="MacLaren's Expositions", short='MacLaren', kind='sword', src='simaclaren.zip',
          about='Alexander MacLaren, Expositions of Holy Scripture (1904–10): sermons on passages.', license=PD),
 ]
 REPORT = []
@@ -268,6 +268,25 @@ def devotional(raw):
 
 
 # ---------------------------------------------------------------- output
+def spans(per, v11n):
+    """Passage commentaries store a comment under its first verse; give each the range it covers:
+    up to the verse before the next comment, or to the end of the chapter."""
+    out = {}
+    for b, d in per.items():
+        starts = collections.defaultdict(list)
+        for k in d:
+            c, vv = k.split(':'); a, _, z = vv.partition('-')
+            starts[int(c)].append((int(a), int(z or a), k))
+        nd = {}
+        for c, lst in starts.items():
+            lst.sort(); last = v11n[b][c - 1] if c - 1 < len(v11n[b]) else lst[-1][1]
+            for i, (a, z, k) in enumerate(lst):
+                end = max(z, (lst[i + 1][0] - 1) if i + 1 < len(lst) else last)
+                nd[f'{c}:{a}' + (f'-{end}' if end > a else '')] = d[k]
+        out[b] = nd
+    return out
+
+
 def write_pack(out, s, per):
     d = os.path.join(out, s['id']); os.makedirs(d, exist_ok=True)
     size = 0
@@ -315,6 +334,7 @@ def main():
         except Exception as e:
             import traceback; REPORT.append(f"- **{s['id']}** FAILED: {e!r}\n```\n{traceback.format_exc()[-1500:]}\n```"); continue
         if not per: REPORT.append(f"- **{s['id']}**: nothing imported"); continue
+        if s.get('span') == 'passage': per = spans(per, v11n)
         meta, per = write_pack(a.out, s, per); metas.append(meta)
         for b, c, v in (('john', 3, 16), ('psalms', 23, 1), ('genesis', 1, 1), ('romans', 8, 28)):
             k, t = sample(per, b, c, v)
