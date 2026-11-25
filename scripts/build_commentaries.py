@@ -83,7 +83,12 @@ def osis_to_text(s):
     s = re.sub(r'<reference[^>]*osisRef="([^"]+)"[^>]*>(.*?)</reference>', ref, s, flags=re.S)
     s = re.sub(r'<scripRef[^>]*passage="([^"]+)"[^>]*>(.*?)</scripRef>', lambda m: strip_tags(m.group(2)), s, flags=re.S)
     def emph(mark):
-        return lambda m: '\n'.join(f'{mark}{x.strip()}{mark}' if x.strip() else '' for x in strip_tags(m.group(2)).split('\n'))
+        # keep the spaces at the edges outside the markers: "<hi>dearly </hi><hi>purchased</hi>"
+        def one(x):
+            if not x.strip(): return x
+            lead, trail = x[:len(x) - len(x.lstrip())], x[len(x.rstrip()):]
+            return f'{lead}{mark}{x.strip()}{mark}{trail}'
+        return lambda m: '\n'.join(one(x) for x in strip_tags(m.group(2)).split('\n'))
     s = re.sub(r'<hi type="(italic|emphasis)">(.*?)</hi>', emph('*'), s, flags=re.S)
     s = re.sub(r'<(i|em)>(.*?)</\1>', emph('*'), s, flags=re.S)
     s = re.sub(r'<hi type="(bold)">(.*?)</hi>', emph('**'), s, flags=re.S)
@@ -111,7 +116,6 @@ def tidy(s):
     s = re.sub(r'‘ (?=\w)', '‘', s)
     s = re.sub(r'[ \t]+', ' ', s)
     s = re.sub(r' *\n *', '\n', s)
-    s = re.sub(r'\*\*\s*\*\*|(?<!\*)\*[ \t]+\*(?!\*)', '', s)   # empty bold / italic
     s = re.sub(r'\n{3,}', '\n\n', s)
     return s.strip()
 
