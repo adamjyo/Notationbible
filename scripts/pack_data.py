@@ -11,7 +11,7 @@ The app reads the list of packed folders from manifest.packed. Big per-book laye
 import json, os, shutil
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, 'data')
-PACK = ['footnotes', 'tr/kjv', 'tr/asv', 'tr/ylt', 'tr/web', 'commentary/scofield', 'commentary/preview', 'places/v', 'topics/v']
+PACK = ['footnotes', 'tr/kjv', 'tr/asv', 'tr/ylt', 'tr/web', 'places/v', 'topics/v']
 mf = os.path.join(DATA, 'manifest.json'); m = json.load(open(mf, encoding='utf-8'))
 packed = set(m.get('packed', []))
 for d in PACK:

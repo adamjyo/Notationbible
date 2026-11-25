@@ -209,7 +209,7 @@ def main():
     dictionary(a.raw); topics(a.raw); places(a.raw)
     mf = os.path.join(DATA, 'manifest.json'); m = json.load(open(mf, encoding='utf-8'))
     L = m.setdefault('layers', {})
-    L['commentary'] = [c for c in L.get('commentary', []) if c['id'] == 'preview'] + coms
+    L['commentary'] = coms
     L['translations'] = [{'id': t, 'abbr': t.upper(), 'name': {'kjv': 'King James Version', 'asv': 'American Standard Version (1901)', 'web': 'World English Bible', 'ylt': "Young's Literal Translation"}[t], 'books': bs} for t, bs in trs.items()]
     L['dictionary'] = {'source': "Easton's Bible Dictionary (1897), public domain"}
     L['topics'] = {'source': "Nave's Topical Bible and Torrey's New Topical Textbook, public domain; data from topical-bible-search (MIT)"}

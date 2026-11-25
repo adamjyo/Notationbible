@@ -1474,16 +1474,6 @@
   },
   "commentary": [
    {
-    "id": "preview",
-    "name": "Preview commentary",
-    "books": [
-     "john",
-     "genesis",
-     "psalms"
-    ],
-    "note": "Written for the preview. The import adds public-domain commentaries such as Matthew Henry."
-   },
-   {
     "id": "jfb",
     "name": "Jamieson-Fausset-Brown",
     "books": [
@@ -1795,7 +1785,6 @@
   }
  },
  "packed": [
-  "commentary/preview",
   "footnotes",
   "places/v",
   "topics/v",
