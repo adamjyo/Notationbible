@@ -93,6 +93,10 @@ function parseRef(q) {
   if (!b) return null;
   return { b: b.id, c: Math.min(+(m[2] || 1), b.ch), v: m[3] ? +m[3] : null };
 }
+// standard short names, used in the passage bar on phones so it stays centred
+const SHORT = { 'Deuteronomy': 'Deut', '1 Chronicles': '1 Chr', '2 Chronicles': '2 Chr', 'Ecclesiastes': 'Eccl', 'Song of Solomon': 'Song', 'Lamentations': 'Lam',
+  '1 Corinthians': '1 Cor', '2 Corinthians': '2 Cor', 'Philippians': 'Phil', 'Colossians': 'Col', '1 Thessalonians': '1 Thess', '2 Thessalonians': '2 Thess', 'Revelation': 'Rev',
+  'Zephaniah': 'Zeph', 'Zechariah': 'Zech', 'Leviticus': 'Lev', 'Galatians': 'Gal', 'Ephesians': 'Eph', 'Habakkuk': 'Hab', 'Nehemiah': 'Neh', 'Philemon': 'Phlm' };
 const hashOf = (b, c, v) => `#${b}-${c}${v ? '-' + v : ''}`;
 function parseHash(h) {
   h = h.replace(/^#/, '');
@@ -290,14 +294,15 @@ const ICON = {
 
 async function render() {
   const { b, c } = cur, book = BY[b];
-  $('#reflabel').textContent = label(b, c);
+  { const full = label(b, c), name = BY[b]?.name || '', short = SHORT[name] ? full.replace(name, SHORT[name]) : full;
+    $('#reflabel').innerHTML = `<span class="lfull">${esc(full)}</span><span class="lshort" aria-hidden="true">${esc(short)}</span>`; }
   setTitle();
   chap = await loadChapter(b, c);
   const L = S.set.layers;
   const pr = prevOf(b, c), nx = nextOf(b, c);
   $('#pprev').textContent = pr ? '← ' + label(pr.b, pr.c) : ''; $('#pprev').href = pr ? hashOf(pr.b, pr.c) : '#';
   $('#pnext').textContent = nx ? label(nx.b, nx.c) + ' →' : ''; $('#pnext').href = nx ? hashOf(nx.b, nx.c) : '#';
-  const head = `<header class="chead"><h1 class="cbook">${esc(book.name)}</h1><p class="csub"><span class="cnum">${b === 'psalms' ? 'Psalm' : 'Chapter'} ${c}</span><span>Berean Standard Bible</span></p></header>` +
+  const head = `<header class="chead"><h1 class="cbook">${esc(book.name)}</h1><p class="csub"><span class="cnum">${b === 'psalms' ? 'Psalm' : 'Chapter'} ${c}</span></p></header>` +
     (M.demoNote ? `<p class="sample">${esc(M.demoNote)}</p>` : '') + (M.sample ? `<p class="sample">Preview data: a few sample chapters with hand-entered Strong's tags. Footnotes, commentary and the study here are samples; the import scripts bring in the full BSB and real sources.</p>` : '');
   if (!chap.verses) {
     const have = Object.entries(M.books).flatMap(([bk, chs]) => Object.keys(chs).map(ch => `<a href="${hashOf(bk, ch)}">${label(bk, ch)}</a>`));
@@ -1181,7 +1186,7 @@ function openNoteTree(from, to) {
 function closeNoteTree() { ntFlush(); ntEl.hidden = true; document.body.classList.remove('nt-open'); nt = null; render(); }
 function ntRenderText() {
   const vs = chap.verses.slice(nt.from - 1, nt.to);
-  $('#nttext').innerHTML = `<p class="ntcap">${esc(treeLabel(nt.key))} · Berean Standard Bible</p>` + vs.map((toks, i) => {
+  $('#nttext').innerHTML = `<p class="ntcap">${esc(treeLabel(nt.key))}</p>` + vs.map((toks, i) => {
     const n = nt.from + i, id = `${chap.b}.${chap.c}.${n}`;
     return `<span class="v" data-anchor="${id}"><sup class="vn" data-skip>${n}</sup>${toks.map(t => typeof t === 'string' ? esc(t) : lord(t[0])).join('')}</span> `;
   }).join('');

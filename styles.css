@@ -348,7 +348,7 @@ body.nt-open .dock{z-index:30}
 @media (max-width:699px){.ntonly{display:none}.nthead{padding:6px 10px}.ntt span{font-size:12px}}
 
 @media (max-width:640px){
-  .bar{grid-template-columns:auto 1fr auto;gap:0;padding:2px 4px}
+  .bar{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:0;padding:2px 4px} /* equal sides keep the passage bar centred */
   .brand span,.tr{display:none}
   .menubtn{padding:2px 4px}
   .menu{top:52px;right:8px}
@@ -457,3 +457,16 @@ body.nt-open .dock{z-index:30}
 #pageink path{fill:currentColor;stroke:none}
 .nomarkup #pageink{display:none}
 body[data-active-tool=pen] #reader{-webkit-user-select:none;user-select:none;touch-action:none;cursor:crosshair;-webkit-touch-callout:none}
+/* phones: the passage name shortens rather than pushing the bar off centre */
+#reflabel .lshort{display:none}
+@media (max-width:640px){
+  #reflabel .lfull{display:none}#reflabel .lshort{display:inline}
+  #reflabel{display:block;max-width:calc(100vw - 2 * 94px - 2 * 38px - 30px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .refnav{gap:0}.refnav>.ico{width:38px}.refbtn{padding:0 4px;gap:2px}.refbtn .caret{width:14px;height:14px}
+}
+@media (max-width:380px){
+  .tools .ico{width:36px}.menubtn{min-width:42px;padding:2px 2px;margin-left:0}.menubtn svg{width:38px;height:32px}
+  .refnav>.ico{width:34px}
+  #reflabel{max-width:calc(100vw - 2 * 80px - 2 * 34px - 24px)}
+}
+@media (max-width:340px){ #hsearch{display:none} #reflabel{max-width:calc(100vw - 2 * 44px - 2 * 34px - 20px)} }

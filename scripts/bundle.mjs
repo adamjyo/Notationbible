@@ -37,7 +37,6 @@ if (mf && !mf.sample) {
   for (const t of mf.layers.translations || []) t.books = t.books.filter(b => KEEP.has(b));
   for (const c of mf.layers.commentary || []) if (c.id === 'jfb') c.books = c.books.filter(b => KEEP.has(b));
   const names = [...KEEP].map(b => b[0].toUpperCase() + b.slice(1)).join(', ');
-  mf.demoNote = `Demo file: the complete Berean Standard Bible is here; interlinear, Jamieson-Fausset-Brown, other translations and topics are included for ${names}. The published app has them for every book.`;
 }
 // keep only the topics that the demo's verse links use
 const usedTopics = new Set();

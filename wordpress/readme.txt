@@ -4,7 +4,7 @@ Tags: bible, scripture, strongs, interlinear, commentary
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.9.0
+Stable tag: 1.9.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -33,6 +33,10 @@ Put the reader in any page or post with the shortcode:
 The plugin updates itself from its GitHub releases (https://github.com/adamjyo/notationbible/releases). WordPress shows new versions on the Plugins and Updates screens like any other plugin, and automatic updates are switched on when the plugin is first activated. Notation Bible → Settings shows the installed and latest versions and has a "Check for updates now" button.
 
 == Changelog ==
+
+= 1.9.1 =
+* Removed the BSB badge and the "Berean Standard Bible" label under chapter titles (until more translations are offered).
+* Phones: the passage bar is centred at the top; long book names are shortened there (Song 8, 1 Thess 5).
 
 = 1.9.0 =
 * The pen draws freely on the page: circle words, underline, scribble in the margins, with a finger, Apple Pencil or mouse. Each drawing is tied to the word nearest its middle, so it stays in place when the text size or screen width changes. On phones and tablets two fingers scroll while the pen is in hand. The eraser rubs drawings out (only its colour, when it has one). Drawings sync with reader accounts.
