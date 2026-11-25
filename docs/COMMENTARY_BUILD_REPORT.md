@@ -11,7 +11,7 @@
 - geneva: 1161 chapters requested, 2 unavailable
 - **geneva**: 14,680 comments in 63 books, 4.6 MB JSON, 1.6 MB zipped
 - **meyer**: 1,940 comments in 62 books, 2.2 MB JSON, 0.9 MB zipped
-- **treasury-of-david**: 163 comments in 1 books, 3.3 MB JSON, 1.2 MB zipped
+- **treasury-of-david**: 2,213 comments in 1 books, 3.4 MB JSON, 1.2 MB zipped
 - **poole**: 24,946 comments in 66 books, 18.5 MB JSON, 6.4 MB zipped
 - **pulpit**: 1,451 comments in 66 books, 25.2 MB JSON, 9.4 MB zipped
 - **ellicott**: 23,313 comments in 66 books, 20.0 MB JSON, 7.2 MB zipped
@@ -20,9 +20,13 @@
 
 ## Samples
 
-### matthew-henry · psalms 23:1
+### matthew-henry · john 3:1-21
 ```
-Many of David's psalms are full of complaints, but this is full of comforts, and the expressions of delight in God's great goodness and dependence upon him. It is a psalm which has been sung by good Christians, and will be while the world stands, with a great deal of pleasure and satisfaction. I. The psalmist here claims relation to God, as his shepherd (Psa 23:1). II. He recounts his experience of the kind things God had done for him as his shepherd (Psa 23:2, Psa 23:3, Psa 23:5). III. Hence he infers that he should want no good (Psa 23:1), that he needed to fear no evil (Psa 23:4), that God would never leave nor forsake him in a way of mercy; and therefore he resolves never to leave nor forsake God in a way of duty (Psa 23:6). In this he had certainly an eye, not only to the blessings of God's providence, which made his outward condition prosperous, but to the communications of God's g
+In this chapter we have, I. Christ's discourse with Nicodemus, a Pharisee, concerning the great mysteries of the gospel, in which he here privately instructs him (v. 1-21). II. John Baptist's discourse with his disciples concerning Christ, upon occasion of his coming into the neighbourhood where John was (Joh 3:22-36), in which he fairly and faithfully resigns all his honour and interest to him.
+
+We found, in the close of the foregoing chapter, that few were brought to Christ at Jerusalem; yet here was one, a considerable one. It is worth while to go a great way for the salvation though but of one soul. Observe,
+
+I. Who this Nicodemus was. Not many mighty and noble are called; yet some are, and here was one. Not many of the rulers, or of the Pharisees; yet. 1. This was a man of the Pharisees, bred to learning, a scholar. Let it not be said that all Christ's followers are unlearned and ig
 ```
 
 ### tyndale · john 3:16
@@ -30,13 +34,13 @@ Many of David's psalms are full of complaints, but this is full of comforts, and
 3:16-21 Because there are no quotation marks around Jesus’ speech in the Greek text, translators debate where Jesus’ speech ends and John’s commentary begins; 3:16-21 might be John’s commentary. 3:16 The truth that God loved the world is basic to Christian understanding (1 Jn 4:9-10). God’s love extends beyond the limits of race and nation, even to those who oppose him (see “The World” Theme Note). • The Son came to save—not condemn (3:17)—men and women who habitually embrace the darkness (3:19-21).
 ```
 
-### calvin · psalms 23:1
+### calvin · john 3:13-18
 ```
-Psalm 23:1-4
+John 3:13-18
 
-1. Jehovah is my shepherd, I shall not want. [529] 2. He maketh me to lie down in pastures of grass; he leadeth me to gently flowing waters. [530] 3. He restoreth my soul; he leadeth me by the paths of righteousness for his name's sake. 4. Though I should walk in the valley of the shadow of death, I will fear no evil: for thou art with me; thy staff and thy crook comfort me.
+13. And [61] no one hath ascended to heaven but he who came down from heaven, the Son of man who is in heaven. 14. And as Moses lifted up the serpent in the wilderness, so must the Son of man be lifted up; 15. That whosoever believeth in him may not perish, but have eternal life. 16. For God so loved the world, that he gave his only-begotten Son; that whosoever believeth in him may not perish, but may have eternal life. 17. For God hath not sent his Son into the world to condemn the world, but that the world may be saved by him. 18. He who believeth in him is not condemned; but he who believeth not is condemned already, because he hath not believed in the name of the only-begotten Son of God.
 
-1. Jehovah is my shepherd. Although God, by his benefits, gently allures us to himself, as it were by a taste of his fatherly sweetness, yet there is nothing into which we more easily fall than into a forgetfulness of him, when we are in the enjoyment of peace and comfort. Yea, prosperity not only so intoxicates many, as to carry them beyond all bounds in their mirth, but it also engenders insolence, which makes them proudly rise up and break forth against God. Accordingly, there is scarcely a hundredt
+13. No one hath ascended to heaven. He again exhorts Nicodemus not to trust to himself and his own sagacity, because no mortal man can, by his own unaided powers, enter into heaven, b
 ```
 
 ### barnes · john 3:16
@@ -57,18 +61,16 @@ The world. All mankind. It does not mean any particular part of the world, but m
 (5) Nothing else but the free love of the Father is the beginning of our salvation, and Christ is he in whom our righteousness and salvation dwells: and faith is the instrument or means by which we apprehend it, and everlasting life is that which is set before us to apprehend. (o) It is not the same to believe in a thing, and to believe about a thing, for we may not believe in anything except in God alone, but we may believe about anything whatever, says Nazianzene in his Oration of the Spirit.
 ```
 
-### meyer · psalms 23:1
+### meyer · john 3:9-21
 ```
-**The Song of the Good Shepherd** · Psalms 23:1-6
+**Love’s Great Gift: Received or Rejected** · John 3:9-21
 
-A sabbatic rest breathes through this psalm, the children’s favorite; while the oldest and holiest confess that it touches an experience which still lies before them. Here is no strife, no fear, no denunciation, and no self-vindication.
+Though physically on earth, our Lord was spiritually in touch with the heavenly realities. He was living among them and bore witness to them. Notice that must, John 3:14. He was the Lamb slain from the foundation of the world, and the divine purpose of redemption would fail unless He fulfilled His part in the eternal compact. That which had been resolved upon before the foundations of the hills were laid must be carried out in all its terrible detail. He must be accounted as a sin offering, and go forth as a scapegoat. He must tread the winepress alone, and pour out His soul unto death. Yet He was not rebellious, nor did He turn back. He rejoiced to do the Father’s will. For the joy that was set before Him, He endured the Cross.
 
-Jehovah is represented as the Shepherd, the Guide, and the Host of His people. We are taught to think less of our attitude toward Him and more of His responsibility for us. The flock does not keep the shepherd, but the shepherd keeps the flock. Look away from yourself and trust Him with all, in all, and for all.
-
-Let God see to your wants. You need nothing outside of Him. His pastures are “tender grass;” His waters, “waters of rest.” He refreshes us when exhausted; heals when diseased; restores from wandering; leads in right paths, though steep; accompanies us into the valley with club for our foes and c
+Redemption originated in God’s great love. Notice the pairs in John 3:16 : God and the Son; loved and
 ```
 
-### treasury-of-david · psalms 23:1-6
+### treasury-of-david · psalms 23:1
 ```
 *There is no inspired title to this psalm, and none is needed, for it records no special event, and needs no other key than that which every Christian may find in his own bosom. It is David's* Heavenly Pastoral; *a surpassing ode, which none of the daughters of music can excel. The clarion of war here gives place to the pipe of peace, and he who so lately bewailed the woes of the Shepherd tunefully rehearses the joys of the flock. Sitting under a spreading tree, with his flock around him, like Bunyan's shepherd-boy in the Valley of Humiliation, we picture David singing this unrivalled pastoral with a heart as full of gladness as it could hold; or, if the psalm be the product of his after-years, we are sure that his soul returned in contemplation to the lonely water-brooks which rippled among the pastures of the wilderness, where in early days she had been wont to dwell. This is the pearl
 ```
@@ -82,13 +84,13 @@ so loved the world, that is, Gentiles as well as Jews. There is a great contest 
 the world should signify here every living soul in the place called the world, will any thing follow from it. It is proper enough to say, A man loved such a family to such a degree that he gave his estate to it, though he never intended such a thing to every child or branch of it. So as what i
 ```
 
-### pulpit · psalms 23:1
+### pulpit · john 3:1-36
 ```
-THIS little psalm is an idyll of great beauty, describing the peace and calm delight which dwell with one whose trust is wholly in God. David’s authorship, asserted in the title, is highly probable; but we cannot fix the poem to any special period in his lifetime; we can only say that he is beyond the days of boyhood, having already enemies (Psalms 23:5), and that he has known what it is to be in danger of death (Psalms 23:4). But, when he writes, he is experiencing a time of rest and refreshment (Psalms 23:1-3), nay, of prosperity and abundance (Psalms 23:5). His thoughts are happy thoughts—he lacks nothing; he has no fear; God’s mercy and goodness are with him; and he feels assured that they will continue with him all the days of his life (Psalms 23:6); he has but one desire for the future, viz. to dwell in the house of God—i.e. in the presence of God, for ever.
+This is the first of the eleven discourses recorded by this evangelist, and for the most part addressed to the cultivated, hierarcical party in Jerusalem, who questioned him in an unfriendly spirit. On the sources of these records, and the degree to which John’s subjectivity coloured his record of them, see Introduction.
 
-Psalms 23:1
+John 3:1
 
-The Lord 
+But there was a man of the Pharisees. Is this narrative introduced, as Baur thinks, to give a specimen of wrongly directed faith, to which Christ did not entrust himself? and was the evangelist busy at once on his great mission of undervaluing the Jewish parties and nation? Certainly not. We have a clear proof that, in the case of the genuine inquirer, Christ did open His very heart; and to a "ruler of Jews," to a "Pharisee," to a "teacher of Israel," he deigned (because he knew what was in the man, and required nobody’s help) to unveil the deepest realities o
 ```
 
 ### ellicott · john 3:16
@@ -98,7 +100,7 @@ God so loved the world.—Familiar as the words are to us, they were uttered to 
 
 ```
 
-### maclaren · john 3:16
+### maclaren · john 3:16-36
 ```
 John
 THE LAKE AND THE RIVER
