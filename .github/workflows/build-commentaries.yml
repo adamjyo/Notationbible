@@ -1,0 +1,50 @@
+# Builds the commentary packs and Spurgeon's Morning and Evening on GitHub's servers.
+#  - commits docs/COMMENTARY_BUILD_REPORT.md and data/devotional/ to this branch
+#  - force-pushes the pack data (JSON, one folder per commentary) to the orphan branch "resources"
+#  - publishes each pack as <id>.zip, plus packs.json, on the pre-release "resources"
+#    (a pre-release, so the plugin's update check, which reads /releases/latest, never sees it)
+name: Build commentary packs
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/initial-reader]
+    paths: ['scripts/build_commentaries.py', 'scripts/sword.py', '.github/workflows/build-commentaries.yml']
+permissions:
+  contents: write
+concurrency: { group: build-commentaries, cancel-in-progress: true }
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: claude/initial-reader }
+      - name: Download sources
+        run: |
+          mkdir -p /tmp/raw && cd /tmp/raw
+          UA='Mozilla/5.0 (compatible; NotationBibleImporter/1.0)'
+          for m in TDavid SME; do curl -sSfL -A "$UA" -o $m.zip https://www.crosswire.org/ftpmirror/pub/sword/packages/rawzip/$m.zip; done
+          for m in sipoole sipulpit siellicott simaclaren; do curl -sSfL -A "$UA" -o $m.zip https://www.sermonindex.net/modules/sword/$m.zip; done
+          git clone -q --depth 1 --filter=blob:none --sparse https://github.com/thefrenchpressed/pillar-commentary-data.git pillar
+          (cd pillar && git sparse-checkout set --no-cone '/c/fbmeyer/*')
+          ls -la
+      - name: Build
+        run: python3 scripts/build_commentaries.py --raw /tmp/raw --out /tmp/packs --report docs/COMMENTARY_BUILD_REPORT.md && ls -la /tmp/packs
+      - name: Commit report and devotional
+        run: |
+          git config user.name "notationbible-bot"; git config user.email "actions@users.noreply.github.com"
+          git add docs/COMMENTARY_BUILD_REPORT.md data/devotional
+          git commit -q -m "Commentary packs: build report and Morning and Evening" && git push || echo "nothing to commit"
+      - name: Publish pack data to the resources branch
+        run: |
+          git checkout -q --orphan resources
+          git rm -rq --cached . && find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          rsync -a --exclude '*.zip' /tmp/packs/ ./
+          git add -A && git commit -q -m "Commentary packs ($(date -u +%F))" && git push -fq origin resources
+      - name: Publish pack zips on the resources pre-release
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: |
+          gh release view resources >/dev/null 2>&1 || gh release create resources --prerelease --target claude/initial-reader \
+            --title "Study resources (commentary packs)" \
+            --notes "Commentary packs installed from the plugin's Study resources page. Not a plugin release."
+          gh release upload resources /tmp/packs/*.zip /tmp/packs/packs.json --clobber
