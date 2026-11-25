@@ -47,7 +47,6 @@ a{color:var(--accent)}
 .refnav{display:flex;align-items:center;gap:2px}
 .refbtn{display:flex;align-items:center;gap:6px;min-height:44px;padding:0 12px;border-radius:10px;font-weight:600;white-space:nowrap}
 .refbtn:hover,.ico:hover{background:var(--chip)}
-.caret{width:16px;height:16px;color:var(--soft)}
 .ico{display:grid;place-items:center;width:44px;height:44px;border-radius:10px;flex:none}
 .ico svg{width:21px;height:21px}
 .ico.on{color:var(--accent)}
@@ -462,7 +461,7 @@ body[data-active-tool=pen] #reader{-webkit-user-select:none;user-select:none;tou
 @media (max-width:640px){
   #reflabel .lfull{display:none}#reflabel .lshort{display:inline}
   #reflabel{display:block;max-width:calc(100vw - 2 * 94px - 2 * 38px - 30px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .refnav{gap:0}.refnav>.ico{width:38px}.refbtn{padding:0 4px;gap:2px}.refbtn .caret{width:14px;height:14px}
+  .refnav{gap:0}.refnav>.ico{width:38px}.refbtn{padding:0 6px;gap:2px}
 }
 @media (max-width:380px){
   .tools .ico{width:36px}.menubtn{min-width:42px;padding:2px 2px;margin-left:0}.menubtn svg{width:38px;height:32px}
