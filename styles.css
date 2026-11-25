@@ -472,3 +472,25 @@ body[data-active-tool=pen] #reader{-webkit-user-select:none;user-select:none;tou
 @media (max-width:340px){ #hsearch{display:none} #reflabel{max-width:calc(100vw - 2 * 44px - 2 * 34px - 20px)} }
 .mk svg{fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
 .mk svg[viewBox]{width:12px;height:12px;stroke-width:2;vertical-align:-1.5px}
+/* address picker: Book · Chapter · Verse wheels */
+.sheet.picker{top:50%;left:50%;right:auto;bottom:auto;transform:translate(-50%,-50%);width:min(440px,calc(100vw - 24px));height:auto;border:1px solid var(--rule);border-radius:16px;box-shadow:0 20px 60px rgb(0 0 0/.3)}
+.sheet.picker .sheetbody{padding:6px 18px 18px;overflow:visible}
+.sheet.picker .sheethead h2{font-variant-numeric:tabular-nums}
+.wheels{display:grid;grid-template-columns:1.7fr 1fr 1fr;gap:14px}
+.wwrap{position:relative}
+.wlab{font:600 11px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--soft);text-align:center;margin:4px 0 6px}
+.wcol{height:calc(44px * 5);overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none;overscroll-behavior:contain;outline:none;
+  -webkit-mask-image:linear-gradient(transparent,#000 32%,#000 68%,transparent);mask-image:linear-gradient(transparent,#000 32%,#000 68%,transparent)}
+.wcol::-webkit-scrollbar{display:none}
+.wpad{height:88px}
+.wi{height:44px;display:flex;align-items:center;justify-content:center;scroll-snap-align:center;font-size:17px;color:var(--soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;font-variant-numeric:tabular-nums;transition:color .12s,font-size .12s}
+.wi.near,.wi.on{color:var(--ink);font-size:20px;font-weight:500}
+.wband{position:absolute;left:0;right:0;bottom:88px;height:44px;border-top:2px solid var(--accent);border-bottom:2px solid var(--accent);pointer-events:none;opacity:.8}
+.wcol:focus-visible + .wband{opacity:1;background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.wbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.wbtns .btn{justify-content:center;min-height:46px;font-size:16px}
+@media (max-width:640px){
+  .sheet.picker{top:auto;left:0;bottom:0;transform:none;width:100vw;border-radius:18px 18px 0 0;border-width:1px 0 0}
+  .sheet.picker .sheetbody{padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+  .wheels{gap:8px}
+}

@@ -447,6 +447,7 @@ document.addEventListener('selectionchange', () => {
 /* ---------- sheet ---------- */
 const sheet = $('#sheet'), scrim = $('#scrim'); let backFn = null;
 function openSheet(title, html, back) {
+  sheet.classList.remove('picker');
   $('#sheettitle').textContent = title; $('#sheetbody').innerHTML = html; $('#sheetbody').scrollTop = 0;
   backFn = back || null; $('#sheetback').hidden = !back;
   sheet.hidden = scrim.hidden = false; applyMarks();
@@ -461,11 +462,58 @@ let toastT; function toast(msg, action, fn) {
 }
 
 /* ---------- picker ---------- */
-function openPicker(test) {
-  test ||= BY[cur.b].t;
-  const html = `<div class="seg" role="group"><button data-test="ot" aria-pressed="${test === 'ot'}">Old Testament</button><button data-test="nt" aria-pressed="${test === 'nt'}">New Testament</button></div>
-  <div class="books">${BOOKS.filter(b => b.t === test).map(b => `<button data-book="${b.id}" class="${b.id === cur.b ? 'cur' : ''}">${esc(b.name)}${M.books[b.id] ? '<span class="dot" title="Has text in this data set"></span>' : ''}</button>`).join('')}</div>`;
-  openSheet('Choose a book', html);
+// Address picker: three wheels, Book · Chapter · Verse, that spin and snap to the middle row.
+const WROW = 44;
+function openPicker() {
+  const sel = { b: cur.b, c: cur.c || 1, v: cur.v || 1 };
+  const chN = b => BY[b].ch, vN = (b, c) => +(M.books[b]?.[c]) || (b === chap?.b && c === chap?.c ? chap.verses.length : 0) || 50;
+  const col = (w, label) => `<div class="wwrap"><div class="wlab">${label}</div><div class="wcol" data-w="${w}" role="listbox" tabindex="0" aria-label="${label}"></div><div class="wband"></div></div>`;
+  openSheet('Go to', `<div class="wheels">${col('b', 'Book')}${col('c', 'Chapter')}${col('v', 'Verse')}</div>
+    <div class="wbtns"><button class="btn" id="wcancel">Cancel</button><button class="btn primary" id="wgo">Go</button></div>`);
+  sheet.classList.add('picker');
+  const C = { b: $('[data-w="b"]', sheet), c: $('[data-w="c"]', sheet), v: $('[data-w="v"]', sheet) };
+  const items = { b: BOOKS.map(x => x.id) };
+  const idxOf = w => w === 'b' ? items.b.indexOf(sel.b) : sel[w] - 1;
+  const fill = (w, labels) => {
+    C[w].innerHTML = `<div class="wpad"></div>${labels.map((t, i) => `<div class="wi" role="option" data-i="${i}">${esc(t)}</div>`).join('')}<div class="wpad"></div>`;
+    C[w]._n = labels.length; C[w].scrollTop = idxOf(w) * WROW; mark(w);
+  };
+  const mark = w => { const i = idxOf(w); C[w].querySelectorAll('.wi').forEach((el, k) => { el.classList.toggle('on', k === i); el.setAttribute('aria-selected', String(k === i)); }); };
+  const fillC = () => { sel.c = Math.min(sel.c, chN(sel.b)); fill('c', Array.from({ length: chN(sel.b) }, (_, i) => i + 1)); };
+  const fillV = () => { const n = vN(sel.b, sel.c); sel.v = Math.min(sel.v, n); fill('v', Array.from({ length: n }, (_, i) => i + 1)); };
+  const label = () => { $('#sheettitle').textContent = `${BY[sel.b].name} ${sel.c}:${sel.v}`; };
+  const setIdx = (w, i) => {
+    i = Math.max(0, Math.min(C[w]._n - 1, i));
+    if (i === idxOf(w)) return mark(w);
+    if (w === 'b') { sel.b = items.b[i]; mark('b'); fillC(); fillV(); }
+    else if (w === 'c') { sel.c = i + 1; mark('c'); fillV(); }
+    else { sel.v = i + 1; mark('v'); }
+    label();
+  };
+  for (const w of ['b', 'c', 'v']) {
+    const el = C[w]; let t;
+    el.addEventListener('scroll', () => {
+      const i = Math.round(el.scrollTop / WROW);
+      el.querySelectorAll('.wi').forEach((x, k) => x.classList.toggle('near', k === i));
+      clearTimeout(t); t = setTimeout(() => setIdx(w, i), 110);
+    }, { passive: true });
+    el.addEventListener('click', e => { const it = e.target.closest('.wi'); if (it) el.scrollTo({ top: +it.dataset.i * WROW, behavior: 'smooth' }); });
+    el.addEventListener('keydown', e => {
+      const i = Math.round(el.scrollTop / WROW), step = { ArrowDown: 1, ArrowUp: -1, PageDown: 5, PageUp: -5 }[e.key];
+      let to = step != null ? i + step : e.key === 'Home' ? 0 : e.key === 'End' ? el._n - 1 : null;
+      if (to == null && w === 'b' && /^[1-3a-z]$/i.test(e.key)) { // type a letter or number to jump to a book
+        const k = e.key.toLowerCase(), list = BOOKS.map(x => x.name.toLowerCase());
+        to = list.findIndex((n, j) => j > i && n.startsWith(k)); if (to < 0) to = list.findIndex(n => n.startsWith(k)); if (to < 0) to = null;
+      }
+      if (e.key === 'Enter') { e.preventDefault(); return $('#wgo').click(); }
+      if (to == null) return;
+      e.preventDefault(); to = Math.max(0, Math.min(el._n - 1, to)); el.scrollTop = to * WROW; setIdx(w, to);
+    });
+  }
+  fill('b', BOOKS.map(x => x.name)); fillC(); fillV(); label();
+  $('#wcancel').onclick = closeSheet;
+  $('#wgo').onclick = () => { closeSheet(); go(sel.b, sel.c, sel.v > 1 ? sel.v : null); };
+  setTimeout(() => C.b.focus({ preventScroll: true }), 50);
 }
 function openChapters(b) {
   const have = M.books[b] || {};
