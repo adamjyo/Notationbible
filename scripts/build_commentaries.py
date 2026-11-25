@@ -94,6 +94,13 @@ def osis_to_text(s):
     return tidy(s)
 
 
+SMALL = {'a', 'an', 'and', 'as', 'at', 'but', 'by', 'for', 'from', 'in', 'into', 'nor', 'of', 'on', 'or', 'the', 'to', 'with'}
+def titlecase(t):
+    if not t.isupper(): return t
+    w = t.lower().split(' ')
+    return ' '.join(x if i and x in SMALL else x[:1].upper() + x[1:] for i, x in enumerate(w))
+
+
 def strip_tags(s):
     return re.sub(r'<[^>]+>', '', s)
 
@@ -205,6 +212,8 @@ def sword(raw, src, v11n):
             if text and not re.fullmatch(r'\W*', text): pending[(b, c)] = text
             continue
         if (b, c) in pending: text = pending.pop((b, c)) + '\n\n' + text
+        if src == 'simaclaren':   # each sermon opens "Book\nTITLE\nPassage."
+            text = re.sub(r'^[1-3]?\s?[A-Z][a-z]+(?: of [A-Z][a-z]+)?\n([^\n]{3,120})\n([^\n]{3,80}?)\.?\n', lambda m: f'**{titlecase(m.group(1).strip())}** · {m.group(2).strip()}\n\n', text)
         add(per, b, c, v, w, text)
     return finish(per)
 
@@ -222,8 +231,13 @@ def tdavid(raw, src, v11n):
         cut = re.search(r'\n\*\*\s*(EXPLANATORY NOTES|HINTS TO|QUAINT)', text, re.I)
         body = text[:cut.start()] if cut else text
         body = re.sub(r'^\*\*Psalm \d+ OVERVIEW\*\*\s*', '', body.strip(), flags=re.I)
-        parts = re.split(r'\n\n(?=\*?Verses? (\d+)(?:\s*(?:,|-|–|to)\s*(\d+))?\.)', '\n\n' + body)
-        # parts: [preamble, v1, w1, chunk1, v2, w2, chunk2, ...]
+        body = re.sub(r'\*\*EXPOSITION\s*(?=Verses? \d)', '**', body)          # "**EXPOSITIONVerse 1.**"
+        body = re.sub(r'\*\*EXPOSITION\*\*\s*', '', body)
+        mark = re.compile(r'\*\*Verses? (\d+)(?:\s*(?:,|-|–|to)\s*(\d+))?\.?\*\*')
+        ms = list(mark.finditer(body))
+        parts = [body[:ms[0].start()] if ms else body]
+        for i, m in enumerate(ms):
+            parts += [m.group(1), m.group(2), body[m.start():ms[i + 1].start() if i + 1 < len(ms) else len(body)]]
         pre = parts[0].strip()
         chunks = [(int(parts[i]), int(parts[i + 1] or parts[i]), parts[i + 2].strip()) for i in range(1, len(parts) - 2, 3)]
         if not chunks:
@@ -263,7 +277,9 @@ def write_pack(out, s, per):
         size += os.path.getsize(p)
     meta = {k: s[k] for k in ('id', 'name', 'short', 'about', 'license') if k in s}
     if s.get('credit'): meta['credit'] = s['credit']
-    meta.update(books=[b for b in IDS if b in per], bytes=size, entries=sum(len(v) for v in per.values()))
+    import datetime
+    meta.update(books=[b for b in IDS if b in per], bytes=size, entries=sum(len(v) for v in per.values()),
+                built=datetime.date.today().isoformat())
     json.dump(meta, open(os.path.join(d, 'meta.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     with zipfile.ZipFile(os.path.join(out, f"{s['id']}.zip"), 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as z:
         for fn in sorted(os.listdir(d)): z.write(os.path.join(d, fn), f"{s['id']}/{fn}")
