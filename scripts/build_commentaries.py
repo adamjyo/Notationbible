@@ -216,7 +216,7 @@ def sword(raw, src, v11n):
             if text and not re.fullmatch(r'\W*', text): pending[(b, c)] = text
             continue
         if (b, c) in pending: text = pending.pop((b, c)) + '\n\n' + text
-        if src == 'simaclaren':   # each sermon opens "Book\nTITLE\nPassage."
+        if src.startswith('simaclaren'):   # each sermon opens "Book\nTITLE\nPassage."
             text = re.sub(r'^[1-3]?\s?[A-Z][a-z]+(?: of [A-Z][a-z]+)?\n([^\n]{3,120})\n([^\n]{3,80}?)\.?\n', lambda m: f'**{titlecase(m.group(1).strip())}** · {m.group(2).strip()}\n\n', text)
         add(per, b, c, v, w, text)
     return finish(per)
