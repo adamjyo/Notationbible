@@ -20,7 +20,7 @@ const LAYERS = [
 ];
 const PRESETS = {
   reading: { strongs: 'off', interlinear: 'off', footnotes: 'off', xrefs: 'off', commentary: 'off', compare: 'off', studies: 'off', notes: 'markers' },
-  study: { strongs: 'tap', interlinear: 'off', footnotes: 'markers', xrefs: 'markers', commentary: 'markers', compare: 'off', studies: 'inline', notes: 'inline' },
+  study: { strongs: 'tap', interlinear: 'off', footnotes: 'markers', xrefs: 'markers', commentary: 'inline', compare: 'off', studies: 'inline', notes: 'inline' },
   original: { strongs: 'inline', interlinear: 'inline', footnotes: 'markers', xrefs: 'off', commentary: 'off', compare: 'off', studies: 'off', notes: 'markers' },
 };
 const KEY = 'notationbible:v1';
@@ -384,7 +384,7 @@ async function render() {
     if (L.xrefs === 'inline' && xrs.length) ib += useTSK() && chap.tsk[key]
       ? `<div class="ib xr tskx"><h4>Cross references · ${esc(label(b, c, n))}</h4>${chap.tsk[key].map(([ph, refs]) => `<p><b>${esc(ph || 'Whole verse')}</b> ${refs.map(r => `<a href="${hashOf(...tskFirst(r).split('.'))}">${esc(tskLabel(r))}</a>`).join('')}</p>`).join('')}</div>`
       : `<div class="ib xr"><h4>Cross references · ${esc(label(b, c, n))}</h4>${xrs.map(r => `<a href="${hashOf(...r.split('.'))}">${esc(anchorLabel(r))}</a>`).join('')}</div>`;
-    if (L.commentary === 'inline') ib += cmEnd.map(x => `<section class="ib cm"><h4>Commentary · ${esc(label(b, x.r.replace('-', '–')))} · ${esc(x.src.short || x.src.name)}</h4><div class="cmtext${x.txt.length > LONG ? ' long' : ''}" data-anchor="${x.anchor}">${rich(x.txt)}</div>${x.txt.length > LONG ? '<button class="btn more" data-more>Read all</button>' : ''}${x.src.credit ? `<p class="hint">${esc(x.src.credit)}</p>` : ''}</section>`).join('');
+    if (L.commentary === 'inline') ib += cmEnd.map(x => `<section class="ib cm"><h4>Commentary · ${esc(label(b, x.r.replace('-', '–')))} · ${esc(x.src.short || x.src.name)}</h4><div class="cmtext" data-anchor="${x.anchor}">${rich(x.txt)}</div>${x.src.credit ? `<p class="hint">${esc(x.src.credit)}</p>` : ''}</section>`).join('');
     if (L.studies === 'inline') ib += sts.map(x => `<section class="ib st"><h4>Study · ${esc(x.d.title)} · ${esc(x.sec.heading)}</h4><div data-anchor="${x.anchor}">${rich(x.sec.body)}</div><button class="lnk" data-study="${x.s.id}">Open the full study</button></section>`).join('');
     if (L.compare === 'inline' && chap.tr?.[i]) ib += `<div class="ib trc"><h4>${esc(trName(S.set.compareTr)?.abbr || '')} · ${esc(label(b, c, n))}</h4><span class="trt">${lord(chap.tr[i])}</span></div>`;
     if (L.notes === 'inline') ib += nts.map(g => `<div class="ib mynote" style="--nc:var(--sw-${noteColor(g)})"><div data-anchor="nt:${g.g}">${noteBody(g)}</div></div>`).join('');
@@ -453,7 +453,7 @@ function toggleLayer(k) {
   const L = S.set.layers;
   if (k === 'markup') S.set.markup = !S.set.markup;
   else if (k === 'darkmode') { S.set.theme = isDark() ? 'light' : 'dark'; applyTheme(); }
-  else { const l = LAYERS.find(x => x.k === k); if (L[k] === 'off') L[k] = S.lastOn[k] || l.modes[1]; else { S.lastOn[k] = L[k]; L[k] = 'off'; } }
+  else { const l = LAYERS.find(x => x.k === k); if (L[k] === 'off') L[k] = k === 'commentary' ? 'inline' : S.lastOn[k] || l.modes[1]; else { S.lastOn[k] = L[k]; L[k] = 'off'; } }
   save(); render(); renderMenu();
   const el = menu.querySelector(`[data-layer="${k}"]`); el && el.focus();
 }
@@ -1974,7 +1974,7 @@ function openStore() {
 function storeGet(id) {
   const { cms, dv } = storeItems(), x = [...cms, ...dv].find(i => i.id === id); if (!x) return;
   S.set.library = [...new Set([...(S.set.library || ['jfb']), id])];
-  if (x.kind === 'commentary') { S.set.cmActive = id; if (S.set.layers.commentary === 'off') S.set.layers.commentary = 'markers'; }
+  if (x.kind === 'commentary') { S.set.cmActive = id; S.set.layers.commentary = 'inline'; }
   save(); render(); openStore();
   toast(x.kind === 'commentary' ? `${x.name} added. It is now the commentary shown.` : `${x.name} added to the menu.`);
 }
@@ -1985,7 +1985,7 @@ function storeDrop(id) {
 }
 document.addEventListener('change', e => {
   const sel = e.target.closest('[data-cmsel]'); if (!sel) return;
-  S.set.cmActive = sel.value; if (S.set.layers.commentary === 'off') S.set.layers.commentary = 'markers';
+  S.set.cmActive = sel.value; if (S.set.layers.commentary === 'off') S.set.layers.commentary = 'inline';
   save();
   const v = !sheet.hidden && /:\d+$/.test($('#sheettitle').textContent) ? +$('#sheettitle').textContent.split(':').pop() : 0;
   render().then(() => { if (!menu.hidden) renderMenu(); if (v && sel.closest('#sheet')) versePanel(v); });
@@ -2013,6 +2013,8 @@ async function openDevotional(day, slot) {
 (async () => {
   M = (await getJSON('data/manifest.json')) || M;
   await loadPacks();
+  // 1.12.1: Commentary that is switched on is shown in the text, in full (once; a later choice of Markers stands)
+  if (!S.set.cmInline) { if (S.set.layers.commentary === 'markers') S.set.layers.commentary = 'inline'; S.set.cmInline = true; save(); }
   studyIdx = (await getJSON('data/studies/index.json')) || [];
   await loadLex();
   if (synth) synth.onvoiceschanged = () => {};
