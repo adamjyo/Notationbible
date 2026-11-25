@@ -250,7 +250,7 @@ function applyMarks() {
       }
       if (kindOf(a) === 'note' && showNotes && lastOfGroup[a.g] === a.id) {
         const st = document.createElement('span');
-        st.className = 'sticky'; st.dataset.skip = ''; st.dataset.note = a.g; if (HILITES.includes(a.c)) st.style.setProperty('--nc', `var(--sw-${a.c})`); st.setAttribute('role', 'button'); st.tabIndex = 0;
+        st.className = 'sticky'; st.dataset.skip = ''; st.dataset.note = a.g; st.style.setProperty('--nc', `var(--sw-${noteColor({ g: a.g, hg: a.hg, c: a.c })})`); st.setAttribute('role', 'button'); st.tabIndex = 0;
         st.title = 'Note: ' + (a.n || '').slice(0, 80); st.setAttribute('aria-label', st.title);
         insertAt(el, a.e, st);
       }
@@ -284,6 +284,19 @@ const PENCIL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 4.5l4
 // the note's text with a small pencil at its very end, inline, to edit it
 const noteBody = g => { const h = rich(g.n || ''), pen = `<button class="npen" data-note="${g.g}" aria-label="Edit note" title="Edit note">${PENCIL}</button>`; return h.endsWith('</p>') ? h.slice(0, -4) + pen + '</p>' : h + pen; };
 const notesFor = id => groups().filter(g => g.k === 'note' && g.items.some(a => a.a === id));
+// A note's box takes the colour of the highlight it sits on.
+function noteColor(g) {
+  const items = g.items || S.ann.filter(a => a.g === g.g);
+  const first = items[0] || g;
+  const hgId = g.hg || first.hg;
+  if (hgId) { const h = S.ann.find(a => a.g === hgId && kindOf(a) === 'hl'); if (h && HILITES.includes(h.c)) return h.c; }
+  for (const it of items) {
+    const h = S.ann.find(a => kindOf(a) === 'hl' && a.a === it.a && HILITES.includes(a.c) && (a.s < Math.max(it.e, it.s + 1) && a.e > it.s || a.s <= it.s && a.e >= it.e));
+    if (h) return h.c;
+  }
+  const c = g.c || first.c;
+  return HILITES.includes(c) ? c : 'yellow';
+}
 function groups() {
   const m = new Map();
   for (const a of S.ann) { if (a.k === 'ink') continue; if (!m.has(a.g)) m.set(a.g, { g: a.g, k: a.k, n: a.n, c: a.c, t: a.t, q: a.q, items: [] }); const g = m.get(a.g); g.items.push(a); if (a.n) g.n = a.n; }
@@ -349,7 +362,7 @@ async function render() {
     if (L.commentary === 'inline') ib += cmEnd.map(x => `<section class="ib cm"><h4>Commentary · ${esc(label(b, x.r.replace('-', '–')))} · ${esc(x.src.name)}</h4><div data-anchor="${x.anchor}">${rich(x.txt)}</div></section>`).join('');
     if (L.studies === 'inline') ib += sts.map(x => `<section class="ib st"><h4>Study · ${esc(x.d.title)} · ${esc(x.sec.heading)}</h4><div data-anchor="${x.anchor}">${rich(x.sec.body)}</div><button class="lnk" data-study="${x.s.id}">Open the full study</button></section>`).join('');
     if (L.compare === 'inline' && chap.tr?.[i]) ib += `<div class="ib trc"><h4>${esc(trName(S.set.compareTr)?.abbr || '')} · ${esc(label(b, c, n))}</h4><span class="trt">${lord(chap.tr[i])}</span></div>`;
-    if (L.notes === 'inline') ib += nts.map(g => `<div class="ib mynote" style="--nc:var(--sw-${esc(g.c || 'yellow')})"><div data-anchor="nt:${g.g}">${noteBody(g)}</div></div>`).join('');
+    if (L.notes === 'inline') ib += nts.map(g => `<div class="ib mynote" style="--nc:var(--sw-${noteColor(g)})"><div data-anchor="nt:${g.g}">${noteBody(g)}</div></div>`).join('');
     const hd = chap.h[key], pstart = n > 1 && chap.p.includes(n) && !hd;
     const pre = (hd ? `<h3 class="shd">${esc(hd[0])}${hd[1] ? `<small>${rich(hd[1]).replace(/^<p>|<\/p>$/g, '')}</small>` : ''}</h3>` : '') + (pstart && !verseMode ? '<span class="pbr"></span>' : '');
     return pre + `<div class="vb" id="v${n}" data-v="${n}"><span class="v" data-anchor="${id}" data-v="${n}"><a class="vn" data-skip href="${hashOf(b, c, n)}" data-panel="${n}">${n}</a>${words}</span>${mk ? '&#8288;' + mk : ''}${verseMode ? '' : ' '}</div>${ib}`;
@@ -475,7 +488,7 @@ async function versePanel(n) {
   if (cms.length) h += cms.map(x => `<h3>Commentary · ${esc(label(b, x.r.replace('-', '–')))} · ${esc(x.src.name)}</h3><div class="prose" data-anchor="${x.anchor}">${rich(x.txt)}</div>`).join('');
   if (sts.length) h += sts.map(x => `<h3>Study · ${esc(x.d.title)}</h3><div class="prose"><b>${esc(x.sec.heading)}</b><div data-anchor="${x.anchor}">${rich(x.sec.body)}</div></div><button class="btn" data-study="${x.s.id}">Open the full study</button>`).join('');
   h += `<div id="vpx" data-b="${b}" data-c="${c}" data-v="${n}"></div>`;
-  if (nts.length) h += `<h3>My notes</h3>${nts.map(g => `<div class="ib mynote" style="margin-left:0;--nc:var(--sw-${esc(g.c || 'yellow')})"><div data-anchor="nt:${g.g}">${noteBody(g)}</div></div>`).join('')}`;
+  if (nts.length) h += `<h3>My notes</h3>${nts.map(g => `<div class="ib mynote" style="margin-left:0;--nc:var(--sw-${noteColor(g)})"><div data-anchor="nt:${g.g}">${noteBody(g)}</div></div>`).join('')}`;
   openSheet(label(b, c, n), h);
   versePanelExtras(b, c, n, plain(toks));
   // fill cross-reference previews when that text is available
@@ -1052,7 +1065,7 @@ function noteEditor({ targets: t, g, verse, listen }) {
     <div class="preview prose" id="nprev"></div>
     <div class="row end">${existing ? '<button class="btn" id="ndel">Delete</button>' : ''}<button class="btn primary" id="nsave">Save note</button></div>`);
   const ta = $('#ntext'), pv = $('#nprev');
-  let nc = existing?.c || S.set.toolColor.hl;
+  let nc = existing ? noteColor(existing) : (HILITES.includes(S.set.toolColor.hl) ? S.set.toolColor.hl : 'yellow');
   const upd = () => {
     pv.className = 'preview prose notebg'; pv.style.setProperty('--nc', `var(--sw-${nc})`);
     pv.innerHTML = ta.value.trim() ? rich(ta.value) : '<span class="hint">Preview</span>';
