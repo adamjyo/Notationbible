@@ -17,3 +17,6 @@ delete_option( 'nb_last_check' );
 delete_option( 'nb_flush_rewrite' );
 delete_option( 'nb_auto_update_set' );
 delete_site_transient( 'nb_latest_release' );
+// Commentary packs are plugin files kept in uploads: they go with the plugin.
+require_once __DIR__ . '/includes/class-nb-packs.php';
+NB_Packs::remove_all();

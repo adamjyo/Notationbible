@@ -26,7 +26,7 @@ const PRESETS = {
 const KEY = 'notationbible:v1';
 let S = {};
 try { S = JSON.parse(localStorage.getItem(KEY)) || {}; } catch { S = {}; }
-const SET_DEFAULTS = { compareTr: 'kjv', commentaries: ['jfb'], theme: 'dark', size: 19, font: 'sans', layout: 'para', nums: true, markup: true, rate: 1, voice: '', cont: true };
+const SET_DEFAULTS = { compareTr: 'kjv', commentaries: ['jfb'], library: ['jfb'], cmActive: 'jfb', theme: 'dark', size: 19, font: 'sans', layout: 'para', nums: true, markup: true, rate: 1, voice: '', cont: true };
 S.set = Object.assign({}, SET_DEFAULTS, S.set || {});
 // appearance: dark by default; 'system' follows the device (and the claude.ai viewer's theme when previewed there)
 const applyTheme = () => { document.documentElement.dataset.mode = ['dark', 'light', 'system'].includes(S.set.theme) ? S.set.theme : 'dark'; };
@@ -41,7 +41,7 @@ const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch
 /* ---------- data ---------- */
 const cache = {};
 // window.__DATA is filled only in the single-file preview build (scripts/bundle.mjs)
-const getJSON = p => cache[p] ??= (window.__DATA && p in window.__DATA ? Promise.resolve(window.__DATA[p]) : fetch((window.NB_BASE || '') + p).then(r => r.ok ? r.json() : null).catch(() => null));
+const getJSON = p => cache[p] ??= (window.__DATA && p in window.__DATA ? Promise.resolve(window.__DATA[p]) : fetch((/^https?:/.test(p) ? '' : (window.NB_BASE || '')) + p).then(r => r.ok ? r.json() : null).catch(() => null));
 let M = { books: {}, layers: { footnotes: { books: [] }, xrefs: { books: [] }, commentary: [] } };
 // Full-Bible files (fmt 2) store each verse as its exact text with tagged phrases written ⟨english¦7225+430⟩;
 // they are turned into tokens here, once per book. Interlinear details live in data/il/ and load only when needed.
@@ -80,10 +80,33 @@ const nums = t => t[1].split(' ');
 
 /* ---------- references ---------- */
 const label = (b, c, v) => `${b === 'psalms' ? 'Psalm' : BY[b]?.name || b} ${c}${v ? ':' + v : ''}`;
+// Treasury of Scripture Knowledge references: "b.c.v", "b.c.v-w", "b.c.v-c2.w", joined with "+"
+const useTSK = () => S.set.xrefSrc !== 'openbible' && !!M.layers.tsk;
+const tskPart = r => { const m = r.match(/^([\w-]+)\.(\d+)\.(\d+)(?:-(\d+)(?:\.(\d+))?)?$/); if (!m) return null; const [, b, c, v, x, y] = m; return { b, c, v, txt: label(b, c, v + (y ? `–${x}:${y}` : x ? `–${x}` : '')) }; };
+const tskLabel = r => r.split('+').map(tskPart).filter(Boolean).map((p, i, a) => i && p.b === a[0].b && p.c === a[0].c ? p.txt.split(':').pop() : p.txt).join(', ');
+const tskFirst = r => { const p = tskPart(r.split('+')[0]); return p ? `${p.b}.${p.c}.${p.v}` : null; };
+// cross references of one verse as plain "b.c.v" ids (markers and inline list)
+const xrefsOf = (ch, key) => useTSK() ? [...new Set((ch.tsk[key] || []).flatMap(([, refs]) => refs.map(tskFirst)).filter(Boolean))] : ch.xr[key] || [];
+const TSK_CREDIT = 'Treasury of Scripture Knowledge, matched to the BSB by CrossReferences.org (CC BY 4.0).';
 const anchorLabel = a => { const p = a.split('.'); return p.length === 3 && BY[p[0]] ? label(p[0], p[1], p[2]) : a; };
 const norm = s => s.toLowerCase().replace(/[\s.]/g, '');
-const bookByName = n => { const k = norm(n); return BOOKS.find(b => norm(b.name) === k) || (k === 'psalm' ? BY.psalms : null); };
-const REF_RE = new RegExp(`\\b(${[...BOOKS.map(b => b.name), 'Psalm'].sort((a, b) => b.length - a.length).map(n => n.replace(/ /g, '\\s+')).join('|')})\\s+(\\d+):(\\d+)(?:[–-](\\d+))?`, 'g');
+// abbreviations the commentaries use for references ("Psa 23:1", "Jn 6:33", "Co1 8:6", "1 Cor. 13:4")
+const REF_ABBR = Object.entries({
+  genesis: 'Gen Ge', exodus: 'Exo Exod Ex', leviticus: 'Lev Le', numbers: 'Num Nu', deuteronomy: 'Deu Deut De', joshua: 'Jos Josh', judges: 'Jdg Judg', ruth: 'Rut Ru',
+  '1-samuel': '1Sa Sa1 1Sam', '2-samuel': '2Sa Sa2 2Sam', '1-kings': '1Ki Kg1 1Kgs 1Kin', '2-kings': '2Ki Kg2 2Kgs 2Kin', '1-chronicles': '1Ch Ch1 1Chr 1Chron', '2-chronicles': '2Ch Ch2 2Chr 2Chron',
+  ezra: 'Ezr', nehemiah: 'Neh', esther: 'Est Esth', psalms: 'Psa Ps Pss Psalms', proverbs: 'Pro Prov Pr', ecclesiastes: 'Ecc Eccl Ecclus', 'song-of-solomon': 'Sol Song Son Cant',
+  isaiah: 'Isa', jeremiah: 'Jer', lamentations: 'Lam', ezekiel: 'Eze Ezek', daniel: 'Dan Da', hosea: 'Hos', joel: 'Joe', amos: 'Amo', obadiah: 'Oba Obad', jonah: 'Jon',
+  micah: 'Mic', nahum: 'Nah', habakkuk: 'Hab', zephaniah: 'Zep Zeph', haggai: 'Hag', zechariah: 'Zec Zech Zac', malachi: 'Mal',
+  matthew: 'Mat Matt Mt', mark: 'Mar Mk', luke: 'Luk Lk', john: 'Joh Jn Jhn', acts: 'Act Ac', romans: 'Rom Ro', '1-corinthians': '1Co Co1 1Cor', '2-corinthians': '2Co Co2 2Cor',
+  galatians: 'Gal Ga', ephesians: 'Eph', philippians: 'Phi Php Phil', colossians: 'Col', '1-thessalonians': '1Th Th1 1Thess 1Thes', '2-thessalonians': '2Th Th2 2Thess 2Thes',
+  '1-timothy': '1Ti Ti1 1Tim', '2-timothy': '2Ti Ti2 2Tim', titus: 'Tit', philemon: 'Phm Phlm Philem', hebrews: 'Heb', james: 'Jam Jas', '1-peter': '1Pe Pe1 1Pet', '2-peter': '2Pe Pe2 2Pet',
+  '1-john': '1Jo Jo1 1Jn 1Joh', '2-john': '2Jo Jo2 2Jn 2Joh', '3-john': '3Jo Jo3 3Jn 3Joh', jude: 'Jde Jud', revelation: 'Rev Re Apoc',
+}).reduce((o, [id, list]) => { list.split(' ').forEach(a => { o[a.toLowerCase()] = id; }); return o; }, {});
+const bookByName = n => { const k = norm(n); return BOOKS.find(b => norm(b.name) === k) || (k === 'psalm' ? BY.psalms : null) || BY[REF_ABBR[k]] || null; };
+// full names, "Psalm", then the abbreviations (a leading 1-3 may stand apart: "1 Cor", "1Cor"), each optionally with a dot
+const REF_NAMES = [...BOOKS.map(b => b.name), 'Psalm'].map(n => n.replace(/ /g, '\\s+'))
+  .concat(Object.keys(REF_ABBR).map(a => (/^[1-3]/.test(a) ? a[0] + '\\s?' + a[1].toUpperCase() + a.slice(2) : a[0].toUpperCase() + a.slice(1)) + '\\.?'));
+const REF_RE = new RegExp(`(?<![\\w-])(${REF_NAMES.sort((a, b) => b.length - a.length).join('|')})\\s*(\\d+):(\\d+)(?:[–-](\\d+))?`, 'g');
 function parseRef(q) {
   const m = q.trim().toLowerCase().match(/^((?:[1-3]\s*)?[a-z][a-z .]*?)\s*(\d+)?(?:\s*[:.]\s*(\d+))?$/);
   if (!m) return null;
@@ -263,8 +286,8 @@ function applyMarks() {
 /* ---------- render chapter ---------- */
 async function loadChapter(b, c) {
   const [t, fn, xr, cms] = await Promise.all([
-    getBook(b), lay('footnotes', b), lay('xrefs', b),
-    Promise.all((M.layers.commentary || []).filter(s => S.set.commentaries.includes(s.id)).map(s => s.books.includes(b) ? bookData(`commentary/${s.id}`, b).then(d => ({ s, d })) : null)),
+    getBook(b), lay('footnotes', b), useTSK() ? lay('tsk', b) : lay('xrefs', b),
+    Promise.all((M.layers.commentary || []).filter(s => s.id === activeCm()?.id).map(s => s.books.includes(b) ? (s.url ? getJSON(`${s.url}/${b}.json`) : bookData(`commentary/${s.id}`, b)).then(d => ({ s, d })) : null)),
   ]);
   const cm = [];
   for (const x of cms) if (x?.d) for (const [r, txt] of Object.entries(x.d)) {
@@ -278,7 +301,7 @@ async function loadChapter(b, c) {
   }
   const il = S.set.layers.interlinear === 'inline' ? (await getIL(b))?.[c] : null;
   const tr = S.set.layers.compare === 'inline' ? (await getTr(S.set.compareTr, b))?.[c] : null;
-  return { b, c, verses: t?.chapters?.[c] || null, h: t?.h || {}, p: t?.p?.[c] || [], il, tr, fn: fn || {}, xr: xr || {}, cm, st };
+  return { b, c, verses: t?.chapters?.[c] || null, h: t?.h || {}, p: t?.p?.[c] || [], il, tr, fn: fn || {}, xr: useTSK() ? {} : xr || {}, tsk: useTSK() ? xr || {} : {}, cm, st };
 }
 const PENCIL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 4.5l4 4L8.5 19.5 3.8 20.2l.7-4.7z"/><path d="M13.5 6.5l4 4"/></svg>';
 // the note's text with a small pencil at its very end, inline, to edit it
@@ -348,7 +371,7 @@ async function render() {
       const sup = L.strongs === 'inline' ? `<sup class="sn" data-skip data-s="${esc(s)}">${esc(s.replace(/[GH]/g, ''))}</sup>` : '';
       return `<span class="w${L.strongs !== 'off' ? ' tag' : ''}" data-s="${esc(s)}">${lord(en)}</span>${sup}`;
     }).join('');
-    const fns = chap.fn[key] || [], xrs = chap.xr[key] || [];
+    const fns = chap.fn[key] || [], xrs = xrefsOf(chap, key);
     const cmStart = chap.cm.filter(x => x.s === n), cmEnd = chap.cm.filter(x => x.e === n);
     const sts = chap.st.filter(x => x.v === n), nts = notesFor(id).filter(g => g.items[g.items.length - 1].a === id); // a note shows once, after the last verse it covers
     let mk = Object.entries(S.trees || {}).filter(([k, x]) => k.startsWith(`${b}.${c}.`) && x.from === n).map(([k]) => `<span class="mk" role="button" tabindex="0" data-skip data-tree="${esc(k)}" title="NoteTree ${esc(treeLabel(k))}">NT</span>`).join('');
@@ -358,8 +381,10 @@ async function render() {
     let ib = '';
     if (L.footnotes === 'inline' && fns.length) ib += fns.map((f, j) => `<div class="ib fn"><h4>Footnote ${String.fromCharCode(97 + fnLetter + j)} · ${esc(label(b, c, n))}</h4><span data-anchor="fn:${id}:${j}">${rich(f[1])}</span></div>`).join('');
     if (L.footnotes !== 'off') fnLetter += fns.length;
-    if (L.xrefs === 'inline' && xrs.length) ib += `<div class="ib xr"><h4>Cross references · ${esc(label(b, c, n))}</h4>${xrs.map(r => `<a href="${hashOf(...r.split('.'))}">${esc(anchorLabel(r))}</a>`).join('')}</div>`;
-    if (L.commentary === 'inline') ib += cmEnd.map(x => `<section class="ib cm"><h4>Commentary · ${esc(label(b, x.r.replace('-', '–')))} · ${esc(x.src.name)}</h4><div data-anchor="${x.anchor}">${rich(x.txt)}</div></section>`).join('');
+    if (L.xrefs === 'inline' && xrs.length) ib += useTSK() && chap.tsk[key]
+      ? `<div class="ib xr tskx"><h4>Cross references · ${esc(label(b, c, n))}</h4>${chap.tsk[key].map(([ph, refs]) => `<p><b>${esc(ph || 'Whole verse')}</b> ${refs.map(r => `<a href="${hashOf(...tskFirst(r).split('.'))}">${esc(tskLabel(r))}</a>`).join('')}</p>`).join('')}</div>`
+      : `<div class="ib xr"><h4>Cross references · ${esc(label(b, c, n))}</h4>${xrs.map(r => `<a href="${hashOf(...r.split('.'))}">${esc(anchorLabel(r))}</a>`).join('')}</div>`;
+    if (L.commentary === 'inline') ib += cmEnd.map(x => `<section class="ib cm"><h4>Commentary · ${esc(label(b, x.r.replace('-', '–')))} · ${esc(x.src.short || x.src.name)}</h4><div class="cmtext${x.txt.length > LONG ? ' long' : ''}" data-anchor="${x.anchor}">${rich(x.txt)}</div>${x.txt.length > LONG ? '<button class="btn more" data-more>Read all</button>' : ''}${x.src.credit ? `<p class="hint">${esc(x.src.credit)}</p>` : ''}</section>`).join('');
     if (L.studies === 'inline') ib += sts.map(x => `<section class="ib st"><h4>Study · ${esc(x.d.title)} · ${esc(x.sec.heading)}</h4><div data-anchor="${x.anchor}">${rich(x.sec.body)}</div><button class="lnk" data-study="${x.s.id}">Open the full study</button></section>`).join('');
     if (L.compare === 'inline' && chap.tr?.[i]) ib += `<div class="ib trc"><h4>${esc(trName(S.set.compareTr)?.abbr || '')} · ${esc(label(b, c, n))}</h4><span class="trt">${lord(chap.tr[i])}</span></div>`;
     if (L.notes === 'inline') ib += nts.map(g => `<div class="ib mynote" style="--nc:var(--sw-${noteColor(g)})"><div data-anchor="nt:${g.g}">${noteBody(g)}</div></div>`).join('');
@@ -401,6 +426,8 @@ const MI = {
   saved: '<svg viewBox="0 0 24 24"><path d="M7 3.5h10v17l-5-3.6-5 3.6z"/></svg>',
   plan: '<svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 9.5h16M8.5 3v4M15.5 3v4M8 13.5l2.2 2.2L16 12"/></svg>',
   tree: '<svg viewBox="0 0 24 24"><rect x="7.5" y="4" width="9" height="12" rx="1"/><path d="M3 8c2 0 3 1 4.5 2M21 8c-2 0-3 1-4.5 2M3 15c1.5 0 3-.5 4.5-1.5M21 15c-1.5 0-3-.5-4.5-1.5"/></svg>',
+  store: '<svg viewBox="0 0 24 24"><path d="M4.5 8.5h15l-1.2 11h-12.6z"/><path d="M8.5 8.5V7a3.5 3.5 0 0 1 7 0v1.5"/></svg>',
+  devo: '<svg viewBox="0 0 24 24"><path d="M3.5 17.5h17M7 17.5a5 5 0 0 1 10 0M12 6.5V4M5.6 9.6 4 8M18.4 9.6 20 8"/></svg>',
   set: '<svg viewBox="0 0 24 24"><path d="M12 3.5l8.5 4.5-8.5 4.5L3.5 8z"/><path d="M3.5 12l8.5 4.5 8.5-4.5M3.5 16l8.5 4.5 8.5-4.5"/></svg>',
 };
 function renderMenu() {
@@ -409,9 +436,11 @@ function renderMenu() {
   menu.innerHTML = `${ACCT.api ? `<button class="mi" role="menuitem" id="acctbtn">${MI.user}<span class="lab">${ACCT.reader ? esc(ACCT.reader.name) : 'Sign in'}</span><span class="sub">${ACCT.reader ? syncLabel() : 'save notes to an account'}</span></button><hr>` : ''}<h4>Tools</h4>
     <button class="mi${speech.on ? ' live' : ''}" role="menuitem" id="playbtn">${MI.read}<span class="lab">${speech.on ? 'Stop reading aloud' : 'Read aloud'}</span></button>
     <button class="mi" role="menuitem" id="studybtn">${MI.study}<span class="lab">Bible studies</span></button>
+    ${M.layers.devotional && (S.set.library || []).includes(M.layers.devotional.id) ? `<button class="mi" role="menuitem" id="devobtn">${MI.devo}<span class="lab">Morning &amp; Evening</span><span class="sub">Spurgeon</span></button>` : ''}
+    <button class="mi" role="menuitem" id="storebtn">${MI.store}<span class="lab">Store</span><span class="sub">free commentaries &amp; devotionals</span></button>
     <button class="mi" role="menuitem" id="savedbtn">${MI.saved}<span class="lab">Highlights &amp; notes</span>${n ? `<span class="sub">${n}</span>` : ''}</button>
     <hr><h4>Show</h4>
-    ${LAYERS.map(l => sw(l.k, L[l.k] !== 'off', l.name, L[l.k] !== 'off' && l.modes.length > 2 ? l.labels[L[l.k]] : '')).join('')}
+    ${LAYERS.map(l => sw(l.k, L[l.k] !== 'off', l.name, L[l.k] !== 'off' && l.modes.length > 2 ? l.labels[L[l.k]] : '') + (l.k === 'commentary' && myCms().length ? `<div class="mi msel"><span class="lab">Showing</span>${cmSelect()}</div>` : '')).join('')}
     ${sw('markup', S.set.markup, 'Highlights &amp; markup', '')}
     ${sw('darkmode', isDark(), 'Dark mode', S.set.theme === 'system' ? 'System' : '')}
     <button class="mi" role="menuitem" id="plansbtn">${MI.plan}<span class="lab">Reading plans</span>${S.plan ? `<span class="sub">day ${Math.max(1, dayIndex(S.plan.start) + 1)}</span>` : ''}</button>
@@ -518,19 +547,32 @@ function openChapters(b) {
 }
 
 /* ---------- verse panel: every layer for one verse ---------- */
+// The reader's commentaries: the ones in their library that this site has; one is shown at a time.
+const myCms = () => (M.layers.commentary || []).filter(c => (S.set.library || ['jfb']).includes(c.id));
+const activeCm = () => { const l = myCms(); return l.find(c => c.id === S.set.cmActive) || l[0] || null; };
+const cmSelect = (cls = '') => { const l = myCms(), a = activeCm(); return l.length ? `<select class="cmsel ${cls}" data-cmsel aria-label="Commentary">${l.map(c => `<option value="${esc(c.id)}"${c.id === a?.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select>` : ''; };
+const LONG = 2400;
+const cmBody = (b, x) => `<p class="cmhd">${esc(x.src.name)} · ${esc(label(b, x.r.replace('-', '–')))}</p><div class="prose cmtext${x.txt.length > LONG ? ' long' : ''}" data-anchor="${x.anchor}">${rich(x.txt)}</div>${x.txt.length > LONG ? '<button class="btn more" data-more>Read all</button>' : ''}${x.src.credit ? `<p class="hint">${esc(x.src.credit)}</p>` : ''}`;
+function commentaryBlock(b, n, cms) {
+  const a = activeCm(); if (!a) return '';
+  const here = cms.filter(x => x.src.id === a.id);
+  return `<h3 class="cmrow">Commentary ${cmSelect()}</h3>${here.length ? here.map(x => cmBody(b, x)).join('') : `<p class="hint">${esc(a.name)} has no comment on this verse${a.books.includes(b) ? '' : ` or on ${esc(BY[b].name)}`}.</p>`}
+    <p class="hint"><button class="linkbtn" data-store>More commentaries in the Store</button></p>`;
+}
 async function versePanel(n) {
   if (!chap?.verses) return;
   const ilv = (await getIL(chap.b))?.[chap.c]?.[n - 1] || []; let wi = 0;
   const { b, c } = chap, id = `${b}.${c}.${n}`, key = `${c}:${n}`, toks = chap.verses[n - 1];
   const tagged = toks.filter(t => typeof t !== 'string');
-  const fns = chap.fn[key] || [], xrs = chap.xr[key] || [];
+  const fns = chap.fn[key] || [], xrs = xrefsOf(chap, key), tsk = useTSK() ? chap.tsk[key] || [] : [];
   const cms = chap.cm.filter(x => x.s <= n && x.e >= n), sts = chap.st.filter(x => x.v === n), nts = notesFor(id);
   let h = `<div class="row"><button class="btn" data-read="${n}">${ICON.play}Read from here</button><button class="btn" data-copy="${n}">Copy</button><button class="btn" data-newnote="${n}">${ICON.note}Note</button><button class="btn rec" data-voicenote="${n}">${ICON.mic}Dictate note</button>${canEditTrees() ? `<button class="btn" data-ntopen="${n}">${MI.tree}NoteTree</button>` : ''}${treeHas(b, c, n).map(([k]) => `<button class="btn" data-tree="${esc(k)}">${MI.tree}${canEditTrees() ? 'Open' : 'View'} NoteTree ${esc(treeLabel(k).split(' ').pop())}</button>`).join('')}</div>
   <p class="quote" style="margin-top:16px">${lord(plain(toks))}</p>`;
   if (tagged.length) h += `<h3>Words · Strong's concordance</h3><div class="words">${tagged.map(t => { const x = LEX[nums(t)[0]] || [], w = ilv[wi++] || []; return `<button data-s="${esc(t[1])}"><span class="en">${lord(t[0])}</span><span class="og ${t[1][0] === 'H' ? 'he' : 'gr'}">${esc(w[0] || t[2] || x[0] || '')}</span><span class="gl">${esc(t[1])} · ${esc(w[1] || x[1] || '')}${w[2] ? ' · ' + esc(w[2]) : ''} · ${esc(x[2] || '')}</span></button>`; }).join('')}</div>`;
   if (fns.length) h += `<h3>Footnotes</h3>${fns.map((f, j) => `<div class="prose"><b>${esc(f[2] ?? f[0])}:</b> <span data-anchor="fn:${id}:${j}">${rich(f[1])}</span></div>`).join('')}`;
-  if (xrs.length) h += `<h3>Cross references</h3><ul class="list">${xrs.map(r => `<li><a href="${hashOf(...r.split('.'))}"><b>${esc(anchorLabel(r))}</b><span class="xprev" data-ref="${r}"></span></a></li>`).join('')}</ul>`;
-  if (cms.length) h += cms.map(x => `<h3>Commentary · ${esc(label(b, x.r.replace('-', '–')))} · ${esc(x.src.name)}</h3><div class="prose" data-anchor="${x.anchor}">${rich(x.txt)}</div>`).join('');
+  if (tsk.length) h += `<h3>Cross references · Treasury of Scripture Knowledge</h3><div class="tsk">${tsk.map(([ph, refs]) => `<div class="tskg"><b>${esc(ph || 'Whole verse')}</b><span>${refs.map(r => `<a href="${hashOf(...tskFirst(r).split('.'))}">${esc(tskLabel(r))}</a>`).join('')}</span></div>`).join('')}</div><p class="hint">${TSK_CREDIT}</p>`;
+  else if (xrs.length) h += `<h3>Cross references</h3><ul class="list">${xrs.map(r => `<li><a href="${hashOf(...r.split('.'))}"><b>${esc(anchorLabel(r))}</b><span class="xprev" data-ref="${r}"></span></a></li>`).join('')}</ul>`;
+  if (myCms().length) h += commentaryBlock(b, n, cms);
   if (sts.length) h += sts.map(x => `<h3>Study · ${esc(x.d.title)}</h3><div class="prose"><b>${esc(x.sec.heading)}</b><div data-anchor="${x.anchor}">${rich(x.sec.body)}</div></div><button class="btn" data-study="${x.s.id}">Open the full study</button>`).join('');
   h += `<div id="vpx" data-b="${b}" data-c="${c}" data-v="${n}"></div>`;
   if (nts.length) h += `<h3>My notes</h3>${nts.map(g => `<div class="ib mynote" style="margin-left:0;--nc:var(--sw-${noteColor(g)})"><div data-anchor="nt:${g.g}">${noteBody(g)}</div></div>`).join('')}`;
@@ -1234,7 +1276,8 @@ function openSettings() {
     ${LAYERS.map(l => `<div class="lrow"><span>${l.name}</span><small>${l.help}</small>${seg('layer:' + l.k, L[l.k], l.modes.map(m => [m, l.labels[m]]))}</div>`).join('')}
     <div><label>Appearance</label>${seg('theme', S.set.theme, [['dark', 'Dark'], ['light', 'Light'], ['system', 'Match system']])}</div>
     ${(M.layers.translations || []).length ? `<div><label>Compare with</label>${seg('compareTr', S.set.compareTr, M.layers.translations.map(t => [t.id, t.abbr]))}<p class="hint">${esc(trName(S.set.compareTr)?.name || '')}. Turn on with the Compare layer.</p></div>` : ''}
-    ${(M.layers.commentary || []).length ? `<div><label>Commentaries</label><div class="chips">${M.layers.commentary.map(cm => `<button class="chip" data-cmsrc="${esc(cm.id)}" aria-pressed="${S.set.commentaries.includes(cm.id)}">${esc(cm.name)}</button>`).join('')}</div></div>` : ''}
+    ${myCms().length ? `<div><label>Commentary</label>${cmSelect('wide')}<p class="hint">Turn it on with the Commentary layer. <button class="linkbtn" data-store>Get more in the Store</button></p></div>` : ''}
+    ${M.layers.tsk ? `<div><label>Cross references from</label>${seg('xrefSrc', useTSK() ? 'tsk' : 'openbible', [['tsk', 'Treasury of Scripture Knowledge'], ['openbible', 'OpenBible.info']])}<p class="hint">${useTSK() ? 'Grouped by the words in the verse they explain.' : 'A single list, ranked by readers’ votes.'}</p></div>` : ''}
     <div><label>Highlights and markup</label>${seg('markup', S.set.markup, [[true, 'Show'], [false, 'Hide']])}</div>
     <div><label for="sz">Text size</label><div class="range"><input id="sz" type="range" min="15" max="26" step="1" value="${S.set.size}"><output id="szo">${S.set.size}px</output></div></div>
     <div><label>Typeface</label>${seg('font', S.set.font, [['sans', 'Source Sans'], ['serif', 'Source Serif']])}</div>
@@ -1242,14 +1285,12 @@ function openSettings() {
     <div><label>Verse numbers</label>${seg('nums', S.set.nums, [[true, 'Show'], [false, 'Hide']])}</div>
     <div><label for="voice">Read-aloud voice</label><select id="voice"><option value="">System default</option>${vs.map(v => `<option value="${esc(v.voiceURI)}" ${v.voiceURI === S.set.voice ? 'selected' : ''}>${esc(v.name)} (${esc(v.lang)})</option>`).join('')}</select></div>
     <div><label>When a chapter ends</label>${seg('cont', S.set.cont, [[true, 'Keep reading'], [false, 'Stop']])}</div>
-    <p class="hint">${esc(M.translation?.name || '')}: ${esc(M.translation?.license || '')}. Cross references from OpenBible.info (CC BY). Lexicon from STEPBible (CC BY 4.0) once imported.</p>
+    <p class="hint">${esc(M.translation?.name || '')}: ${esc(M.translation?.license || '')}. Cross references: ${TSK_CREDIT} OpenBible.info (CC BY). Lexicon from STEPBible (CC BY 4.0).</p>
   </div>`);
   $('#sz').oninput = e => { S.set.size = +e.target.value; $('#szo').textContent = S.set.size + 'px'; reader.style.setProperty('--size', S.set.size + 'px'); save(); };
   $('#voice').onchange = e => { S.set.voice = e.target.value; save(); };
 }
 sheet.addEventListener('click', e => {
-  const cm = e.target.closest('[data-cmsrc]');
-  if (cm) { const id = cm.dataset.cmsrc, set = new Set(S.set.commentaries); set.has(id) ? set.delete(id) : set.add(id); S.set.commentaries = [...set]; save(); render(); openSettings(); return; }
   const b = e.target.closest('[data-set]'); if (!b) return;
   const name = b.dataset.set, raw = b.dataset.val, val = raw === 'true' ? true : raw === 'false' ? false : raw;
   if (name === 'preset') Object.assign(S.set.layers, PRESETS[val]);
@@ -1610,13 +1651,22 @@ document.addEventListener('click', async e => {
   const t = e.target;
   const q = s => t.closest(s);
   if (q('#nt')) return; // NoteTree handles its own clicks
+  if (q('[data-more]')) { const m = q('[data-more]'); m.previousElementSibling?.classList.remove('long'); m.remove(); return; }
+  if (q('[data-store]')) { closeMenu(); return openStore(); }
+  if (q('[data-get]')) return storeGet(q('[data-get]').dataset.get);
+  if (q('[data-drop]')) return storeDrop(q('[data-drop]').dataset.drop);
+  if (q('[data-cmsel]')) return; // a dropdown: its change event does the work
+  if (q('[data-devo]')) { const [dd, sl] = q('[data-devo]').dataset.devo.split('|'); return openDevotional(dd, sl); }
   if (q('#menubtn')) return menu.hidden ? openMenu() : closeMenu(true);
+  if (menu.contains(t) && q('[data-cmsel]')) return; // the commentary dropdown stays open in the menu
   if (menu.contains(t)) {
     if (q('[data-layer]')) return toggleLayer(q('[data-layer]').dataset.layer);
     closeMenu();
     if (q('#playbtn')) return speech.on ? stopReading() : startReading(cur.v || 1);
     if (q('#treesbtn')) return openTreesList();
     if (q('#plansbtn')) return openPlans();
+    if (q('#devobtn')) return openDevotional();
+    if (q('#storebtn')) return openStore();
     if (q('#acctbtn')) return openAccount();
   } else closeMenu();
   if (q('#refbtn')) return openPicker();
@@ -1888,9 +1938,81 @@ async function openReset(token) {
 // A small handle for support and automated tests.
 window.NotationBible = { get state() { return S; }, get account() { return ACCT; }, save, push, pull, uid, version: 1 };
 
+/* ---------- commentary packs ---------- */
+// Big commentaries come as packs. The catalogue is packs.json on the project's "resources" branch
+// (manifest.packsBase); on WordPress, packs the site has installed (NB_CONFIG.packs) are read from
+// the site instead of GitHub. Readers add the ones they want to their library from the Store.
+async function loadPacks() {
+  const site = window.NB_CONFIG && Array.isArray(window.NB_CONFIG.packs) ? window.NB_CONFIG.packs : [];
+  const idx = M.packsBase ? await getJSON(M.packsBase + 'packs.json') : null;
+  const remote = Array.isArray(idx) ? idx.map(p => ({ ...p, url: M.packsBase + p.id })) : [];
+  const local = new Map(site.filter(p => p && p.id && p.url).map(p => [p.id, p]));
+  const list = [...remote.map(p => local.has(p.id) ? { ...p, ...local.get(p.id) } : p), ...[...local.values()].filter(p => !remote.some(r => r.id === p.id))];
+  const have = new Set((M.layers.commentary || []).map(c => c.id));
+  M.layers.commentary = [...(M.layers.commentary || []), ...list.filter(p => Array.isArray(p.books) && !have.has(p.id))];
+  // older settings kept a list of switched-on commentaries; the library starts from it
+  if (!Array.isArray(S.set.library)) S.set.library = ['jfb'];
+}
+
+/* ---------- Store: free commentaries and devotionals for the reader's library ---------- */
+const mb = n => n ? `${(n / 1048576).toFixed(n > 10485760 ? 0 : 1)} MB` : '';
+function storeItems() {
+  const cms = (M.layers.commentary || []).map(c => ({ ...c, kind: 'commentary', builtin: !c.url }));
+  const dv = M.layers.devotional ? [{ id: M.layers.devotional.id, name: M.layers.devotional.name, kind: 'devotional', about: 'A morning and an evening reading for every day of the year (1865–68).', license: 'Public domain' }] : [];
+  return { cms, dv };
+}
+function openStore() {
+  const { cms, dv } = storeItems(), lib = new Set(S.set.library || ['jfb']);
+  const card = x => { const got = lib.has(x.id);
+    return `<li class="sitem"><div><b>${esc(x.name)}</b><span>${esc(x.about || '')}</span><small>${[x.books ? `${x.books.length} book${x.books.length === 1 ? '' : 's'}` : '', x.license, x.zip_bytes ? mb(x.zip_bytes) : ''].filter(Boolean).map(esc).join(' · ')}</small></div>
+      ${got ? `<span class="sgot">${x.id === 'jfb' ? 'Included' : 'In your library'}${x.id === 'jfb' ? '' : `<button class="linkbtn" data-drop="${esc(x.id)}">Remove</button>`}</span>` : `<button class="btn primary sfree" data-get="${esc(x.id)}">Free</button>`}</li>`; };
+  openSheet('Store', `<p class="hint" style="margin-top:0">Everything here is free. Tap <b>Free</b> to add it to your library; commentaries then appear in the Commentary list and devotionals in the menu.</p>
+    <h3>Commentaries</h3><ul class="store">${cms.map(card).join('')}</ul>
+    ${dv.length ? `<h3>Devotionals</h3><ul class="store">${dv.map(card).join('')}</ul>` : ''}
+    ${M.packsBase && !cms.some(c => c.url) ? '<p class="hint">The full catalogue could not be reached just now. Check your connection and open the Store again.</p>' : ''}`);
+}
+function storeGet(id) {
+  const { cms, dv } = storeItems(), x = [...cms, ...dv].find(i => i.id === id); if (!x) return;
+  S.set.library = [...new Set([...(S.set.library || ['jfb']), id])];
+  if (x.kind === 'commentary') { S.set.cmActive = id; if (S.set.layers.commentary === 'off') S.set.layers.commentary = 'markers'; }
+  save(); render(); openStore();
+  toast(x.kind === 'commentary' ? `${x.name} added. It is now the commentary shown.` : `${x.name} added to the menu.`);
+}
+function storeDrop(id) {
+  S.set.library = (S.set.library || ['jfb']).filter(i => i !== id || i === 'jfb');
+  if (S.set.cmActive === id) S.set.cmActive = 'jfb';
+  save(); render(); openStore();
+}
+document.addEventListener('change', e => {
+  const sel = e.target.closest('[data-cmsel]'); if (!sel) return;
+  S.set.cmActive = sel.value; if (S.set.layers.commentary === 'off') S.set.layers.commentary = 'markers';
+  save();
+  const v = !sheet.hidden && /:\d+$/.test($('#sheettitle').textContent) ? +$('#sheettitle').textContent.split(':').pop() : 0;
+  render().then(() => { if (!menu.hidden) renderMenu(); if (v && sel.closest('#sheet')) versePanel(v); });
+});
+
+/* ---------- Spurgeon's Morning and Evening ---------- */
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const dayName = k => { const [m, d] = k.split('-'); return `${MONTHS[+m - 1]} ${+d}`; };
+async function openDevotional(day, slot) {
+  const d = await getJSON(`data/devotional/${M.layers.devotional?.id || 'spurgeon-morning-evening'}.json`);
+  if (!d) return toast('Morning and Evening is not in this data set');
+  const now = new Date(), keys = Object.keys(d).sort();
+  day = day && d[day] ? day : `${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  if (!d[day]) day = keys[0];
+  slot = slot || (now.getHours() < 17 ? 'm' : 'e'); if (!d[day][slot]) slot = d[day].m ? 'm' : 'e';
+  const r = d[day][slot], i = keys.indexOf(day), prev = keys[(i - 1 + keys.length) % keys.length], next = keys[(i + 1) % keys.length];
+  openSheet(r.title || `${slot === 'm' ? 'Morning' : 'Evening'}, ${dayName(day)}`, `<div class="seg" role="group">${[['m', 'Morning'], ['e', 'Evening']].map(([k, t]) => `<button data-devo="${day}|${k}" aria-pressed="${k === slot}"${d[day][k] ? '' : ' disabled'}>${t}</button>`).join('')}</div>
+    <div class="prose devo" data-anchor="dv:${day}:${slot}">${rich(r.text)}</div>
+    <div class="row devonav"><button class="btn" data-devo="${prev}|${slot}">‹ ${esc(dayName(prev))}</button><button class="btn" data-devo="|">Today</button><button class="btn" data-devo="${next}|${slot}">${esc(dayName(next))} ›</button></div>
+    <p class="hint">C. H. Spurgeon, Morning and Evening: Daily Readings (1865–68). Public domain, from the CrossWire SWORD module.</p>`);
+  $('#sheetbody').scrollTop = 0;
+}
+
 /* ---------- start ---------- */
 (async () => {
   M = (await getJSON('data/manifest.json')) || M;
+  await loadPacks();
   studyIdx = (await getJSON('data/studies/index.json')) || [];
   await loadLex();
   if (synth) synth.onvoiceschanged = () => {};

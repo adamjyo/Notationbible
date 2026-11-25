@@ -3,7 +3,7 @@
  * Plugin Name:       Notation Bible
  * Plugin URI:        https://github.com/adamjyo/notationbible
  * Description:       The complete Berean Standard Bible with Strong's numbers, Greek and Hebrew interlinear, footnotes, cross-references, commentaries, highlighting, notes and NoteTrees. Serves a full-page reader and a [notation_bible] shortcode.
- * Version:           1.11.4
+ * Version:           1.12.0
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            Notation Bible
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'NB_VERSION', '1.11.4' );
+define( 'NB_VERSION', '1.12.0' );
 define( 'NB_FILE', __FILE__ );
 define( 'NB_DIR', plugin_dir_path( __FILE__ ) );
 define( 'NB_URL', plugin_dir_url( __FILE__ ) );
@@ -28,12 +28,14 @@ require_once NB_DIR . 'includes/class-nb-updater.php';
 require_once NB_DIR . 'includes/class-nb-accounts.php';
 require_once NB_DIR . 'includes/class-nb-admin.php';
 require_once NB_DIR . 'includes/class-nb-readers-admin.php';
+require_once NB_DIR . 'includes/class-nb-packs.php';
 
 NB_Reader::init();
 NB_Updater::init();
 NB_Accounts::init();
 NB_Admin::init();
 NB_Readers_Admin::init();
+NB_Packs::init();
 
 register_activation_hook( __FILE__, array( 'NB_Reader', 'activate' ) );
 register_deactivation_hook( __FILE__, array( 'NB_Reader', 'deactivate' ) );

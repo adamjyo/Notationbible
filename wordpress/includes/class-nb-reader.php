@@ -170,6 +170,7 @@ class NB_Reader {
 			'title'    => self::tab_title(),
 			'api'      => NB_Accounts::enabled() ? esc_url_raw( rest_url( NB_Accounts::NS . '/' ) ) : '',
 			'signups'  => NB_Accounts::signups_open(),
+			'packs'    => NB_Packs::for_reader(),
 		);
 
 		$html = str_replace( 'href="styles.css"', 'href="' . esc_url( $base . 'styles.css?ver=' . $ver ) . '"', $html );

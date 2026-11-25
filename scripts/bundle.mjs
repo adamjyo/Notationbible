@@ -22,7 +22,7 @@ async function jsonFiles(dir) {
 // lexicon and places). The heaviest extras (interlinear, JFB, other translations,
 // topics) are limited to a few books to keep the file small; override with BUNDLE_BOOKS=a,b,c.
 const KEEP = new Set((process.env.BUNDLE_BOOKS || 'genesis,psalms,john,romans').split(','));
-const LIMITED = /^data\/(il|commentary\/jfb)\/([\w-]+)\.json$/;          // per-book folders to trim
+const LIMITED = /^data\/(il|tsk|commentary\/jfb)\/([\w-]+)\.json$/;          // per-book folders to trim
 const LIMITED_PACKED = ['data/tr/kjv.json', 'data/tr/asv.json', 'data/tr/ylt.json', 'data/tr/web.json', 'data/topics/v.json'];
 const data = {};
 for (const f of await jsonFiles('data')) {
@@ -37,6 +37,22 @@ if (mf && !mf.sample) {
   for (const t of mf.layers.translations || []) t.books = t.books.filter(b => KEEP.has(b));
   for (const c of mf.layers.commentary || []) if (c.id === 'jfb') c.books = c.books.filter(b => KEEP.has(b));
   const names = [...KEEP].map(b => b[0].toUpperCase() + b.slice(1)).join(', ');
+}
+// a few commentary packs for the demo's books, read from a local copy of the "resources" branch
+// (PACKS_DIR, default ../packs-test); the real app installs packs on the site
+const PACKS_DIR = process.env.PACKS_DIR || path.join(ROOT, 'packs-test');
+const DEMO_PACKS = (process.env.DEMO_PACKS || 'tyndale,meyer,treasury-of-david').split(',');
+if (mf) {
+  delete mf.packsBase;
+  try {
+    const list = JSON.parse(await readFile(path.join(PACKS_DIR, 'packs.json'), 'utf8'));
+    for (const pk of list.filter(p => DEMO_PACKS.includes(p.id))) {
+      const books = pk.books.filter(b => KEEP.has(b));
+      for (const b of books) data[`data/commentary/${pk.id}/${b}.json`] = JSON.parse(await readFile(path.join(PACKS_DIR, pk.id, `${b}.json`), 'utf8'));
+      const { bytes, zip_bytes, entries, ...meta } = pk;
+      mf.layers.commentary.push({ ...meta, books });
+    }
+  } catch (e) { console.log('no commentary packs for the demo:', e.message); }
 }
 // keep only the topics that the demo's verse links use
 const usedTopics = new Set();

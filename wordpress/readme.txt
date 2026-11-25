@@ -4,7 +4,7 @@ Tags: bible, scripture, strongs, interlinear, commentary
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.11.4
+Stable tag: 1.12.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -33,6 +33,14 @@ Put the reader in any page or post with the shortcode:
 The plugin updates itself from its GitHub releases (https://github.com/adamjyo/notationbible/releases). WordPress shows new versions on the Plugins and Updates screens like any other plugin, and automatic updates are switched on when the plugin is first activated. Notation Bible → Settings shows the installed and latest versions and has a "Check for updates now" button.
 
 == Changelog ==
+
+= 1.12.0 =
+* Store: a new menu item lists free commentaries and devotionals; a Free button adds one to the reader's library. Eleven new commentaries: Matthew Henry, Tyndale Open Study Notes, John Calvin, Barnes' Notes, Geneva Bible notes (1599), F. B. Meyer, Spurgeon's Treasury of David, Matthew Poole, the Pulpit Commentary, Ellicott and MacLaren's Expositions. Devotional: Spurgeon's Morning and Evening.
+* A Commentary dropdown (in the menu, the verse panel and settings) picks which commentary from the library is shown. Long comments fold behind Read all.
+* Devotionals added from the Store appear in the menu; Morning and Evening opens on today's reading.
+* Cross references now come from the Treasury of Scripture Knowledge, grouped by the words in the verse they explain (OpenBible.info can still be chosen in settings).
+* Abbreviated references in commentaries (Psa 23:1, Jn 6:33, 1 Cor. 13:4) are now links.
+* New admin page, Notation Bible → Study resources: optionally install the commentary packs on this site so they are served from it instead of GitHub.
 
 = 1.11.4 =
 * Removed the down arrow beside the passage name.
