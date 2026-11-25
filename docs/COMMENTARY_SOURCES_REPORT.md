@@ -1,639 +1,133 @@
-# Commentary sources report
-Wed Nov 25 02:30:31 UTC 2026
+# Commentary sources report (probe)
+Wed Nov 25 02:33:58 UTC 2026
 
-## crosswire
-https://www.crosswire.org/ftpmirror/pub/sword/raw/mods.d.tar.gz
+## SermonIndex pages: download links
+### poole (53993 bytes)
+href="/modules/esword/SI-POOLE.cmti.zip"
+href="/modules/mybible/SI-POOLE.commentaries.zip"
+href="/modules/sword/sipoole.zip"
+href="/modules/theword/SI-POOLE.cmt.twm.zip"
+      <div class="cmt-hero-downloads">
+        <span class="cmt-dl-heading">Downloads</span>
+        <a href="/modules/sword/sipoole.zip" download class="cmt-dl-btn" title="For Xiphos, BibleTime, And Bible, PocketSword, Ezra">
+          SWORD Module
+        <a href="/modules/mybible/SI-POOLE.commentaries.zip" download class="cmt-dl-btn" title="For MyBible on Android">
+        <a href="/modules/esword/SI-POOLE.cmti.zip" download class="cmt-dl-btn" title="For e-Sword on Windows">
+### pulpit-commentary (54650 bytes)
+href="/modules/esword/SI-PULPIT.cmti.zip"
+href="/modules/mybible/SI-PULPIT.commentaries.zip"
+href="/modules/sword/sipulpit.zip"
+href="/modules/theword/SI-PULPIT.cmt.twm.zip"
+      <div class="cmt-hero-downloads">
+        <span class="cmt-dl-heading">Downloads</span>
+        <a href="/modules/sword/sipulpit.zip" download class="cmt-dl-btn" title="For Xiphos, BibleTime, And Bible, PocketSword, Ezra">
+          SWORD Module
+        <a href="/modules/mybible/SI-PULPIT.commentaries.zip" download class="cmt-dl-btn" title="For MyBible on Android">
+        <a href="/modules/esword/SI-PULPIT.cmti.zip" download class="cmt-dl-btn" title="For e-Sword on Windows">
+### ellicott (54166 bytes)
+href="/modules/esword/SI-ELLICOTT.cmti.zip"
+href="/modules/mybible/SI-ELLICOTT.commentaries.zip"
+href="/modules/sword/siellicott.zip"
+href="/modules/theword/SI-ELLICOTT.cmt.twm.zip"
+      <div class="cmt-hero-downloads">
+        <span class="cmt-dl-heading">Downloads</span>
+        <a href="/modules/sword/siellicott.zip" download class="cmt-dl-btn" title="For Xiphos, BibleTime, And Bible, PocketSword, Ezra">
+          SWORD Module
+        <a href="/modules/mybible/SI-ELLICOTT.commentaries.zip" download class="cmt-dl-btn" title="For MyBible on Android">
+        <a href="/modules/esword/SI-ELLICOTT.cmti.zip" download class="cmt-dl-btn" title="For e-Sword on Windows">
+### maclaren (53081 bytes)
+href="/modules/esword/SI-MACLAREN.cmti.zip"
+href="/modules/mybible/SI-MACLAREN.commentaries.zip"
+href="/modules/sword/simaclaren.zip"
+href="/modules/theword/SI-MACLAREN.cmt.twm.zip"
+      <div class="cmt-hero-downloads">
+        <span class="cmt-dl-heading">Downloads</span>
+        <a href="/modules/sword/simaclaren.zip" download class="cmt-dl-btn" title="For Xiphos, BibleTime, And Bible, PocketSword, Ezra">
+          SWORD Module
+        <a href="/modules/mybible/SI-MACLAREN.commentaries.zip" download class="cmt-dl-btn" title="For MyBible on Android">
+        <a href="/modules/esword/SI-MACLAREN.cmti.zip" download class="cmt-dl-btn" title="For e-Sword on Windows">
+
+## SermonIndex module zips
+poole -> https://www.sermonindex.net/modules/sword/sipoole.zip (7266149 bytes)
+pulpit-commentary -> https://www.sermonindex.net/modules/sword/sipulpit.zip (28404286 bytes)
+ellicott -> https://www.sermonindex.net/modules/sword/siellicott.zip (7700238 bytes)
+maclaren -> https://www.sermonindex.net/modules/sword/simaclaren.zip (7479546 bytes)
+
+## Probes
+
+### SME.zip (572,799 bytes)
 ```
-2BabDict | RawLD |  | Definitions and Symbols from The Two Babylons |  | 39326 |  | ./modules/lexdict/rawld/2babdict/2babdict
-ABS_Essay_GoodSam_SWB | RawGenBook | Essays | Essays on The Good Samaritan: Violence on the Road, Social World of Bandits |  | 22774 |  | ./modules/genbook/rawgenbook/abs_essay_goodsam_swb/ABS_Essay_GoodSam_SWB
-Abbott | zCom |  | Illustrated New Testament | Public Domain | 522230 |  | ./modules/comments/zcom/abbott/
-AbbottSmith | zLD |  | G. Abbott-Smith's A Manual Greek Lexicon of the New Testament | Public Domain | 1750654 |  | ./modules/lexdict/zld/abbottsmith/dict
-AbbottSmithStrongs | zLD |  | G. Abbott-Smith's A Manual Greek Lexicon (with Strongs) of the New Testament | Public Domain | 2269695 |  | ./modules/lexdict/zld/abbottsmithstrongs/dict
-AmTract | RawLD |  | American Tract Society Bible Dictionary | Public Domain | 1943113 |  | ./modules/lexdict/rawld/amtract/amtract
-BDBGlosses_Strongs | zLD |  | BDB Glosses (Strong's) | Public Domain | 947039 |  | ./modules/lexdict/zld/bdbglosses_strongs/bdbglosses_strongs
-BaptistConfession1646 | RawGenBook | Generic Books | First Baptist Confession of Faith, London 1646 Edition with an Addendum by Benjamin Cox | Public Domain | 105704 |  | ./modules/genbook/rawgenbook/baptistconfession1646/baptistconfession1646
-BaptistConfession1689 | RawGenBook |  | Baptist Confession of Faith of 1689 | Public Domain | 158618 |  | ./modules/genbook/rawgenbook/baptistconfession1689/baptistconfession1689
-Barnes | zCom |  | Barnes' New Testament Notes | Public Domain | 6104575 |  | ./modules/comments/zcom/barnes/
-Burkitt | zCom |  | Burkitt's Expository Notes | Public Domain | 3036894 |  | ./modules/comments/zcom/burkitt/
-CBC | RawLD |  | Condensed Biblical Cyclopedia | Public Domain | 484656 |  | ./modules/lexdict/rawld/cbc/cbc
-CalvinCommentaries | zCom |  | Calvin's Collected Commentaries | Public Domain | 21630766 | KJV | ./modules/comments/zcom/calvincommentaries/
-Catena | zCom |  | Catena Aurea (Thomas Aquinas) | Public Domain | 2434032 |  | ./modules/comments/zcom/catena/
-Cawdrey | zLD |  | A Table Alphabeticall by Robert Cawdrey (1604) | Public Domain | 242619 |  | ./modules/lexdict/zld/cawdrey/cawdrey
-Clarke | zCom |  | Adam Clarke's Commentary and critical notes on the Bible | Public Domain | 8873357 | KJV | ./modules/comments/zcom/clarke/
-Concord | RawGenBook |  | Book of Concord (Triglot Concordia): The Symbolical Books of the Ev. Lutheran Church | Public Domain | 2753444 |  | ./modules/genbook/rawgenbook/concord/concord
-DBD | zLD | Daily Devotional | Day By Day By Grace - Bob Hoekstra | Copyrighted; Permission to distribute gr | 430765 |  | ./modules/lexdict/zld/devotionals/dbd/dbd
-DTN | RawCom |  | Darby Translation Notes | Public Domain | 1039726 |  | ./modules/comments/rawcom/dtn/
-Daily | RawLD | Daily Devotional | Jonathan Bagster's Daily Light on the Daily Path | Public Domain | 1036870 |  | ./modules/lexdict/rawld/devotionals/daily/daily
-DarkNightOfTheSoul | RawGenBook |  | "The Dark Night of the Soul" by St. John of the Cross | Public Domain | 346370 |  | ./modules/genbook/rawgenbook/darknightofthesoul/darknightofthesoul
-Dodson | zLD |  | Dodson Greek-English Lexicon | Public Domain | 520323 |  | ./modules/lexdict/zld/dodson/dodson
-EMBReality | RawGenBook |  | The Reality of Prayer by E.M. Bounds | Public Domain | 203528 |  | ./modules/genbook/rawgenbook/embreality/embreality
-Easton | zLD |  | Easton's Bible Dictionary | Public Domain | 1638992 |  | ./modules/lexdict/zld/easton/easton
-Enoch | RawGenBook |  | The Book of Enoch in English | Public Domain | 503752 |  | ./modules/genbook/rawgenbook/enoch/enoch
-Family | zCom |  | Family Bible Notes |  | 638157 |  | ./modules/comments/zcom/family/
-Finney | RawGenBook |  | Sermons on Gospel Themes by Charles G. Finney (1792-1875) | Public Domain | 791061 |  | ./modules/genbook/rawgenbook/finney/finney
-Geneva | zCom |  | Geneva Bible Translation Notes |  | 1974656 |  | ./modules/comments/zcom/geneva/
-Heretics | RawGenBook |  | Heretics by Gilbert K. Chesterton (1874-1936) | Public Domain | 391704 |  | ./modules/genbook/rawgenbook/heretics/heretics
-Hitchcock | zLD |  | Hitchcock's Bible Names | Public Domain | 226411 |  | ./modules/lexdict/zld/hitchcock/dict
-ISBE | zLD |  | International Standard Bible Encyclopedia | Public Domain | 10472804 |  | ./modules/lexdict/zld/isbe/isbe
-Imitation | RawGenBook |  | Imitation of Christ by Thomas a Kempis | Public Domain | 376829 |  | ./modules/genbook/rawgenbook/imitation/imitation
-Institutes | RawGenBook |  | Calvin's Institutes | Public Domain | 4128964 |  | ./modules/genbook/rawgenbook/institutes/institutes
-JCRHoliness | RawGenBook |  | Holiness by J. C. Ryle | Public Domain | 1037439 |  | ./modules/genbook/rawgenbook/jcrholiness/jcrholiness
-JEAffections | RawGenBook |  | Religious Affections by Jonathan Edwards | Public Domain | 1029629 |  | ./modules/genbook/rawgenbook/jeaffections/jeaffections
-JESermons | RawGenBook |  | Select Sermons of Jonathan Edwards | Public Domain | 1207053 |  | ./modules/genbook/rawgenbook/jesermons/jesermons
-JFB | zCom4 | Commentaries | Jamieson Fausset Brown Bible Commentary | Public Domain | 433676 | KJV | ./modules/comments/zcom/jfb/
-JOChrist | RawGenBook |  | Christologia by John Owen | Public Domain | 1026688 |  | ./modules/genbook/rawgenbook/jochrist/jochrist
-JOCommGod | RawGenBook |  | Communion with God the Father, Son and Holy Ghost by John Owen | Public Domain | 1344739 |  | ./modules/genbook/rawgenbook/jocommgod/jocommgod
-JOGlory | RawGenBook |  | The Glory of Christ by John Owen | Public Domain | 701176 |  | ./modules/genbook/rawgenbook/joglory/joglory
-JOMortSin | RawGenBook |  | The Mortification of Sin by John Owen | Public Domain | 306895 |  | ./modules/genbook/rawgenbook/jomortsin/jomortsin
-Josephus | RawGenBook |  | Josephus: The Complete Works | Public Domain | 4841546 |  | ./modules/genbook/rawgenbook/josephus/josephus
-Jubilees | RawGenBook |  | The Book of Jubilees | Public Domain | 401174 |  | ./modules/genbook/rawgenbook/jubilees/jubilees
-KD | zCom4 |  | Keil and Delitzsch Biblical Commentary on the Old Testament | Public Domain | 11534692 | KJV | ./modules/comments/zcom4/kd/
-KingComments | zCom |  | Kingcomments, commentary on the whole Bible. | Copyrighted; Free non-commercial distrib | 9307305 | KJV | ./modules/comments/zcom/kingcomments/
-LawGospel | RawGenBook |  | Walther's Law and Gospel | Public Domain | 1742686 |  | ./modules/genbook/rawgenbook/lawgospel/lawgospel
-Lightfoot | zCom |  | John Lightfoot Commentary | Public Domain | 723385 |  | ./modules/comments/zcom/lightfoot/
-Luther | zCom |  | Luther's Commentary on Selected Bible Passages | Public Domain | 3510625 |  | ./modules/comments/zcom/luther/
-MHC | zCom4 |  | Matthew Henry's Complete Commentary on the Whole Bible | Public Domain | 15604474 | KJV | ./modules/comments/zcom4/mhc/
-MHCC | zCom | Commentaries | Matthew Henry's Concise Commentary on the Whole Bible | Public Domain | 433676 | KJV | ./modules/comments/zcom/mhcc/
-MLStrong | zLD |  | An Intermediate Greek–English Lexicon Keyed to Strong's Numbers | Creative Commons: BY-SA 4.0 | 1324586 |  | ./modules/lexdict/zld/mlstrong/dict
-MollColossians | RawGenBook |  | Paul's Letter to the Believers at Colosse - A Series of Devotions by Pastor Randy Moll | Copyrighted; Permission to distribute gr | 110325 |  | ./modules/genbook/rawgenbook/mollcolossians/mollcolossians
-NETnotesfree | zCom |  | Free version of NET Bible Footnotes with limited notes | Copyrighted | 3804584 |  | ./modules/comments/zcom/netnotesfree/
-Nave | zLD |  | Naveߴs Topical Bible | Public Domain | 1572986 |  | ./modules/lexdict/zld/nave/dict
-OSHM | zLD |  | Open Scriptures Hebrew Morphology | Creative Commons: BY 4.0 | 297814 |  | ./modules/lexdict/zld/oshm/dict
-Orthodoxy | RawGenBook |  | Orthodoxy by Gilbert K. Chesterton (1874-1936) | Public Domain | 355851 |  | ./modules/genbook/rawgenbook/orthodoxy/orthodoxy
-PNT | zCom |  | The People's New Testament | Public Domain | 943098 |  | ./modules/comments/zcom/pnt/
-Packard | zLD |  | Packard's Morphological Analysis Codes | Creative Commons: BY-SA 4.0 | 279187 |  | ./modules/lexdict/zld/packard/dict
-Passion | RawGenBook |  | Dolorous Passion of Our Lord Jesus Christ | Public Domain | 774046 |  | ./modules/genbook/rawgenbook/passion/passion
-Personal | RawFiles |  | Personal Commentary |  | 691798 |  | ./modules/comments/rawfiles/personal/
-Pilgrim | RawGenBook |  | The Pilgrim's Progress by John Bunyan (1628-1688) | Public Domain | 648743 |  | ./modules/genbook/rawgenbook/pilgrim/pilgrim
-Practice | RawGenBook |  | The Practice of the Presence of God: The Best Rule of Holy Life by Brother Lawrence (Nicho | Public Domain | 64943 |  | ./modules/genbook/rawgenbook/practice/practice
-QuotingPassages | zCom |  | Scripture Passages Quoting Scripture | Public Domain | 442094 |  | ./modules/comments/zcom/quotingpassages/
-RWP | zCom |  | Robertson's Word Pictures | Copyrighted; Free non-commercial distrib | 3534360 |  | ./modules/comments/zcom/rwp/
-Robinson | zLD |  | Robinson's Morphological Analysis Codes | Creative Commons: BY-SA 4.0 | 142026 |  | ./modules/lexdict/zld/robinson/dict
-SAOA | RawLD |  | Scripture Alphabet Of Animals | Public Domain | 101298 |  | ./modules/lexdict/rawld/saoa/saoa
-SME | zLD | Daily Devotional | C. H. Spurgeon's Morning and Evening: Daily Readings | Public Domain | 580432 |  | ./modules/lexdict/zld/devotionals/sme/sme
-Scofield | zCom |  | Scofield Reference Notes, 1917 Edition | Public Domain | 847474 | KJV | ./modules/comments/zcom/scofield/
-Smith | RawLD |  | Smith's Bible Dictionary | Public Domain | 3494051 |  | ./modules/lexdict/rawld/smith/smith
-Spurious | RawCom |  | Tischendorf's Spurious Passages of the GNT | Public Domain | 200069 |  | ./modules/comments/rawcom/spurious/
-StrongsGreek | zLD |  | Strong's Greek Bible Dictionary | Public Domain | 863426 |  | ./modules/lexdict/zld/strongsgreek/dict
-StrongsHebrew | RawLD |  | Strong's Hebrew Bible Dictionary | Public Domain | 1552838 |  | ./modules/lexdict/rawld/strongshebrew/strongshebrew
-Summa | RawGenBook |  | Summa Theologica by St. Thomas Aquinas | Public Domain | 18258973 |  | ./modules/genbook/rawgenbook/summa/summa
-TCR | RawLD |  | Thompson Chain Topics | Public Domain | 977704 |  | ./modules/lexdict/rawld/tcr/tcr
-TDavid | zCom4 |  | C. H. Spurgeon's Treasury of David | Public Domain | 5340005 | KJV | ./modules/comments/zcom/tdavid/
-TFG | RawCom |  | The Fourfold Gospel and Commentary on Acts of Apostles | Public Domain | 2961985 |  | ./modules/comments/rawcom/tfg/
-TSK | zCom |  | Treasury of Scripture Knowledge | Public Domain | 2869063 |  | ./modules/comments/zcom/tsk/
-Torrey | RawLD |  | R. A. Torrey's New Topical Textbook | Public Domain | 1714224 |  | ./modules/lexdict/rawld/torrey/torrey
-Webster1806 | zLD |  | Webster's 1806 A Compendious Dictionary of the English Language | Public Domain | 3989740 |  | ./modules/lexdict/zld/webster1806/webster1806
-Webster1828 | zLD |  | Webster's Dictionary 1828 | Creative Commons: BY-SA 4.0 | 10872365 |  | ./modules/lexdict/zld/webster1828/dict
-Webster1913 | zLD |  | Webster's 1913 Revised Unabridged Dictionary of the English Language | Public Domain | 25683736 |  | ./modules/lexdict/zld/webster1913/webster1913
-Wesley | zCom4 |  | John Wesley's Notes on the Bible | Public Domain | 3175418 | KJV | ./modules/comments/zcom4/wesley/
-Westminster | RawGenBook |  | Westminster Confession & Catechisms | Public Domain | 1567085 |  | ./modules/genbook/rawgenbook/westminster/westminster
-Westminster21 | RawGenBook | Generic Books | The Westminster Standards translated into twenty-first century American English | Copyrighted; Freely distributable | 1094132 |  | ./modules/genbook/rawgenbook/westminster21/westminster21
+{'ModDrv': 'zLD', 'SourceType': 'OSIS', 'Encoding': 'UTF-8', 'Versification': None, 'Description': "C. H. Spurgeon's Morning and Evening: Daily Readings", 'DistributionLicense': 'Public Domain', 'Category': 'Daily Devotional'}
+entries: 366 text bytes: 1585095
+keys: ['01.01', '01.02', '01.03', '01.04', '01.05', '01.06', '01.07', '01.08'] ... ['12.29', '12.30', '12.31']
+'01.01' '<div type="entry" osisID="01.01"><div type="section" osisID="01.01.am"><title>Morning, January 1</title><p><hi type="italic">“They did eat of the fruit of the land of Canaan that year.”</hi><lb/><reference osisRef="Bible:Josh.5.12">Joshua 5:12</reference></p><p>Israel’s weary wanderings were all over, and the promised rest was attained. No more moving tents, fiery serpents, fierce Amalekites, and howling wildernesses: they came to the land which flowed with milk and honey, and they ate the old corn of the land. Perhaps this year, beloved Christian reader, this may be thy case or mine. Joyful is the prospect, and if faith be in active exercise, it will yield unalloyed delight. To be with Jesus in the rest which remaineth for the people of God, is a cheering hope indeed, and to expect this glory so soon is a double bliss. Unbelief shudders at the Jordan which still rolls between us and the goodly land, but let us rest assured that we have already experienced more ills than death at its worst can cause us. Let us banish every fearful thought, and rejoice with exceeding great joy, in the prospect that this year we shall begin to be “for ever with the Lord.”</p><p>A part of the host will this year tarry on earth, to do service for their Lord. If this should fall to our lot, there is no reason why the New Year’s text should not still be true. “We who have believed do enter into rest.” The Holy Spirit is the earnest of our inheritance; he gives us “glory begun below.” In heaven they'
+'01.02' '<div type="entry" osisID="01.02"><div type="section" osisID="01.02.am"><title>Morning, January 2</title><p><hi type="italic">“Continue in prayer.”</hi><lb/><reference osisRef="Bible:Col.4.2">Colossians 4:2</reference></p><p>It is interesting to remark how large a portion of Sacred Writ is occupied with the subject of prayer, either in furnishing examples, enforcing precepts, or pronouncing promises. We scarcely open the Bible before we read, “Then began men to call upon the name of the Lord;” and just as we are about to close the volume, the “Amen” of an earnest supplication meets our ear. Instances are plentiful. Here we find a wrestling Jacob—there a Daniel who prayed three times a day—and a David who with all his heart called upon his God. On the mountain we see Elias; in the dungeon Paul and Silas. We have multitudes of commands, and myriads of promises. What does this teach us, but the sacred importance and necessity of prayer? We may be certain that whatever God has made prominent in his Word, he intended to be conspicuous in our lives. If he has said much about prayer, it is because he knows we have much need of it. So deep are our necessities, that until we are in heaven we must not cease to pray. Dost thou want nothing? Then, I fear thou dost not know thy poverty. Hast thou no mercy to ask of God? Then, may the Lord’s mercy show thee thy misery! A prayerless soul is a Christless soul. Prayer is the lisping of the believing infant, the shout of the fighting believer, '
 ```
 
-## crosswire-attic
-https://www.crosswire.org/ftpmirror/pub/sword/atticraw/mods.d.tar.gz
+### TDavid.zip (4,956,285 bytes)
 ```
-AquinasSummaTheologica | RawGenBook |  | Summa Theologica by St. Thomas Aquinas | Public Domain | 17395601 |  | ./modules/genbook/rawgenbook/aquinassummatheologica/aquinassummatheologica
-Barnes | zCom |  | Barnes' New Testament Notes | Public Domain | 6104575 |  | ./modules/comments/zcom/barnes/
-EEnochCharles | RawGenBook |  | 1 Enoch in English | Public Domain | 246700 |  | ./modules/genbook/rawgenbook/eenochcharles/eenochcharles
-EnumaElish | RawGenBook |  | The Enuma Elish | Public Domain | 68504 |  | ./modules/genbook/rawgenbook/enumaelish/enumaelish
-Jasher | RawGenBook |  | The Book of Jasher | Public Domain | 981686 |  | ./modules/genbook/rawgenbook/jasher/jasher
-Jub | RawGenBook |  | The Book of Jubilees | Public Domain | 340120 |  | ./modules/genbook/rawgenbook/jub/jub
-KingComm | zCom |  | Kingcomments, commentary on the whole Bible. | Copyrighted; Free non-commercial distrib | 9324795 | KJV | ./modules/comments/zcom/kingcomm/
-OTPassages | zCom |  | Old Testament passages cited in the New Testament | Public Domain | 104224 |  | ./modules/comments/zcom/otpassages/
-QuotingPassages | zCom |  | Scripture Passages Quoting Scripture | Public Domain | 431633 |  | ./modules/comments/zcom/quotingpassages/
-RWP | zCom |  | Robertson's Word Pictures | Copyrighted; Free non-commercial distrib | 3053685 |  | ./modules/comments/zcom/rwp/
-SummaTheologica | RawGenBook |  | Summa Theologica by Thomas Aquinas | Public Domain | 15984939 |  | ./modules/genbook/rawgenbook/summatheologica/summatheologica
-WebstersDict | zLD |  | Webster's Revised Unabridged Dictionary of the English Language 1913 | Public Domain | 17473202 |  | ./modules/lexdict/zld/webstersdict/webstersdict
+{'ModDrv': 'zCom4', 'SourceType': 'OSIS', 'Encoding': 'UTF-8', 'Versification': 'KJV', 'Description': "C. H. Spurgeon's Treasury of David", 'DistributionLicense': 'Public Domain', 'Category': None}
+entries: 301 books: 1 text bytes: 15100971
+range entries: 0 intro entries: 151
+largest books: [('psalms', 15100971)]
+('psalms', 1, 1, 1) '<div type="x-milestone" subType="x-preverse" sID="pv1"/><title type="x-s">Psalm 1 OVERVIEW</title> <div sID="gen10" type="x-p"/> <div type="x-milestone" subType="x-preverse" eID="pv1"/> <div eID="gen10" type="x-p"/> <title type="x-s">TITLE.</title> <div sID="gen11" type="x-p"/> <hi type="italic">This Psalm may be regarded as</hi> THE PREFACE PSALM, <hi type="italic">having in it a notification of the contents of the entire Book. It is the psalmists\'s desire to teach us the way to blessedness, and to warn us of the sure destruction of sinners. This, then, is the matter of the first Psalm, which may be looked upon, in some respects, as the text upon which the whole of the Psalms make up a divine sermon.</hi> <div eID="gen11" type="x-p"/> <title type="x-s">DIVISION.</title> <div sID="gen12" type="x-p"/> <hi type="italic">This Psalm consists of two parts: in the first (from verse 1 to the end of the 3rd) David sets out wherein the felicity and blessedness of a godly man consisteth, what his exercises are, and what blessings he shall receive from the Lord. In the second part (from verse 4 to the end) he contrasts the state and character of the ungodly, reveals the future, and describes,'
+('psalms', 2, 1, 1) '<div type="x-milestone" subType="x-preverse" sID="pv2"/><title type="x-s">Psalm 2 OVERVIEW</title> <div sID="gen112" type="x-p"/> <div type="x-milestone" subType="x-preverse" eID="pv2"/> <div eID="gen112" type="x-p"/> <title type="x-s">TITLE.</title> <div sID="gen113" type="x-p"/> <hi type="italic">We shall not greatly err in our summary of this sublime Psalm if we call it</hi> THE PSALM OF MESSIAH THE PRINCE; <hi type="italic">for it sets forth, as in a wondrous vision, the tumult of the people against the Lord\'s anointed, the determinate purpose of God to exalt his own Son, and the ultimate reign of that Son over all his enemies. Let us read it with the eye of faith, beholding, as in a glass, the final triumph of our Lord Jesus Christ over all his enemies. Lowth has the following remarks upon this Psalm: "The establishment of David upon his throne, notwithstanding the opposition made to it by his enemies, is the subject of the Psalm. David sustains in it a twofold character, literal and allegorical. If we read over the Psalm, first with an eye to the literal David, the meaning is obvious, and put beyond all dispute by the sacred history. There is indeed an uncommon glow in the ex'
+('psalms', 23, 0, 0) '<chapter n="23" osisID="Ps.23" sID="Ps.23"/> <div eID="gen2876" type="x-p"/> '
+('psalms', 23, 1, 1) '<div type="x-milestone" subType="x-preverse" sID="pv23"/><title type="x-s">Psalm 23 OVERVIEW</title> <div sID="gen2877" type="x-p"/> <div type="x-milestone" subType="x-preverse" eID="pv23"/><hi type="italic">There is no inspired title to this psalm, and none is needed, for it records no special event, and needs no other key than that which every Christian may find in his own bosom. It is David\'s</hi> Heavenly Pastoral; <hi type="italic">a surpassing ode, which none of the daughters of music can excel. The clarion of war here gives place to the pipe of peace, and he who so lately bewailed the woes of the Shepherd tunefully rehearses the joys of the flock. Sitting under a spreading tree, with his flock around him, like Bunyan\'s shepherd-boy in the Valley of Humiliation, we picture David singing this unrivalled pastoral with a heart as full of gladness as it could hold; or, if the psalm be the product of his after-years, we are sure that his soul returned in contemplation to the lonely water-brooks which rippled among the pastures of the wilderness, where in early days she had been wont to dwell. This is the pearl of psalms whose soft and pure radiance delights every eye; a pearl of w'
+('psalms', 0, 0, 0) '<div canonical="true" osisID="Ps" sID="gen2" type="book"/> <title type="x-s"></title> <div sID="gen3" type="x-p"/> Preface <div eID="gen3" type="x-p"/> <div sID="gen4" type="x-p"/> My Preface shall at least possess the virtue of brevity, as I find it difficult to impart to it any other. <div eID="gen4" type="x-p"/> <div sID="gen5" type="x-p"/> One thing the reader will please clearly to understand, and I beg him to bear it in mind; <hi type="italic">I am far from endorsing all I have quoted</hi>. I am neither responsible for the scholarship or orthodoxy of the writers. The names are given that each author may bear his own burden; and a variety of writers have been quoted that the thoughts of many minds might be before the reader. Still I trust nothing evil has been admitted; if it be so it is an oversight. <div eID="gen5" type="x-p"/> <div sID="gen6" type="x-p"/> The research expended on this volume would have occupied far too much of my time, had not my friend and amanuensis Mr. John L. Keys, most diligently aided me in investigations at the British Museum, Dr. William\'s Library, and other treasuries of theological lore. With his help I have ransacked books by the hundred, often w'
 ```
 
-## xiphos
-https://ftp.xiphos.org/mods.d.tar.gz
-curl: (7) Failed to connect to ftp.xiphos.org port 443 after 189 ms: Could not connect to server
-(download failed)
-
-## sermonindex
-https://www.sermonindex.net/modules/sword/mods.d.tar.gz
-curl: (22) The requested URL returned error: 404
-(download failed)
-
-## SermonIndex module listing page
-
-## SermonIndex commentary index (links)
-href="/commentary/1645eng/"
-href="/commentary/1655richardsonot/"
-href="/commentary/abc/"
-href="/commentary/absimpson/"
-href="/commentary/adamclarke/"
-href="/commentary/aek/"
-href="/commentary/alford/"
-href="/commentary/alfordgnt/"
-href="/commentary/anf/"
-href="/commentary/annotated-bible/"
-href="/commentary/aquifer-open-study-notes/"
-href="/commentary/b-h-carroll/"
-href="/commentary/barclay/"
-href="/commentary/barnes/"
-href="/commentary/bbc/"
-href="/commentary/bcw/"
-href="/commentary/beet/"
-href="/commentary/benson/"
-href="/commentary/bi/"
-href="/commentary/bibleteachers/"
-href="/commentary/boles/"
-href="/commentary/bonar/"
-href="/commentary/box/"
-href="/commentary/bridge/"
-href="/commentary/bridgesproverbs/"
-href="/commentary/broadus/"
-href="/commentary/bsa-study-bible/"
-href="/commentary/burkitt/"
-href="/commentary/butler/"
-href="/commentary/bwj/"
-href="/commentary/calcom/"
-href="/commentary/cambridge/"
-href="/commentary/cambridgegreek/"
-href="/commentary/candlish-1jn/"
-href="/commentary/catena/"
-href="/commentary/catholic-commentary/"
-href="/commentary/cbc/"
-href="/commentary/cbnotes/"
-href="/commentary/chmnp/"
-href="/commentary/coffman/"
-href="/commentary/coke/"
-href="/commentary/concise-commentary/"
-href="/commentary/constable/"
-href="/commentary/cottage-bible/"
-href="/commentary/cpc/"
-href="/commentary/csm/"
-href="/commentary/d-r/"
-href="/commentary/darby-s-n-t-synopsis/"
-href="/commentary/darbynotes/"
-href="/commentary/derick/"
-href="/commentary/diodati/"
-href="/commentary/doddridge/"
-href="/commentary/doyly/"
-href="/commentary/ds-clark-revelation/"
-href="/commentary/dsb/"
-href="/commentary/dummelow/"
-href="/commentary/dunagan/"
-href="/commentary/dutch-annotations/"
-href="/commentary/eadie/"
-href="/commentary/easyenglish/"
-href="/commentary/eb/"
-href="/commentary/ecf/"
-href="/commentary/edwards/"
-href="/commentary/ellicott/"
-href="/commentary/evans-w/"
-href="/commentary/everett/"
-href="/commentary/exp-gr/"
-href="/commentary/expositor-s/"
-href="/commentary/expositors-dictionary/"
-href="/commentary/f-b-hole/"
-href="/commentary/fairbairn/"
-href="/commentary/familynt/"
-href="/commentary/fbmeyer/"
-href="/commentary/fortner/"
-href="/commentary/foy-wallace-revelation/"
-href="/commentary/galatians-cmt/"
-href="/commentary/gann/"
-href="/commentary/garner-howes/"
-href="/commentary/genevabn/"
-href="/commentary/gill/"
-href="/commentary/gnomon/"
-href="/commentary/godbey/"
-href="/commentary/godet/"
-href="/commentary/greattexts/"
-href="/commentary/guzik/"
-href="/commentary/h-meyer/"
-href="/commentary/h-smith/"
-href="/commentary/hall/"
-href="/commentary/hammond/"
-href="/commentary/hampton/"
-href="/commentary/hastings-children/"
-href="/commentary/haweis/"
-href="/commentary/haydock-c/"
-href="/commentary/hebrews-milligan/"
-href="/commentary/hendriksen/"
-href="/commentary/hengstenberg/"
-href="/commentary/hodge/"
-href="/commentary/homileticae/"
-href="/commentary/hpm/"
-href="/commentary/ibs/"
-href="/commentary/iccnt/"
-href="/commentary/illustrated-nt/"
-href="/commentary/iron/"
-href="/commentary/irwin/"
-href="/commentary/isa-jaa/"
-href="/commentary/itwsb/"
-href="/commentary/j-brown/"
-href="/commentary/j-haldane/"
-href="/commentary/jblightfoot/"
-href="/commentary/jfb-u/"
-href="/commentary/jgmitchell/"
-href="/commentary/jimgerrish/"
-href="/commentary/joncourson/"
-href="/commentary/jonesmark/"
-href="/commentary/keildelitzsch/"
-href="/commentary/kg-titus/"
-href="/commentary/kingcomments/"
-href="/commentary/kjv-notes/"
-href="/commentary/knecht/"
-href="/commentary/knolly-s/"
-href="/commentary/l-m-grant/"
-href="/commentary/lange/"
-href="/commentary/lapide/"
-href="/commentary/larkin-rev/"
-href="/commentary/lenski/"
-href="/commentary/lightfoot/"
-href="/commentary/lipscomb/"
-href="/commentary/livingwater/"
-href="/commentary/luscombe/"
-href="/commentary/luthercmt/"
-href="/commentary/maclaren/"
-href="/commentary/mahan/"
-href="/commentary/mark-dorris/"
-href="/commentary/matthewhenry/"
-href="/commentary/mcgar/"
-href="/commentary/mcgee/"
-href="/commentary/milligan/"
-href="/commentary/mor/"
-href="/commentary/morgan-g-campbell/"
-href="/commentary/netnotes/"
-href="/commentary/newell/"
-href="/commentary/nt-caton-minor-epistles-commentary/"
-href="/commentary/ntrc/"
-href="/commentary/numerical-bible/"
-href="/commentary/old-green-commentaries/"
-href="/commentary/overview-bible-books/"
-href="/commentary/owenhebrews/"
-href="/commentary/patrick-lowth/"
-href="/commentary/pb/"
-href="/commentary/peake/"
-href="/commentary/pett/"
-href="/commentary/phc/"
-href="/commentary/philpot/"
-href="/commentary/pink/"
-href="/commentary/plain-talk-on/"
-href="/commentary/pnt/"
-href="/commentary/poole/"
-href="/commentary/popular/"
-href="/commentary/price/"
-href="/commentary/psalms/"
-href="/commentary/pulpit-commentary/"
-href="/commentary/quotes2/"
-href="/commentary/revelation-hinds/"
-href="/commentary/richard-watson/"
-href="/commentary/riley/"
-href="/commentary/robertsonwp/"
-href="/commentary/romans-whiteside/"
-href="/commentary/rose/"
-href="/commentary/ryle-expository-thoughts/"
-href="/commentary/schaff/"
-href="/commentary/scofield/"
-href="/commentary/scottrevelation/"
-href="/commentary/seiss/"
-href="/commentary/self-interpreting-bible/"
-href="/commentary/sermonbible/"
-href="/commentary/sgnt/"
-href="/commentary/spurgeon/"
-href="/commentary/summarized-bible/"
-href="/commentary/sutcliffe/"
-href="/commentary/tfg/"
-href="/commentary/tgc/"
-href="/commentary/tlbc/"
-href="/commentary/trapp/"
-href="/commentary/tscott/"
-href="/commentary/tske/"
-href="/commentary/utley/"
-href="/commentary/vincentws/"
-href="/commentary/wardlaw-proverbs/"
-href="/commentary/wesley/"
-href="/commentary/westcott/"
-href="/commentary/whedon/"
-href="/commentary/wkelly/"
-href="/commentary/wnt/"
-href="/commentary/woods/"
-href="/commentary/zerrcbc/"
-
-## HelloAO available commentaries
-abbott | Illustrated New Testament | Illustrated New Testament | https://www.crosswire.org/sword/modules/ModInfo.jsp?modName=Abbott | 27 | 260
-adam-clarke | Adam Clarke's Commentary and critical notes on the Bible | Adam Clarke's Commentary and critical notes on the Bible | https://www.crosswire.org/sword/modules/ModInfo.jsp?modName=Clarke | 66 | 1189
-barnes | Barnes' New Testament Notes | Barnes' New Testament Notes | https://www.crosswire.org/sword/modules/ModInfo.jsp?modName=Barnes | 27 | 260
-burkitt | Burkitt's Expository Notes | Burkitt's Expository Notes | https://www.crosswire.org/sword/modules/ModInfo.jsp?modName=Burkitt | 27 | 260
-calvincommentaries | Calvin's Collected Commentaries | Calvin's Collected Commentaries | https://www.crosswire.org/sword/modules/ModInfo.jsp?modName=CalvinCommentaries | 48 | 801
-catena | Catena Aurea (Thomas Aquinas) | Catena Aurea (Thomas Aquinas) | https://www.crosswire.org/sword/modules/ModInfo.jsp?modName=Catena | 4 | 89
-dtn | Darby Translation Notes | Darby Translation Notes | https://www.crosswire.org/sword/modules/ModInfo.jsp?modName=DTN | 66 | 1185
-dutkant | Kanttekeningen Statenvertaling | Annotations to the Dutch States Translation | https://www.crosswire.org/sword/modules/ModInfo.jsp?modName=DutKant | 66 | 1187
-family | Family Bible Notes | Family Bible Notes | https://www.crosswire.org/sword/modules/ModInfo.jsp?modName=Family | 26 | 256
-geneva | Geneva Bible Translation Notes | Geneva Bible Translation Notes | https://www.crosswire.org/sword/modules/ModInfo.jsp?modName=Geneva | 63 | 1161
-jamieson-fausset-brown | Jamieson-Fausset-Brown Bible Commentary | Jamieson-Fausset-Brown Bible Commentary | https://creativecommons.org/publicdomain/mark/1.0/ | 66 | 1187
-john-calvin | John Calvin's Commentaries | John Calvin's Commentaries | https://creativecommons.org/publicdomain/mark/1.0/ | 48 | 817
-john-gill | John Gill Bible Commentary | John Gill Bible Commentary | https://creativecommons.org/publicdomain/mark/1.0/ | 66 | 1189
-keil-delitzsch | Carl Friedrich Keil and Franz Delitzsch Old Testament Commentary | Carl Friedrich Keil and Franz Delitzsch Old Testament Commentary | https://creativecommons.org/publicdomain/mark/1.0/ | 39 | 909
-lightfoot | John Lightfoot Commentary | John Lightfoot Commentary | https://www.crosswire.org/sword/modules/ModInfo.jsp?modName=Lightfoot | 4 | 87
-luther | Luther's Commentary on Selected Bible Passages | Luther's Commentary on Selected Bible Passages | https://www.crosswire.org/sword/modules/ModInfo.jsp?modName=Luther | 48 | 148
-mak | Matthias Ansorgs Kommentar | Matthias Ansorg's Commentary | https://www.crosswire.org/sword/modules/ModInfo.jsp?modName=MAK | 44 | 240
-matthew-henry | Matthew Henry Bible Commentary | Matthew Henry Bible Commentary | https://creativecommons.org/publicdomain/mark/1.0/ | 65 | 1167
-pnt | The People's New Testament | The People's New Testament | https://www.crosswire.org/sword/modules/ModInfo.jsp?modName=PNT | 26 | 259
-quotingpassages | Scripture Passages Quoting Scripture | Scripture Passages Quoting Scripture | https://www.crosswire.org/sword/modules/ModInfo.jsp?modName=QuotingPassages | 60 | 618
-rieger | Carl Heinrich Riegers Kommentar | Carl Heinrich Rieger's Commentary | https://www.crosswire.org/sword/modules/ModInfo.jsp?modName=Rieger | 28 | 324
-scofield | Scofield Reference Notes, 1917 Edition | Scofield Reference Notes, 1917 Edition | https://www.crosswire.org/sword/modules/ModInfo.jsp?modName=Scofield | 66 | 948
-spurious | Tischendorf's Spurious Passages of the GNT | Tischendorf's Spurious Passages of the GNT | https://www.crosswire.org/sword/modules/ModInfo.jsp?modName=Spurious | 19 | 80
-tfg | The Fourfold Gospel and Commentary on Acts of Apostles | The Fourfold Gospel and Commentary on Acts of Apostles | https://www.crosswire.org/sword/modules/ModInfo.jsp?modName=TFG | 6 | 119
-tsk | Treasury of Scripture Knowledge | Treasury of Scripture Knowledge | https://www.crosswire.org/sword/modules/ModInfo.jsp?modName=TSK | 66 | 1189
-tyndale | Tyndale Open Study Notes | Tyndale Open Study Notes | https://creativecommons.org/licenses/by-sa/4.0/ | 65 | 1187
-
-## Tyndale Open Study Notes zip
-HTTP/2 200 
-content-type: application/zip
-content-length: 3065210
-
-## Candidate module zips (size, conf)
-
-### Barnes  (https://www.crosswire.org/ftpmirror/pub/sword/packages/rawzip) 5812827 bytes
+### si_ellicott.zip (7,700,238 bytes)
 ```
-    82460  2013-07-16 09:45   modules/comments/zcom/barnes/nt.czv
-  6018995  2013-07-16 09:45   modules/comments/zcom/barnes/nt.czz
-     3120  2013-07-16 09:45   modules/comments/zcom/barnes/nt.czs
-      437  2013-07-16 09:45   mods.d/barnes.conf
----------                     -------
-  6105012                     4 files
-[Barnes]
-DataPath=./modules/comments/zcom/barnes/
-ModDrv=zCom
-BlockType=CHAPTER
-CompressType=ZIP
-Lang=en
-Encoding=UTF-8
-SourceType=ThML
-Version=1.1
-History_1.1=Made numerous (mostly formatting) corrections and replaced some omitted cross-references
-Description=Barnes' New Testament Notes
-About=Barnes' New Testament Notes
-DistributionLicense=Public Domain
-LCSH=Bible. N.T.--Commentaries.
-SwordVersionDate=2002-01-01
-InstallSize=6104575
+{'ModDrv': 'zCom', 'SourceType': 'OSIS', 'Encoding': 'UTF-8', 'Versification': 'KJV', 'Description': "Ellicott's Commentary for English Readers", 'DistributionLicense': 'Public Domain', 'Category': 'Commentaries'}
+entries: 24568 books: 66 text bytes: 21268100
+range entries: 0 intro entries: 1255
+largest books: [('matthew', 1152152), ('psalms', 1105482), ('acts', 1102607), ('john', 1035448), ('genesis', 882138)]
+('genesis', 1, 1, 1) '<div sID="gen4" type="x-p"/>B: ON THE NAMES ELOHIM AND JEHOVAH-ELOHIM.<br/>Throughout the first account of creation (Genesis 1:1 to Genesis 2:3) the Deity is simply called Elohim. This word is strictly a plural of Eloah, which is used as the name of God only in poetry, or in late books like those of Nehemiah and Daniel. It is there an Aramaism, God in Syriac being Aloho, in Ohaldee Ellah, and in Arabic Allahu—all of which are merely dialectic varieties of the Hebrew Eloah, and are used constantly in the singular number. In poetry EJoah is sometimes employed with great emphasis, as, for instance, in Psalms 18:31 : “Who is Eloah except Jehovah?” But while thus the sister dialects used the singular both in poetry and prose, the Hebrews used the plural Elohim as the ordinary name of God, the difference being that to the one God was simply power, strength (the root-meaning of Eloah); to the other He was the union of all powers, the Almighty. The plural thus intensified the idea of the majesty and greatness of God; but besides this, it was the germ of the doctrine of a plurality of persons in the Divine unity.<br/>In the second narrative (Genesis 2:4 to Genesis 3:24), which is an account'
+('genesis', 1, 2, 2) '<div sID="gen9" type="x-p"/>(2) And the earth.—The conjunction “and” negatives the well-meant attempt to harmonise geology and Scripture by taking Genesis 1:1 as a mere heading; the two verses go together, and form a general summary of creation, which is afterwards divided into its several stages.<br/>Was is not the copula, but the substantive verb existed, and expresses duration of time. After creation, the earth existed as a shapeless and empty waste.<br/>Without form, and void.—Literally, tohu and bohu, which words are both substantives, and signify wasteness and emptiness. The similarity of their forms, joined with the harshness of their sound, made them pass almost into a proverb for everything that was dreary and desolate (Isaiah 34:11; Jeremiah 4:23). It expresses here the state of primæval matter immediately after creation, when as yet there was no cohesion between the separate particles.<br/>Darkness.—As light is the result either of the condensation of matter or of vibrations caused by chemical action, this exactly agrees with the previous representation of the chaos out of which the earth was to be shaped. It existed at present only as an incoherent waste of emptiness.<b'
+('john', 3, 16, 16) '<div sID="gen40456" type="x-p"/>(16) The last verse has spoken of “every one who believeth.” The thought went beyond the limits that Rabbis set to the kingdom of God. Its only limit is humanity. This thought is now repeated and strengthened by the “might not perish,” and the love of God is made the foundation on which it rests. Perhaps no verse in the Bible has been so much explained as this; perhaps no verse can be so little explained. Most young preachers have sermons upon it; older men learn that its meaning must be felt and thought rather than spoken. Still less can it be written; and this Note may not attempt to do more than indicate some lines of thought which may help to lead to others.<br/>God so loved the world.—Familiar as the words are to us, they were uttered to Nicodemus for the first time. They are the revelation of the nature of God, and the ground of our love to God and man. (Comp. Notes on 1 John 4:7-11.)<br/>His only begotten Son.—Here, once again, the Old Testament Scriptures suggest and explain the words used. Every Jew knew, and loved to think and tell of his forefather who was willing to sacrifice his own and only son in obedience to what he thought to be the '
+('psalms', 23, 0, 0) '<chapter osisID="Ps.23" sID="gen20245"/> '
+('psalms', 23, 1, 1) '<div sID="gen20247" type="x-p"/>XXIII.<br/>Under two images equally familiar in Hebrew poetry—that of the shepherd watching over his flock, and of the banquet where Jehovah presides over the just—this psalm expresses the tranquility and happiness of those who are conscious of the Divine protection. But, after the Hebrew lyric manner, direct allusions to circumstances mingle with the images. We think therefore of some real person and some actual experience, and not of an allegorical reference to the return of the people of Israel from exile, or of the guidance of the rescued nation from Egypt through the wilderness, which were favourite modes of explanation among the Rabbis. The mention of the house of Jehovah seems decisive against the Davidic authorship, which else it would be fascinating to accept, breathing, as the exquisite verse does, the freshness and beauty of the “sweet singer’s” early shepherd days. The feast, too, under the enemies’ eyes, might have been a reminiscence of Mahanaim; but if David’s fortunes have thus coloured the psalm, it must have been through the mind of some later writer. The rhythm of the poem is as tender as the thought.<div eID="gen20247" type="x-p"/'
+('genesis', 0, 0, 0) '<div osisID="Gen" sID="gen1" type="book"/> '
 ```
 
-### Geneva  (https://www.crosswire.org/ftpmirror/pub/sword/packages/rawzip) 1680224 bytes
+### si_maclaren.zip (7,479,546 bytes)
 ```
-    82460  2015-07-21 01:34   modules/comments/zcom/geneva/nt.bzv
-      312  2015-07-21 01:34   modules/comments/zcom/geneva/nt.bzs
-      444  2015-07-21 01:34   modules/comments/zcom/geneva/ot.bzs
-   623539  2015-07-21 01:34   modules/comments/zcom/geneva/nt.bzz
-   241150  2015-07-21 01:34   modules/comments/zcom/geneva/ot.bzv
-  1026751  2015-07-21 01:34   modules/comments/zcom/geneva/ot.bzz
-      337  2015-07-21 01:34   mods.d/geneva.conf
----------                     -------
-  1974993                     7 files
-[Geneva]
-DataPath=./modules/comments/zcom/geneva/
-ModDrv=zCom
-SourceType=ThML
-Lang=en
-Description=Geneva Bible Translation Notes
-About=Geneva Bible Translation Notes
-BlockType=BOOK
-CompressType=ZIP
-History_1.1=converted to ThML, corrected much markup
-Version=1.1
-SwordVersionDate=2001-11-28
-LCSH=Bible--Commentaries.
-InstallSize=1974656
+{'ModDrv': 'zCom', 'SourceType': 'OSIS', 'Encoding': 'UTF-8', 'Versification': 'KJV', 'Description': 'Expositions of Holy Scripture', 'DistributionLicense': 'Public Domain', 'Category': 'Commentaries'}
+entries: 2262 books: 61 text bytes: 22230231
+range entries: 0 intro entries: 668
+largest books: [('john', 2151808), ('acts', 1739767), ('luke', 1686134), ('psalms', 1579022), ('mark', 1292884)]
+('genesis', 1, 26, 26) '<div sID="gen4" type="x-p"/>Genesis<br/>THE VISION OF<br/>Genesis 1:26 - Genesis 2:3.<br/>We are not to look to Genesis for a scientific cosmogony, and are not to be disturbed by physicists’ criticisms on it as such. Its purpose is quite another, and far more important; namely, to imprint deep and ineffaceable the conviction that the one God created all things. Nor must it be forgotten that this vision of creation was given to people ignorant of natural science, and prone to fall back into surrounding idolatry. The comparison of the creation narratives in Genesis with the cuneiform tablets, with which they evidently are most closely connected, has for its most important result the demonstration of the infinite elevation above their monstrosities and puerilities, of this solemn, steadfast attribution of the creative act to the one God. Here we can only draw out in brief the main points which the narrative brings into prominence.<br/>1. The revelation which it gives is the truth, obscured to all other men when it was given, that one God ‘ in the beginning created the heaven and the earth.’ That solemn utterance is the keynote of the whole. The rest but expands it. It was a challenge '
+('genesis', 2, 1, 1) '<div sID="gen11" type="x-p"/>Genesis<br/>THE VISION OF<br/>Genesis 1:26 - Genesis 2:3.<br/>We are not to look to Genesis for a scientific cosmogony, and are not to be disturbed by physicists’ criticisms on it as such. Its purpose is quite another, and far more important; namely, to imprint deep and ineffaceable the conviction that the one God created all things. Nor must it be forgotten that this vision of creation was given to people ignorant of natural science, and prone to fall back into surrounding idolatry. The comparison of the creation narratives in Genesis with the cuneiform tablets, with which they evidently are most closely connected, has for its most important result the demonstration of the infinite elevation above their monstrosities and puerilities, of this solemn, steadfast attribution of the creative act to the one God. Here we can only draw out in brief the main points which the narrative brings into prominence.<br/>1. The revelation which it gives is the truth, obscured to all other men when it was given, that one God ‘ in the beginning created the heaven and the earth.’ That solemn utterance is the keynote of the whole. The rest but expands it. It was a challenge'
+('john', 3, 16, 16) '<div sID="gen5929" type="x-p"/>John<br/>THE LAKE AND THE RIVER<br/>John 3:16.<br/>I venture to say that my text shows us a lake, a river, a pitcher, and a draught. ‘ God so loved the world’ -that is the lake. A lake makes a river for itself-’ God so loved the world that He gave His . . . Son.’ But the river does not quench any one’ s thirst unless he has something to lift the water with: ‘ God so loved the world that He gave His . . . Son, that whosoever believeth on Him.’ Last comes the draught: ‘ shall not perish, but have everlasting life.’<br/>I. The great lake, God’ s love.<br/>Before Jesus Christ came into this world no one ever dreamt of saying ‘ God loves.’ Some of the Old Testament psalmists had glimpses of that truth and came pretty near expressing it. But among all the ‘ gods many and lords many,’ there were lustful gods and beautiful gods, and idle gods, and fighting gods and peaceful gods: but not one of whom worshippers said, ‘ He loves.’ Once it was a new and almost incredible message, but we have grown accustomed to it, and it is not strange any more to us. But if we would try to think of what it means, the whole truth would flash up into fresh newness, and all the '
+('psalms', 23, 0, 0) '<chapter osisID="Ps.23" sID="gen2238"/> '
+('psalms', 23, 1, 1) '<div sID="gen2240" type="x-p"/>Psalms<br/>THE KING OF ISRAEL<br/>Psalms 23:1 - Psalms 23:6.<br/>The king who had been the shepherd-boy, and had been taken from the quiet sheep-cotes to rule over Israel, sings this little psalm of Him who is the true Shepherd and King of men. We do not know at what period of David’ s life it was written, but it sounds as if it were the work of his later years. There is a fulness of experience about it, and a tone of subdued, quiet confidence which speaks of a heart mellowed by years, and of a faith made sober by many a trial. A young man would not write so calmly, and a life which was just opening would not afford material for such a record of God’ s guardianship in all changing circumstances.<br/>If, then, we think of the psalm as the work of David’ s later years, is it not very beautiful to see the old king looking back with such vivid and loving remembrance to his childhood’ s occupation, and bringing up again to memory in his palace the green valleys, the gentle streams, the dark glens where he had led his flocks in the old days; very beautiful to see him traversing all the stormy years of warfare and rebellion, of crime and sorrow, which lay be'
+('genesis', 0, 0, 0) '<div osisID="Gen" sID="gen1" type="book"/> '
 ```
 
-### TDavid  (https://www.crosswire.org/ftpmirror/pub/sword/packages/rawzip) 4956285 bytes
+### si_poole.zip (7,266,149 bytes)
 ```
-        0  2022-06-24 22:21   modules/comments/zcom/tdavid/nt.bzs
-       24  2022-06-24 22:21   modules/comments/zcom/tdavid/ot.bzs
-   289380  2022-06-24 22:21   modules/comments/zcom/tdavid/ot.bzv
-    98952  2022-06-24 22:21   modules/comments/zcom/tdavid/nt.bzv
-  4951649  2022-06-24 22:21   modules/comments/zcom/tdavid/ot.bzz
-        0  2022-06-24 22:21   modules/comments/zcom/tdavid/nt.bzz
-     2087  2022-06-24 22:21   mods.d/tdavid.conf
----------                     -------
-  5342092                     7 files
-## Sword module configuration file
-
-## Required elements
-# Module Unique Identifier.
-[TDavid]
-
-# Short description of the module.
-Description=C. H. Spurgeon's Treasury of David
-
-# Path to the module data files relative to the SWORD module library root directory.
-DataPath=./modules/comments/zcom/tdavid/
-
-# Driver used for reading the module.
-ModDrv=zCom4
-
-## Required elements with defaults
-# Markup used in the module.
-SourceType=OSIS
-
-# How the text in the conf and in the module are encoded.
-Encoding=UTF-8
-
-# Compression algorithm.
-CompressType=ZIP
-
-# How much of the work is compressed into a block.
-BlockType=BOOK
-
-# Versification employed by a Bible module.
-Versification=KJV
+{'ModDrv': 'zCom', 'SourceType': 'OSIS', 'Encoding': 'UTF-8', 'Versification': 'KJV', 'Description': "Matthew Poole's Commentary on the Holy Bible", 'DistributionLicense': 'Public Domain', 'Category': 'Commentaries'}
+entries: 27267 books: 66 text bytes: 22788912
+range entries: 0 intro entries: 1255
+largest books: [('psalms', 1696227), ('isaiah', 1328302), ('matthew', 1237936), ('ezekiel', 1218422), ('jeremiah', 1116828)]
+('genesis', 1, 1, 1) '<div sID="gen4" type="x-p"/>GENESIS CHAPTER 1<div eID="gen4" type="x-p"/><div sID="gen5" type="x-p"/>The whole visible creation asserted in general, Genesis 1:1. Showed in particular the condition of the rude matter of it, Genesis 1:2. The formation of the several creatures on the several days.<div eID="gen5" type="x-p"/><div sID="gen6" type="x-p"/>(1.) Light produced by the powerful word of God, Genesis 1:3; approved and separated from the darkness, Genesis 1:4; named, and the first day declared, Genesis 1:5.<div eID="gen6" type="x-p"/><div sID="gen7" type="x-p"/>(2.) The firmament formed, its use, name, and time, Genesis 1:6-8.<div eID="gen7" type="x-p"/><div sID="gen8" type="x-p"/>(3.) The waters separated from the earth; sea and dry land named and approved, Genesis 1:9-10. The earth brings forth grass, herbs, and trees; approved, and time declared, Genesis 1:11-13.<div eID="gen8" type="x-p"/><div sID="gen9" type="x-p"/>(4.) The firmament furnished with sun, moon, and stars; their uses assigned, their names, with approbation, and time of doing, declared, Genesis 1:14-19.<div eID="gen9" type="x-p"/><div sID="gen10" type="x-p"/>(5.) Waters and air furnished, approved, blessed, and'
+('genesis', 1, 2, 2) '<div sID="gen19" type="x-p"/>The same confused mass or heap is here called both<div eID="gen19" type="x-p"/><div sID="gen20" type="x-p"/>earth, from its most solid and substantial part; and the<div eID="gen20" type="x-p"/><div sID="gen21" type="x-p"/>deep, from its vast bulk and depth; and waters, from its outward face and covering. See Psalms 104:6 2 Peter 3:5.<div eID="gen21" type="x-p"/><div sID="gen22" type="x-p"/>Without form and void; without order and beauty, and without furniture and use.<div eID="gen22" type="x-p"/><div sID="gen23" type="x-p"/>Upon the face, the surface or uppermost part of it, upon which the light afterward shone. Thus not the earth only, but also the heaven above it, was without light, as is manifest from the following verses.<div eID="gen23" type="x-p"/><div sID="gen24" type="x-p"/>The Spirit of God; not the wind, which was not yet created, as is manifest, because the air, the matter or subject of it, was not yet produced; but the Third Person of the glorious Trinity, called the Holy Ghost, to whom the work of creation is attributed, Job 26:13, as it is ascribed to the Second Person, the Son, John 1:3 Colossians 1:16-17 Hebrews 1:3, and to the First Per'
+('john', 3, 16, 16) '<div sID="gen79175" type="x-p"/>For God the Father, who is the Lord of all, debtor to none, sufficient to himself,<div eID="gen79175" type="x-p"/><div sID="gen79176" type="x-p"/>so loved the world, that is, Gentiles as well as Jews. There is a great contest about the signification of the term, between those who contend for or against the point of universal redemption; but certain it is, that from this term no more can be solidly concluded, than from the terms all and every, which in multitudes of places are taken in a restrained sense for many, or all of such a nation or kind. As this term sometimes signifies all persons, so, in , the Gentiles in opposition to the Jews. Nor, admitting that<div eID="gen79176" type="x-p"/><div sID="gen79177" type="x-p"/>the world should signify here every living soul in the place called the world, will any thing follow from it. It is proper enough to say, A man loved such a family to such a degree that he gave his estate to it, though he never intended such a thing to every child or branch of it. So as what is truth in that so vexed a question cannot be determined from any of these universal terms; which must, when all is said that can be said, be ex'
+('psalms', 23, 0, 0) '<chapter osisID="Ps.23" sID="gen33023"/> '
+('psalms', 23, 1, 1) '<div sID="gen33025" type="x-p"/>Psalms 23<div eID="gen33025" type="x-p"/><div sID="gen33026" type="x-p"/>THE<div eID="gen33026" type="x-p"/><div sID="gen33027" type="x-p"/>The matter of this Psalm gives us some general discovery of the time of its writing; which was when David was delivered out of his distresses, and quietly settled in his kingdom.<div eID="gen33027" type="x-p"/><div sID="gen33028" type="x-p"/>A Psalm of David.<div eID="gen33028" type="x-p"/><div sID="gen33029" type="x-p"/>David deseribeth his own happiness, , both in temporal, , and in spiritual things, . His confidence in God’ s mercy, and vows to dwell in his house for ever, .<div eID="gen33029" type="x-p"/><div sID="gen33030" type="x-p"/>He hath showed himself to be so by his gracious providences towards me and for me; and he hath taken upon him that office and relation to me by his entering into covenant with me, whereby he hath engaged himself to rule, and feed, and preserve, and heal me, and do all which shepherds do, or are obliged to do, to their flocks; which David very well understood, and had doubtless carefully performed his duty to his sheep; and therefore he strengthens his faith by this consideratio'
+('genesis', 0, 0, 0) '<div osisID="Gen" sID="gen1" type="book"/> '
 ```
 
-### TSK  (https://www.crosswire.org/ftpmirror/pub/sword/packages/rawzip) 2643739 bytes
+### si_pulpit-commentary.zip (28,404,286 bytes)
 ```
-    82460  2013-07-16 13:59   modules/comments/zcom/tsk/nt.bzv
-      324  2013-07-16 13:59   modules/comments/zcom/tsk/nt.bzs
-      468  2013-07-16 13:59   modules/comments/zcom/tsk/ot.bzs
-   662833  2013-07-16 13:59   modules/comments/zcom/tsk/nt.bzz
-   241150  2013-07-16 13:59   modules/comments/zcom/tsk/ot.bzv
-  1881828  2013-07-16 13:59   modules/comments/zcom/tsk/ot.bzz
-      605  2013-07-16 13:59   mods.d/tsk.conf
----------                     -------
-  2869668                     7 files
-[TSK]
-DataPath=./modules/comments/zcom/tsk/
-ModDrv=zCom
-BlockType=BOOK
-CompressType=ZIP
-SourceType=ThML
-Lang=en
-Version=1.4
-History_1.4=minor corrections to scripture references
-History_1.3=converted to ThML with formatting corrections
-History_1.1=added missing |'s after verse references
-Description=Treasury of Scripture Knowledge
-About=Treasury of Scripture Knowledge: five-hundred thousand scripture references and parallel passages by Canne, Browne, Blayney, Scott, and others about 1880
-SwordVersionDate=2001-12-15
-LCSH=Bible--Cross references.
-DistributionLicense=Public Domain
-InstallSize=2869063
-```
-
-### MHC  (https://www.crosswire.org/ftpmirror/pub/sword/packages/rawzip) 15195123 bytes
-```
-      336  2022-09-06 06:26   modules/comments/zcom4/mhc/nt.bzs
-      480  2022-09-06 06:26   modules/comments/zcom4/mhc/ot.bzs
-   289380  2022-09-06 06:26   modules/comments/zcom4/mhc/ot.bzv
-    98952  2022-09-06 06:26   modules/comments/zcom4/mhc/nt.bzv
-  9964748  2022-09-06 06:26   modules/comments/zcom4/mhc/ot.bzz
-  5250578  2022-09-06 06:26   modules/comments/zcom4/mhc/nt.bzz
-     2562  2022-09-06 06:26   mods.d/mhc.conf
----------                     -------
- 15607036                     7 files
-## Sword module configuration file
-
-## Required elements
-# Module Unique Identifier.
-[MHC]
-
-# Short description of the module.
-Description=Matthew Henry's Complete Commentary on the Whole Bible
-
-# Path to the module data files relative to the SWORD module library root directory.
-DataPath=./modules/comments/zcom4/mhc/
-
-# Driver used for reading the module.
-ModDrv=zCom4
-
-## Required elements with defaults
-# Markup used in the module.
-SourceType=OSIS
-
-# How the text in the conf and in the module are encoded.
-Encoding=UTF-8
-
-# Compression algorithm.
-CompressType=ZIP
-
-# How much of the work is compressed into a block.
-BlockType=BOOK
-
-# Versification employed by a Bible module.
-Versification=KJV
-```
-
-### MHCC  (https://www.crosswire.org/ftpmirror/pub/sword/packages/rawzip) 1773040 bytes
-```
-      336  2026-11-24 13:54   modules/comments/zcom/mhcc/nt.bzs
-      480  2026-11-24 13:54   modules/comments/zcom/mhcc/ot.bzs
-   241150  2026-11-24 13:54   modules/comments/zcom/mhcc/ot.bzv
-    82460  2026-11-24 13:54   modules/comments/zcom/mhcc/nt.bzv
-  1181296  2026-11-24 13:54   modules/comments/zcom/mhcc/ot.bzz
-   623602  2026-11-24 13:54   modules/comments/zcom/mhcc/nt.bzz
-     2370  2026-11-24 13:54   mods.d/mhcc.conf
----------                     -------
-  2131694                     7 files
-## Sword module configuration file
-
-## Required elements
-# Module Unique Identifier.
-[MHCC]
-
-# Short description of the module.
-Description=Matthew Henry's Concise Commentary on the Whole Bible
-
-# Path to the module data files relative to the SWORD module library root directory.
-DataPath=./modules/comments/zcom/mhcc/
-
-# Driver used for reading the module.
-ModDrv=zCom
-
-## Required elements with defaults
-# Markup used in the module.
-SourceType=OSIS
-
-# How the text in the conf and in the module are encoded.
-Encoding=UTF-8
-
-# Compression algorithm.
-CompressType=ZIP
-
-# How much of the work is compressed into a block.
-BlockType=BOOK
-
-# Versification employed by a Bible module.
-Versification=KJV
-```
-
-### SME  (https://www.crosswire.org/ftpmirror/pub/sword/packages/rawzip) 572799 bytes
-```
-     6222  2015-07-20 14:07   modules/lexdict/zld/devotionals/sme/sme.dat
-       16  2015-07-20 14:07   modules/lexdict/zld/devotionals/sme/sme.zdx
-   571266  2015-07-20 14:07   modules/lexdict/zld/devotionals/sme/sme.zdt
-     2928  2015-07-20 14:07   modules/lexdict/zld/devotionals/sme/sme.idx
-      812  2015-07-20 14:07   mods.d/sme.conf
----------                     -------
-   581244                     5 files
-[SME]
-DataPath=./modules/lexdict/zld/devotionals/sme/sme
-ModDrv=zLD
-SourceType=OSIS
-Lang=en
-Feature=DailyDevotion
-Category=Daily Devotional
-Description=C. H. Spurgeon's Morning and Evening: Daily Readings
-About=Morning and Evening: Daily Readings\par by Charles Spurgeon\par This material comes from CCEL, through a generous contribution by Logos Bible Software.
-LCSH=Devotional calendars.
-DistributionLicense=Public Domain
-MinimumVersion=1.5.9
-SwordVersionDate=2010-06-29
-Version=1.7
-History_1.7=Fixed corrupted module
-History_1.6=Removed wordID for those frontends that can't deal with them.
-History_1.5=Switched to CCEL's ThML source (itself from Logos) and converted to OSIS. This should fix all missing/empty entry and formatting problems.
-TextSource=CCEL
-Encoding=UTF-8
-CompressType=ZIP
-InstallSize=580432
-```
-
-### CalvinCommentaries  (https://www.crosswire.org/ftpmirror/pub/sword/packages/rawzip) 20897508 bytes
-```
-     3180  2022-08-13 09:59   modules/comments/zcom/calvincommentaries/nt.bzs
-     2748  2022-08-13 09:59   modules/comments/zcom/calvincommentaries/ot.bzs
-   241150  2022-08-13 09:59   modules/comments/zcom/calvincommentaries/ot.bzv
-    82460  2022-08-13 09:59   modules/comments/zcom/calvincommentaries/nt.bzv
- 14354655  2022-08-13 09:59   modules/comments/zcom/calvincommentaries/ot.bzz
-  6946573  2022-08-13 09:59   modules/comments/zcom/calvincommentaries/nt.bzz
-     2570  2022-08-13 09:59   mods.d/calvincommentaries.conf
----------                     -------
- 21633336                     7 files
-## Sword module configuration file
-
-## Required elements
-# Module Unique Identifier.
-[CalvinCommentaries]
-
-# Short description of the module.
-Description=Calvin's Collected Commentaries
-
-# Path to the module data files relative to the SWORD module library root directory.
-DataPath=./modules/comments/zcom/calvincommentaries/
-
-# Driver used for reading the module.
-ModDrv=zCom
-
-## Required elements with defaults
-# Markup used in the module.
-SourceType=OSIS
-
-# How the text in the conf and in the module are encoded.
-Encoding=UTF-8
-
-# Compression algorithm.
-CompressType=ZIP
-
-# How much of the work is compressed into a block.
-BlockType=BOOK
-
-# Versification employed by a Bible module.
-Versification=KJV
+{'ModDrv': 'zCom', 'SourceType': 'OSIS', 'Encoding': 'UTF-8', 'Versification': 'KJV', 'Description': 'The Pulpit Commentary', 'DistributionLicense': 'Public Domain', 'Category': 'Commentaries'}
+entries: 2699 books: 66 text bytes: 29999257
+range entries: 0 intro entries: 1248
+largest books: [('psalms', 5254839), ('exodus', 3155606), ('genesis', 2922801), ('isaiah', 1324285), ('jeremiah', 1206336)]
+('genesis', 1, 1, 1) '<div sID="gen4" type="x-p"/>I. THAT this initial section is not history is apparent from the circumstance that the occurrences it describes belong to a period of time which antedates the dawn of history. That it is not science is evinced by the fact that, in some, at least, of its particulars, it refers to a condition of our globe concerning which even modern research has attained to no definite conclusions, while in all of them it claims to be regarded not as uttering the findings of reason, but as declaring the course of nature. That still less can it be myth must be obvious to any who will carefully contrast it with those heathen cosmogonies which it is said to resemble. Only the most absolute devotion to preconceived opinion can render one oblivious of its immense superiority, to them in respect of both simplicity of construction and sublimity of conception. The absurdities, puerilities, and monstrosities that abound in them are conspicuously absent from it.<div eID="gen4" type="x-p"/><div sID="gen5" type="x-p"/>It alone ascends to the idea of a creation ex nihilo, and of a supreme Intelligence by whom that creation is effected. Unlike them, it is destitute of either local colo'
+('genesis', 1, 6, 6) '<div sID="gen71" type="x-p"/>Genesis 1:6<div eID="gen71" type="x-p"/><div sID="gen72" type="x-p"/>Day two. The work of this day consisted in the formation of that immense gaseous ocean, called the atmosphere, by which the earth is encircled. And God said, Let there be a firmament (rakiya, an expand, from rakah, to beat out; LXX; στερεωμα; Vulgate, firmamentum) in the midst of the waters. To affirm with Knobel, Gesenius, and others that the Hebrews supposed the atmospheric heavens to be a metallic substance (Exodus 24:10), a vault fixed on the water-flood which surrounds the earth (Proverbs 8:27), firm as a molten looking-glass (Job 37:18), borne by the highest mountains, which are therefore called the pillars and foundations of heaven (2 Samuel 22:8), and having doors and windows (Genesis 7:11; Genesis 28:17; Psalms 78:23), is to confound poetical metaphor with literal prose, optical and phenomenal language with strict scientific statement. The Vulgate and English translations of rakiya may convey the idea of solidity, though it is doubtful if στερεωμα (LXX.) does not signify that which makes firm as well as that which is made firm (McCaul, Wordsworth, W. Lewis), thus referring to '
+('psalms', 23, 0, 0) '<chapter osisID="Ps.23" sID="gen96486"/> '
+('psalms', 23, 1, 1) '<div sID="gen96488" type="x-p"/>THIS little psalm is an idyll of great beauty, describing the peace and calm delight which dwell with one whose trust is wholly in God. David’s authorship, asserted in the title, is highly probable; but we cannot fix the poem to any special period in his lifetime; we can only say that he is beyond the days of boyhood, having already enemies (Psalms 23:5), and that he has known what it is to be in danger of death (Psalms 23:4). But, when he writes, he is experiencing a time of rest and refreshment (Psalms 23:1-3), nay, of prosperity and abundance (Psalms 23:5). His thoughts are happy thoughts—he lacks nothing; he has no fear; God’s mercy and goodness are with him; and he feels assured that they will continue with him all the days of his life (Psalms 23:6); he has but one desire for the future, viz. to dwell in the house of God—i.e. in the presence of God, for ever.<div eID="gen96488" type="x-p"/><div sID="gen96489" type="x-p"/>Psalms 23:1<div eID="gen96489" type="x-p"/><div sID="gen96490" type="x-p"/>The Lord is my Shepherd. This metaphor, so frequent in the later Scriptures (Isaiah 40:11; Isaiah 49:9, Isaiah 49:10; Jeremiah 31:10; Ezekiel 34:6-19; Jo'
+('genesis', 0, 0, 0) '<div osisID="Gen" sID="gen1" type="book"/> '
 ```
