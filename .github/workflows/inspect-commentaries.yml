@@ -1,77 +1,52 @@
-# Lists candidate public-domain commentaries and devotionals on GitHub's servers and commits a
-# report (docs/COMMENTARY_SOURCES_REPORT.md): CrossWire / Xiphos / SermonIndex SWORD module
-# catalogues, the HelloAO commentary list, and sizes of the modules we plan to import.
+# Downloads the candidate SWORD modules on GitHub's servers, probes them with scripts/sword.py
+# and commits a report (docs/COMMENTARY_SOURCES_REPORT.md): entries, sizes, raw samples.
 name: Inspect commentary sources
 on:
   workflow_dispatch:
   push:
     branches: [claude/initial-reader]
-    paths: ['.github/workflows/inspect-commentaries.yml']
+    paths: ['.github/workflows/inspect-commentaries.yml', 'scripts/probe_modules.py']
 permissions:
   contents: write
 concurrency: { group: inspect-commentaries, cancel-in-progress: true }
 jobs:
   inspect:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
         with: { ref: claude/initial-reader }
-      - name: Catalogues
+      - name: Probe
         run: |
           set +e
-          mkdir -p /tmp/cat && cd /tmp/cat
+          mkdir -p /tmp/m && cd /tmp/m
           UA='Mozilla/5.0 (compatible; NotationBibleImporter/1.0)'
           OUT=$GITHUB_WORKSPACE/docs/COMMENTARY_SOURCES_REPORT.md
           {
-          echo "# Commentary sources report"; date -u
-          list() { # $1 label, $2 url of mods.d.tar.gz
-            echo; echo "## $1"; echo "$2"
-            mkdir -p "$1" && curl -sSfL -A "$UA" "$2" -o "$1.tgz" && tar -xzf "$1.tgz" -C "$1" || { echo "(download failed)"; return; }
-            echo '```'
-            for f in "$1"/mods.d/*.conf; do
-              python3 - "$f" <<'PY'
-          import sys, re
-          t = open(sys.argv[1], encoding='utf-8', errors='replace').read()
-          name = re.search(r'^\[(.+?)\]', t, re.M)
-          g = lambda k: (re.search(rf'^{k}=(.*)$', t, re.M) or [None, ''])[1].strip()
-          lang, drv, cat = g('Lang'), g('ModDrv'), g('Category')
-          if lang not in ('en', '') or drv in ('zText', 'zText4', 'RawText', 'RawText4'): sys.exit()
-          print(' | '.join([name.group(1) if name else '?', drv, cat, g('Description')[:90], g('DistributionLicense')[:40], g('InstallSize'), g('Versification'), g('DataPath')]))
-          PY
-            done | sort
-            echo '```'
-          }
-          list crosswire https://www.crosswire.org/ftpmirror/pub/sword/raw/mods.d.tar.gz
-          list crosswire-attic https://www.crosswire.org/ftpmirror/pub/sword/atticraw/mods.d.tar.gz
-          list xiphos https://ftp.xiphos.org/mods.d.tar.gz
-          list sermonindex https://www.sermonindex.net/modules/sword/mods.d.tar.gz
-          echo; echo "## SermonIndex module listing page"
-          curl -sSL -A "$UA" https://www.sermonindex.net/modules/sword/ | grep -oiE 'href="[^"]+\.zip"' | sort -u | head -200
-          echo; echo "## SermonIndex commentary index (links)"
-          curl -sSL -A "$UA" https://www.sermonindex.net/commentary/ | grep -oiE 'href="/commentary/[^"/]+/?"' | sort -u | head -200
-          echo; echo "## HelloAO available commentaries"
-          curl -sSfL -A "$UA" https://bible.helloao.org/api/available_commentaries.json | python3 -c "
-          import json,sys
-          d=json.load(sys.stdin)
-          for c in d.get('commentaries',[]): print(c.get('id'),'|',c.get('name'),'|',c.get('englishName'),'|',c.get('licenseUrl') or c.get('license'),'|',c.get('numberOfBooks'),'|',c.get('totalNumberOfChapters'))
-          "
-          echo; echo "## Tyndale Open Study Notes zip"
-          curl -sSIL -A "$UA" https://tyndaleopenresources.com/wp-content/themes/tyndale-openresources/files/tyndale_open-studynotes.zip | grep -iE '^(HTTP|content-length|content-type)'
-          echo; echo "## Candidate module zips (size, conf)"
-          for m in Barnes Geneva TDavid TSK MHC MHCC SME Poole MPC Pulpit PulpitCommentary Ellicott EllicottCommentary MacLaren Maclaren CalvinCommentaries Meyer; do
-            for base in https://www.crosswire.org/ftpmirror/pub/sword/packages/rawzip https://ftp.xiphos.org/zip; do
-              code=$(curl -s -o "$m.zip" -w '%{http_code}' -A "$UA" "$base/$m.zip")
-              if [ "$code" = 200 ]; then
-                echo; echo "### $m  ($base) $(stat -c %s $m.zip) bytes"
-                echo '```'; unzip -l $m.zip | tail -n +4 | head -12; unzip -p $m.zip 'mods.d/*' | head -30; echo '```'
-                break
-              fi
+          echo "# Commentary sources report (probe)"; date -u
+          for m in TDavid SME; do curl -sSfL -A "$UA" -o $m.zip https://www.crosswire.org/ftpmirror/pub/sword/packages/rawzip/$m.zip; done
+          echo; echo "## SermonIndex pages: download links"
+          for s in poole pulpit-commentary ellicott maclaren; do
+            curl -sSL -A "$UA" "https://www.sermonindex.net/commentary/$s/" -o page_$s.html
+            echo "### $s ($(stat -c %s page_$s.html) bytes)"
+            grep -oiE '(href|src)="[^"]*(sword|\.zip|download)[^"]*"' page_$s.html | sort -u | head -20
+            grep -oiE '.{0,120}(sword module|download).{0,160}' page_$s.html | head -6
+          done
+          echo; echo "## SermonIndex module zips"
+          for s in poole pulpit-commentary ellicott maclaren; do
+            link=$(grep -oiE 'https?://[^"]*modules/sword/[^"]+\.zip|/modules/sword/[^"]+\.zip' page_$s.html | head -1)
+            names="$link sipoole poole sipulpit pulpit sipulpitcommentary siellicott ellicott simaclaren maclaren"
+            for n in $names; do
+              case "$n" in http*) u="$n";; /*) u="https://www.sermonindex.net$n";; *) u="https://www.sermonindex.net/modules/sword/$n.zip";; esac
+              code=$(curl -s -o si_$s.zip -w '%{http_code}' -A "$UA" "$u")
+              if [ "$code" = 200 ] && unzip -tq si_$s.zip >/dev/null 2>&1; then echo "$s -> $u ($(stat -c %s si_$s.zip) bytes)"; break; else echo "$s: $u -> $code"; rm -f si_$s.zip; fi
             done
           done
+          echo; echo "## Probes"
+          python3 $GITHUB_WORKSPACE/scripts/probe_modules.py $GITHUB_WORKSPACE/data/tr/kjv.json *.zip
           } > "$OUT" 2>&1
           wc -c "$OUT"
       - name: Commit report
         run: |
           git config user.name "notationbible-bot"; git config user.email "actions@users.noreply.github.com"
-          git add docs/COMMENTARY_SOURCES_REPORT.md && git commit -q -m "Commentary sources report" && git push || echo "nothing to commit"
+          git add docs/COMMENTARY_SOURCES_REPORT.md && git commit -q -m "Commentary sources probe report" && git push || echo "nothing to commit"
