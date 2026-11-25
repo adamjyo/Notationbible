@@ -5,7 +5,6 @@
 
 Expects in raw/ (the workflow downloads them):
   scrollmapper/formats/csv/{KJV,ASV,WEB,YLT}.csv   scrollmapper/bible_databases (MIT); the texts are public domain
-  pillar/c/scofield/<USFM>/<chapter>.json          thefrenchpressed/pillar-commentary-data (MIT); Scofield notes, public domain
   eastons.json                                     garydavenport73/eastons-bible-dictionary-json (MIT); Easton 1897, public domain
   topical/dist/{nave,torrey}/{topics,entries,assertions}.jsonl   j86schroeder/topical-bible-search (MIT)
   geo/data/{ancient,modern}.jsonl                  openbibleinfo/Bible-Geocoding-Data (CC BY 4.0)
@@ -206,10 +205,7 @@ def main():
         if jfb:
             for b, d in jfb.items(): write(f'commentary/jfb/{b}.json', d)
             coms.append({'id': 'jfb', 'name': 'Jamieson-Fausset-Brown', 'books': sorted(jfb), 'note': 'Jamieson, Fausset & Brown, Commentary Critical and Explanatory on the Whole Bible (1871). Public domain, via HelloAO Free Use Bible API.'})
-    sco = pillar_commentary(a.raw, 'scofield')
-    if sco:
-        for b, d in sco.items(): write(f'commentary/scofield/{b}.json', d)
-        coms.append({'id': 'scofield', 'name': 'Scofield Reference Notes', 'books': sorted(sco), 'note': 'C. I. Scofield, Scofield Reference Notes (1917). Public domain, via pillar-commentary-data (MIT).'})
+    # Scofield Reference Notes were removed from the app at the owner's request; not rebuilt.
     dictionary(a.raw); topics(a.raw); places(a.raw)
     mf = os.path.join(DATA, 'manifest.json'); m = json.load(open(mf, encoding='utf-8'))
     L = m.setdefault('layers', {})

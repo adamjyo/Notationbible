@@ -4,7 +4,7 @@ Tags: bible, scripture, strongs, interlinear, commentary
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.11.0
+Stable tag: 1.11.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -17,7 +17,7 @@ Notation Bible adds a full Bible reader to your site at /bible/ (you can change 
 * All 66 books of the Berean Standard Bible (BSB), with its headings, paragraphs and footnotes
 * Strong's numbers and a Greek and Hebrew concordance
 * Greek and Hebrew interlinear for every verse
-* Cross-references, Jamieson-Fausset-Brown and Scofield commentaries, KJV, ASV and YLT to compare
+* Cross-references, the Jamieson-Fausset-Brown commentary, KJV, ASV and YLT to compare
 * Easton's Bible Dictionary, Nave's and Torrey's topics, Bible places
 * Highlighters, pens, sticky notes and NoteTrees (with Apple Pencil support)
 * Read aloud and dictation
@@ -33,6 +33,9 @@ Put the reader in any page or post with the shortcode:
 The plugin updates itself from its GitHub releases (https://github.com/adamjyo/notationbible/releases). WordPress shows new versions on the Plugins and Updates screens like any other plugin, and automatic updates are switched on when the plugin is first activated. Notation Bible → Settings shows the installed and latest versions and has a "Check for updates now" button.
 
 == Changelog ==
+
+= 1.11.1 =
+* Removed the Scofield Reference Notes commentary.
 
 = 1.11.0 =
 * Search opens out of the search icon as a floating field, with results in a window that grows under it (no side panel). Enter opens the first result; Escape or a click outside closes it.

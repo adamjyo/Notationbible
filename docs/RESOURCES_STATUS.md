@@ -8,7 +8,6 @@ Resource importing is **paused**. The importer (`scripts/build_resources.py`) an
 |---|---|---|---|
 | KJV, ASV, YLT (Compare layer, verse panel) | scrollmapper/bible_databases `formats/csv` | MIT repo; texts public domain | 66 books each, ~31,100 verses |
 | Jamieson-Fausset-Brown commentary | HelloAO Free Use Bible API (`/api/c/jamieson-fausset-brown/...`) | Public domain | 17,055 verse comments; 2 chapters unavailable |
-| Scofield Reference Notes | thefrenchpressed/pillar-commentary-data `c/scofield` | MIT; text public domain | 3,205 notes in 66 books |
 | Easton's Bible Dictionary | garydavenport73/eastons-bible-dictionary-json | MIT; text public domain | 3,961 terms |
 | Nave's + Torrey's topical Bibles | j86schroeder/topical-bible-search `dist/` | MIT; texts public domain | 5,941 topics, 181,879 verse links |
 | Bible places | openbibleinfo/Bible-Geocoding-Data `data/` | CC BY 4.0 (attribution shown in the app) | 1,342 places, 1,335 with coordinates |

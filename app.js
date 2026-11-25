@@ -26,7 +26,7 @@ const PRESETS = {
 const KEY = 'notationbible:v1';
 let S = {};
 try { S = JSON.parse(localStorage.getItem(KEY)) || {}; } catch { S = {}; }
-const SET_DEFAULTS = { compareTr: 'kjv', commentaries: ['jfb', 'scofield'], theme: 'dark', size: 19, font: 'sans', layout: 'para', nums: true, markup: true, rate: 1, voice: '', cont: true };
+const SET_DEFAULTS = { compareTr: 'kjv', commentaries: ['jfb'], theme: 'dark', size: 19, font: 'sans', layout: 'para', nums: true, markup: true, rate: 1, voice: '', cont: true };
 S.set = Object.assign({}, SET_DEFAULTS, S.set || {});
 // appearance: dark by default; 'system' follows the device (and the claude.ai viewer's theme when previewed there)
 const applyTheme = () => { document.documentElement.dataset.mode = ['dark', 'light', 'system'].includes(S.set.theme) ? S.set.theme : 'dark'; };

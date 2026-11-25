@@ -5,7 +5,6 @@ translation ASV: 66 books, 31086 verses
 translation WEB: missing
 translation YLT: 66 books, 31102 verses
 commentary jamieson-fausset-brown: 17055 entries, 2 chapters unavailable
-commentary scofield: 3205 entries in 66 books
 easton: 3961 terms
 nave: 5321 topics
 torrey: 620 topics

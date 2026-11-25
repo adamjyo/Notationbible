@@ -19,7 +19,7 @@ async function jsonFiles(dir) {
 }
 
 // The one-file demo carries the complete Bible text (all 66 books, with footnotes, cross references,
-// lexicon, Scofield notes and places). The heaviest extras (interlinear, JFB, other translations,
+// lexicon and places). The heaviest extras (interlinear, JFB, other translations,
 // topics) are limited to a few books to keep the file small; override with BUNDLE_BOOKS=a,b,c.
 const KEEP = new Set((process.env.BUNDLE_BOOKS || 'genesis,psalms,john,romans').split(','));
 const LIMITED = /^data\/(il|commentary\/jfb)\/([\w-]+)\.json$/;          // per-book folders to trim
