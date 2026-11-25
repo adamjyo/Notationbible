@@ -15,7 +15,7 @@
 - **poole**: 24,946 comments in 66 books, 18.5 MB JSON, 6.4 MB zipped
 - **pulpit**: 1,451 comments in 66 books, 25.2 MB JSON, 9.4 MB zipped
 - **ellicott**: 23,313 comments in 66 books, 20.0 MB JSON, 7.2 MB zipped
-- **maclaren**: 1,594 comments in 61 books, 21.5 MB JSON, 7.3 MB zipped
+- **maclaren**: 1,594 comments in 61 books, 21.5 MB JSON, 7.2 MB zipped
 - Morning and Evening: 366 days, 732 readings
 
 ## Samples
@@ -102,12 +102,11 @@ God so loved the world.—Familiar as the words are to us, they were uttered to 
 
 ### maclaren · john 3:16-36
 ```
-John
-THE LAKE AND THE RIVER
-John 3:16.
+**The Lake and the River** · John 3:16
+
 I venture to say that my text shows us a lake, a river, a pitcher, and a draught. ‘God so loved the world’ -that is the lake. A lake makes a river for itself-’ God so loved the world that He gave His . . . Son.’ But the river does not quench any one’s thirst unless he has something to lift the water with: ‘God so loved the world that He gave His . . . Son, that whosoever believeth on Him.’ Last comes the draught: ‘shall not perish, but have everlasting life.’
 I. The great lake, God’s love.
-Before Jesus Christ came into this world no one ever dreamt of saying ‘God loves.’ Some of the Old Testament psalmists had glimpses of that truth and came pretty near expressing it. But among all the ‘gods many and lords many,’ there were lustful gods and beautiful gods, and idle gods, and fighting gods and peaceful gods: but not one of whom worshippers said, ‘He 
+Before Jesus Christ came into this world no one ever dreamt of saying ‘God loves.’ Some of the Old Testament psalmists had glimpses of that truth and came pretty near expressing it. But among all the ‘gods many and lords many,’ there were lustful gods and beautiful gods, and idle gods, and fighting gods and peaceful gods: but not one of whom worshippers said, ‘He
 ```
 
 ### Morning and Evening · 01-01
