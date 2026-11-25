@@ -97,6 +97,11 @@ function parseRef(q) {
 const SHORT = { 'Deuteronomy': 'Deut', '1 Chronicles': '1 Chr', '2 Chronicles': '2 Chr', 'Ecclesiastes': 'Eccl', 'Song of Solomon': 'Song', 'Lamentations': 'Lam',
   '1 Corinthians': '1 Cor', '2 Corinthians': '2 Cor', 'Philippians': 'Phil', 'Colossians': 'Col', '1 Thessalonians': '1 Thess', '2 Thessalonians': '2 Thess', 'Revelation': 'Rev',
   'Zephaniah': 'Zeph', 'Zechariah': 'Zech', 'Leviticus': 'Lev', 'Galatians': 'Gal', 'Ephesians': 'Eph', 'Habakkuk': 'Hab', 'Nehemiah': 'Neh', 'Philemon': 'Phlm' };
+// small marker icons after a verse: a book for commentary, a chain link for cross references
+const MK_ICON = {
+  book: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.6C10 5.1 7.4 4.6 3.8 4.9v13.4c3.6-.3 6.2.2 8.2 1.7 2-1.5 4.6-2 8.2-1.7V4.9c-3.6-.3-6.2.2-8.2 1.7z"/><path d="M12 6.6V20"/></svg>',
+  xref: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.2 13.8a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1.1 1.1"/><path d="M13.8 10.2a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1.1-1.1"/></svg>',
+};
 const hashOf = (b, c, v) => `#${b}-${c}${v ? '-' + v : ''}`;
 function parseHash(h) {
   h = h.replace(/^#/, '');
@@ -334,8 +339,8 @@ async function render() {
     const cmStart = chap.cm.filter(x => x.s === n), cmEnd = chap.cm.filter(x => x.e === n);
     const sts = chap.st.filter(x => x.v === n), nts = notesFor(id).filter(g => g.items[g.items.length - 1].a === id); // a note shows once, after the last verse it covers
     let mk = Object.entries(S.trees || {}).filter(([k, x]) => k.startsWith(`${b}.${c}.`) && x.from === n).map(([k]) => `<span class="mk" role="button" tabindex="0" data-skip data-tree="${esc(k)}" title="NoteTree ${esc(treeLabel(k))}">NT</span>`).join('');
-    if (L.xrefs === 'markers' && xrs.length) mk += `<span class="mk" role="button" tabindex="0" data-skip data-panel="${n}" title="Cross references">↗</span>`;
-    if (L.commentary === 'markers' && cmStart.length) mk += `<span class="mk" role="button" tabindex="0" data-skip data-panel="${n}" title="Commentary">C</span>`;
+    if (L.xrefs === 'markers' && xrs.length) mk += `<span class="mk" role="button" tabindex="0" data-skip data-panel="${n}" title="Cross references" aria-label="Cross references">${MK_ICON.xref}</span>`;
+    if (L.commentary === 'markers' && cmStart.length) mk += `<span class="mk" role="button" tabindex="0" data-skip data-panel="${n}" title="Commentary" aria-label="Commentary">${MK_ICON.book}</span>`;
     if (L.studies === 'markers' && sts.length) mk += `<span class="mk" role="button" tabindex="0" data-skip data-panel="${n}" title="Study">S</span>`;
     let ib = '';
     if (L.footnotes === 'inline' && fns.length) ib += fns.map((f, j) => `<div class="ib fn"><h4>Footnote ${String.fromCharCode(97 + fnLetter + j)} · ${esc(label(b, c, n))}</h4><span data-anchor="fn:${id}:${j}">${rich(f[1])}</span></div>`).join('');

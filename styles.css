@@ -470,3 +470,5 @@ body[data-active-tool=pen] #reader{-webkit-user-select:none;user-select:none;tou
   #reflabel{max-width:calc(100vw - 2 * 80px - 2 * 34px - 24px)}
 }
 @media (max-width:340px){ #hsearch{display:none} #reflabel{max-width:calc(100vw - 2 * 44px - 2 * 34px - 20px)} }
+.mk svg{fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
+.mk svg[viewBox]{width:12px;height:12px;stroke-width:2;vertical-align:-1.5px}
