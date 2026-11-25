@@ -1,0 +1,13 @@
+{
+ "id": "treasury-of-david",
+ "name": "Spurgeon's Treasury of David",
+ "short": "Spurgeon",
+ "about": "C. H. Spurgeon's exposition of the Psalms (1869–85).",
+ "license": "Public domain",
+ "books": [
+  "psalms"
+ ],
+ "bytes": 3355701,
+ "entries": 2213,
+ "built": "2026-11-25"
+}
