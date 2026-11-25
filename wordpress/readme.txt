@@ -4,7 +4,7 @@ Tags: bible, scripture, strongs, interlinear, commentary
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.10.0
+Stable tag: 1.11.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -33,6 +33,11 @@ Put the reader in any page or post with the shortcode:
 The plugin updates itself from its GitHub releases (https://github.com/adamjyo/notationbible/releases). WordPress shows new versions on the Plugins and Updates screens like any other plugin, and automatic updates are switched on when the plugin is first activated. Notation Bible → Settings shows the installed and latest versions and has a "Check for updates now" button.
 
 == Changelog ==
+
+= 1.11.0 =
+* Search opens out of the search icon as a floating field, with results in a window that grows under it (no side panel). Enter opens the first result; Escape or a click outside closes it.
+* Search removed from the menu, since its icon sits beside the menu button. The icon now stays visible on the smallest phones.
+* A Strong's number shows a lookup button instead of opening the lexicon while you type.
 
 = 1.10.0 =
 * New address picker: three spinning wheels, Book, Chapter and Verse, with Cancel and Go. Type a letter to jump to a book; arrow keys step a wheel.

@@ -409,7 +409,6 @@ function renderMenu() {
   const sw = (k, on, name, sub) => `<button class="mi" role="menuitemcheckbox" aria-checked="${on}" data-layer="${k}"><span class="lab">${name}</span>${sub ? `<span class="sub">${sub}</span>` : ''}<span class="sw" aria-hidden="true"></span></button>`;
   menu.innerHTML = `${ACCT.api ? `<button class="mi" role="menuitem" id="acctbtn">${MI.user}<span class="lab">${ACCT.reader ? esc(ACCT.reader.name) : 'Sign in'}</span><span class="sub">${ACCT.reader ? syncLabel() : 'save notes to an account'}</span></button><hr>` : ''}<h4>Tools</h4>
     <button class="mi${speech.on ? ' live' : ''}" role="menuitem" id="playbtn">${MI.read}<span class="lab">${speech.on ? 'Stop reading aloud' : 'Read aloud'}</span></button>
-    <button class="mi" role="menuitem" id="searchbtn">${MI.search}<span class="lab">Search</span><kbd>/</kbd></button>
     <button class="mi" role="menuitem" id="gotobtn">${MI.goto}<span class="lab">Go to book and chapter</span></button>
     <button class="mi" role="menuitem" id="studybtn">${MI.study}<span class="lab">Bible studies</span></button>
     <button class="mi" role="menuitem" id="savedbtn">${MI.saved}<span class="lab">Highlights &amp; notes</span>${n ? `<span class="sub">${n}</span>` : ''}</button>
@@ -447,6 +446,7 @@ document.addEventListener('selectionchange', () => {
 /* ---------- sheet ---------- */
 const sheet = $('#sheet'), scrim = $('#scrim'); let backFn = null;
 function openSheet(title, html, back) {
+  closeSearch();
   sheet.classList.remove('picker');
   $('#sheettitle').textContent = title; $('#sheetbody').innerHTML = html; $('#sheetbody').scrollTop = 0;
   backFn = back || null; $('#sheetback').hidden = !back;
@@ -572,17 +572,57 @@ async function lexPanel(s, back) {
 }
 
 /* ---------- search ---------- */
+// Search: the header's search icon opens out into a floating field; results grow in a window under it.
+let fsearch = null;
 function openSearch(q = '') {
-  openSheet('Search', `<div class="field"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input id="q" type="search" autofocus placeholder="Words, a reference, or a Strong's number" value="${esc(q)}" autocomplete="off"><button class="ico" id="qmic" aria-label="Search by voice">${ICON.mic}</button></div><div id="qres"><p class="hint">Try <b>light</b>, <b>"grace and truth"</b>, <b>jn 1:14</b> or <b>G3056</b>.</p></div>`);
-  const inp = $('#q'); let t;
-  inp.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => runSearch(inp.value), 180); });
-  $('#qmic').onclick = () => dictate(txt => { inp.value = txt; runSearch(txt); }, $('#qmic'));
-  if (q) runSearch(q);
+  if (!sheet.hidden) closeSheet();
+  closeMenu?.();
+  if (!fsearch) {
+    fsearch = document.createElement('div'); fsearch.className = 'fsearch'; fsearch.id = 'fsearch'; fsearch.setAttribute('role', 'search'); fsearch.hidden = true;
+    fsearch.innerHTML = `<div class="field fsf"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input id="q" type="search" aria-label="Search" placeholder="Words, a reference, or a Strong's number" autocomplete="off" enterkeyhint="search"><button class="ico" id="qmic" aria-label="Search by voice">${ICON.mic}</button><button class="ico" id="qclose" aria-label="Close search">${ICON.x}</button></div>
+      <div class="fsres" id="qres" aria-live="polite"></div>`;
+    document.body.append(fsearch);
+    const inp = $('#q', fsearch); let t;
+    inp.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => runSearch(inp.value), 180); });
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); return closeSearch(); }
+      if (e.key === 'Enter') { e.preventDefault(); clearTimeout(t); const first = $('#qres .goto, #qres .list a', fsearch); if (first && inp.value.trim()) first.click(); else runSearch(inp.value); }
+    });
+    $('#qmic', fsearch).onclick = () => dictate(txt => { inp.value = txt; runSearch(txt); }, $('#qmic', fsearch));
+    $('#qclose', fsearch).onclick = () => closeSearch();
+    fsearch.addEventListener('click', e => {
+      if (e.target.closest('#qres a[href^="#"]')) setTimeout(closeSearch, 0);
+      const lx = e.target.closest('[data-lexq]'); if (lx) { const v = $('#q', fsearch).value; closeSearch(); lexPanel(lx.dataset.lexq, () => openSearch(v)); }
+    });
+  }
+  placeSearch();
+  const inp = $('#q', fsearch), wasOpen = !fsearch.hidden;
+  fsearch.hidden = false; $('#hsearch').setAttribute('aria-expanded', 'true');
+  if (!wasOpen) { fsearch.classList.remove('opening'); void fsearch.offsetWidth; fsearch.classList.add('opening'); }
+  if (q || !inp.value) { inp.value = q; runSearch(q); }
+  inp.focus(); inp.select();
 }
+function placeSearch() {
+  if (!fsearch) return;
+  const r = $('#hsearch').getBoundingClientRect(), vw = document.documentElement.clientWidth;
+  const narrow = vw < 641, top = Math.max(4, r.top + r.height / 2 - 24);
+  const right = narrow ? 8 : Math.max(8, vw - r.right);
+  fsearch.style.top = top + 'px'; fsearch.style.right = right + 'px';
+  fsearch.style.width = Math.min(560, vw - right - 8) + 'px';
+  fsearch.style.setProperty('--from', Math.max(0, Math.min(560, vw - right - 8) - (narrow ? vw - 8 - r.left : r.width)) + 'px');
+  $('#qres', fsearch).style.maxHeight = `calc(100dvh - ${top + 64}px)`;
+}
+function closeSearch() {
+  if (!fsearch || fsearch.hidden) return;
+  fsearch.hidden = true; $('#hsearch').setAttribute('aria-expanded', 'false'); searchToken++;
+  if (document.activeElement === document.body || fsearch.contains(document.activeElement)) $('#hsearch').focus({ preventScroll: true });
+}
+window.addEventListener('resize', () => { if (fsearch && !fsearch.hidden) placeSearch(); });
+document.addEventListener('pointerdown', e => { if (fsearch && !fsearch.hidden && !fsearch.contains(e.target) && !e.target.closest('#hsearch')) closeSearch(); });
 async function runSearch(q) {
   const out = $('#qres'); if (!out) return; q = q.trim();
-  if (!q) { out.innerHTML = ''; return; }
-  if (/^[GH]\d{1,4}$/i.test(q)) { lexPanel(q.toUpperCase(), () => openSearch(q)); return; }
+  if (!q) { out.innerHTML = '<p class="hint fshint">Try <b>light</b>, <b>"grace and truth"</b>, <b>jn 1:14</b> or <b>G3056</b>.</p>'; return; }
+  if (/^[GH]\d{1,4}$/i.test(q)) { out.innerHTML = `<button class="goto" data-lexq="${esc(q.toUpperCase())}">Look up ${esc(q.toUpperCase())} in the lexicon<span>→</span></button>`; return; }
   const ref = parseRef(q);
   let h = ref ? `<a class="goto" href="${hashOf(ref.b, ref.c, ref.v)}">Go to ${esc(label(ref.b, ref.c, ref.v))}<span>→</span></a>` : '';
   const phrase = q.match(/^"(.+)"$/)?.[1]?.toLowerCase();
@@ -1590,7 +1630,7 @@ document.addEventListener('click', async e => {
   if (q('[data-ch]')) { const x = q('[data-ch]'); closeSheet(); return go(x.dataset.b, x.dataset.ch); }
   if (q('#prev')) { const p = prevOf(cur.b, cur.c); return p && go(p.b, p.c); }
   if (q('#next')) { const p = nextOf(cur.b, cur.c); return p && go(p.b, p.c); }
-  if (q('#searchbtn, #hsearch')) return openSearch();
+  if (q('#hsearch')) return fsearch && !fsearch.hidden ? closeSearch() : openSearch();
   if (q('#studybtn')) return openStudies();
   if (q('#savedbtn')) return openSaved();
   if (q('#setbtn')) return openSettings();
